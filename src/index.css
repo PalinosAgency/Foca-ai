@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* --- CORES OFICIAIS FOCA.AÍ (MIV) --- */
+    
+    /* Fundo Geral: Soft Gray muito suave para evitar o branco "estourado" */
+    --background: 0 0% 98%; 
+    
+    /* Texto Principal: Deep Blue (Substitui o preto) */
+    --foreground: 236 90% 15%; /* #040949 */
+
+    /* Cards e Superfícies: Branco Puro para contraste com o fundo cinza */
+    --card: 0 0% 100%;
+    --card-foreground: 236 90% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 236 90% 15%;
+
+    /* Primary: Electric Blue #0026f7 -> HSL(231, 100%, 48%) */
+    --primary: 231 100% 48%;
+    --primary-foreground: 0 0% 100%; /* Texto branco no botão azul */
+
+    /* Secondary: Soft Gray #e6e6e6 -> HSL(0, 0%, 90%) */
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 236 90% 15%;
+
+    /* Muted: Tons acinzentados para textos secundários */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 231 100% 48%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Bordas sutis */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    
+    /* Anel de foco na cor da marca */
+    --ring: 231 100% 48%;
+
+    --radius: 0.5rem; /* 8px - Mais profissional e "tech" que 12px */
+    
+    /* Sombras refinadas */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* MODO ESCURO (Deep Blue como base) */
+    --background: 236 90% 15%; /* #040949 */
+    --foreground: 0 0% 98%;
+
+    --card: 236 85% 18%; /* Levemente mais claro que o fundo */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 236 85% 18%;
+    --popover-foreground: 0 0% 98%;
+
+    /* No dark mode, o Electric Blue pode ser cansativo, mantemos mas podemos ajustar a luminosidade se precisar */
+    --primary: 231 100% 60%; 
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 236 50% 25%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 236 50% 25%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 236 50% 25%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 236 50% 25%;
+    --input: 236 50% 25%;
+    --ring: 231 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* Correção de Emergência para Inputs */
+input, textarea, select {
+  color: #0f172a !important; /* Força cor escura (Slate-900) */
+  background-color: #ffffff;
+}
+
+/* Garante que o placeholder seja legível */
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important; /* Slate-400 */
+}
