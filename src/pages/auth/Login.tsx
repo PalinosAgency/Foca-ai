@@ -92,13 +92,14 @@ export default function Login() {
         </Alert>
       )}
 
-      {/* --- BOTÃO GOOGLE --- */}
+      {/* --- SEÇÃO GOOGLE + SEPARADOR --- */}
+      {/* AJUSTE: Reduzi mb-10 para mb-6 e space-y-6 para space-y-4 */}
       <div className="mb-6 space-y-4">
         <Button 
           variant="outline" 
           type="button" 
           onClick={handleGoogleLogin}
-          className="w-full h-11 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2 shadow-sm transition-all hover:shadow-md"
+          className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all hover:shadow-md text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -109,11 +110,11 @@ export default function Login() {
           Entrar com Google
         </Button>
 
-        <div className="relative flex items-center">
-          <span className="w-full border-t border-gray-200" />
-          <span className="absolute left-1/2 -translate-x-1/2 bg-white px-2 text-xs uppercase text-gray-500 font-medium">
-            Ou entre com e-mail
-          </span>
+        {/* Separador Estilizado */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent" />
+          </div>
         </div>
       </div>
 
