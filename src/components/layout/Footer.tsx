@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Instagram, Linkedin, Twitter, Mail } from 'lucide-react';
+import { Instagram, Mail } from 'lucide-react';
 
 export function Footer() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export function Footer() {
           
           {/* Brand */}
           <div className="md:col-span-1">
-            {/* LOGO CORRIGIDA */}
+            {/* LOGO */}
             <Link to="/" className="relative flex items-center gap-2 mb-4 h-16 w-40 overflow-hidden">
               <img 
                 src="/logo-icon-fundo.png" 
@@ -92,18 +92,22 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-white">Empresa</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-blue-100/70 hover:text-white text-sm transition-colors">
+                <a 
+                  href="https://palinosprodutora.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-100/70 hover:text-white text-sm transition-colors"
+                >
                   Sobre nós
-                </Link>
-              </li>
-              <li>
-                {/* Link direto para email também aqui, caso procurem em "Contato" */}
-                <a href="mailto:suportefocaaioficial@gmail.com" className="text-blue-100/70 hover:text-white text-sm transition-colors">
-                  Contato
                 </a>
               </li>
               <li>
-                <a href="https://blog.focaai.com" className="text-blue-100/70 hover:text-white text-sm transition-colors">
+                <a 
+                  href="https://www.instagram.com/palinos_produtora/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-100/70 hover:text-white text-sm transition-colors"
+                >
                   Blog
                 </a>
               </li>
@@ -140,22 +144,6 @@ export function Footer() {
               rel="noopener noreferrer"
             >
               <Instagram className="w-5 h-5" />
-            </a>
-            <a
-              href="https://linkedin.com/company/focaai"
-              className="text-blue-100/50 hover:text-white transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Linkedin className="w-5 h-5" />
-            </a>
-            <a
-              href="https://twitter.com/focaai"
-              className="text-blue-100/50 hover:text-white transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Twitter className="w-5 h-5" />
             </a>
           </div>
         </div>
