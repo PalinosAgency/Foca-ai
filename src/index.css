@@ -6,14 +6,14 @@
 
 @layer base {
   :root {
-    /* --- CORES OFICIAIS FOCA.AÍ (MIV) --- */
+    /* --- CORES OFICIAIS FOCA.AÍ --- */
     --background: 0 0% 98%; 
     --foreground: 236 90% 15%; /* #040949 */
     --card: 0 0% 100%;
     --card-foreground: 236 90% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 236 90% 15%;
-    --primary: 231 100% 48%; /* #0026f7 */
+    --primary: 231 100% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 90%;
     --secondary-foreground: 236 90% 15%;
@@ -61,25 +61,36 @@
   }
   html {
     font-family: 'Outfit', system-ui, sans-serif;
-    scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent; /* Remove o quadrado azul no toque */
+    /* Zoom leve geral (1.1) para o dashboard ficar bom */
+    zoom: 1.1; 
   }
   body {
     @apply bg-background text-foreground antialiased;
+    min-width: 1024px;
+    overflow-x: auto;
   }
 }
 
-/* --- CORREÇÕES CRÍTICAS MOBILE --- */
-
-/* 1. Previne Zoom no iPhone: Inputs devem ter min 16px */
-@media screen and (max-width: 768px) {
-  input, textarea, select {
-    font-size: 16px !important;
-  }
+/* --- CORREÇÃO 1: FOTOS ESMAGADAS --- */
+/* Isso força a imagem a manter a proporção, custe o que custar */
+img {
+  height: auto !important; 
+  object-fit: contain;
 }
 
-/* 2. Cores de Input e Placeholder */
-input, textarea, select {
+/* --- CORREÇÃO 2: LOGIN/REGISTRO AFASTADOS --- */
+/* Esta classe será usada apenas nas páginas de Auth para aproximar MUITO (1.6x) */
+.auth-zoom-wrapper {
+  zoom: 1.6; /* Aumenta 60% em relação ao normal */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
+}
+
+/* Inputs legíveis */
+input, textarea, select, button {
+  font-size: 16px !important; 
   color: #0f172a !important; 
   background-color: #ffffff;
 }
