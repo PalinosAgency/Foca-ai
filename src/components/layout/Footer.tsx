@@ -137,13 +137,15 @@ export function Footer() {
             © {new Date().getFullYear()} Foca.aí. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-4">
+            {/* ÍCONE INSTAGRAM ATUALIZADO */}
             <a
               href="https://www.instagram.com/foca__ai?igsh=MXZrd21nYjI5ZmZ2dQ%3D%3D"
-              className="text-blue-100/50 hover:text-white transition-colors"
+              className="text-white/80 hover:text-[#E1306C] transition-colors duration-300"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Instagram"
             >
-              <Instagram className="w-5 h-5" />
+              <Instagram className="w-6 h-6" />
             </a>
           </div>
         </div>
