@@ -6,9 +6,9 @@
 
 @layer base {
   :root {
-    /* --- CORES OFICIAIS FOCA.AÍ --- */
+    /* Cores mantidas */
     --background: 0 0% 98%; 
-    --foreground: 236 90% 15%; /* #040949 */
+    --foreground: 236 90% 15%;
     --card: 0 0% 100%;
     --card-foreground: 236 90% 15%;
     --popover: 0 0% 100%;
@@ -27,31 +27,6 @@
     --input: 220 13% 91%;
     --ring: 231 100% 48%;
     --radius: 0.5rem;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  }
-
-  .dark {
-    --background: 236 90% 15%;
-    --foreground: 0 0% 98%;
-    --card: 236 85% 18%;
-    --card-foreground: 0 0% 98%;
-    --popover: 236 85% 18%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 231 100% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 236 50% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 236 50% 25%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 236 50% 25%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 236 50% 25%;
-    --input: 236 50% 25%;
-    --ring: 231 100% 60%;
   }
 }
 
@@ -60,41 +35,36 @@
     @apply border-border;
   }
   html {
-    font-family: 'Outfit', system-ui, sans-serif;
-    /* Zoom leve geral (1.1) para o dashboard ficar bom */
-    zoom: 1.1; 
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    
+    /* MUDANÇA CRÍTICA: 13px no mobile */
+    /* Isso afasta os elementos e faz caber mais coisa na tela */
+    font-size: 12px; 
   }
+
+  /* No Desktop mantém o padrão legível */
+  @media (min-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+  }
+  
   body {
     @apply bg-background text-foreground antialiased;
-    min-width: 1024px;
-    overflow-x: auto;
+    overflow-x: hidden; 
+    width: 100%;
+    position: relative;
   }
 }
 
-/* --- CORREÇÃO 1: FOTOS ESMAGADAS --- */
-/* Isso força a imagem a manter a proporção, custe o que custar */
-img {
-  height: auto !important; 
-  object-fit: contain;
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
-/* --- CORREÇÃO 2: LOGIN/REGISTRO AFASTADOS --- */
-/* Esta classe será usada apenas nas páginas de Auth para aproximar MUITO (1.6x) */
-.auth-zoom-wrapper {
-  zoom: 1.6; /* Aumenta 60% em relação ao normal */
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding-top: 2rem;
-}
-
-/* Inputs legíveis */
-input, textarea, select, button {
-  font-size: 16px !important; 
-  color: #0f172a !important; 
-  background-color: #ffffff;
-}
-
-input::placeholder, textarea::placeholder {
-  color: #94a3b8 !important;
+/* Mantém inputs em 16px para evitar zoom automático do iOS ao digitar */
+input, select, textarea, button {
+  font-size: 16px !important;
 }

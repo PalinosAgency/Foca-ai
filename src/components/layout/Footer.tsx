@@ -21,47 +21,48 @@ export function Footer() {
 
   return (
     <footer className="bg-[#040949] border-t border-white/10 text-white transition-colors duration-300">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 pt-10 pb-8 md:py-12">
+        
+        {/* GRID PRINCIPAL: 2 colunas no mobile (compacto), 4 no desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-8">
           
-          {/* Brand */}
-          <div className="md:col-span-1">
+          {/* Brand - Ocupa as 2 colunas no mobile para destaque */}
+          <div className="col-span-2 md:col-span-1">
             {/* LOGO */}
-            <Link to="/" className="relative flex items-center gap-2 mb-4 h-16 w-40 overflow-hidden">
+            <Link to="/" className="flex items-center gap-2 mb-3 md:mb-4 group">
               <img 
                 src="/logo-icon-fundo.png" 
                 alt="Foca.Aí" 
-                className="h-14 w-14 object-contain" 
+                className="h-10 w-10 md:h-12 md:w-12 object-contain group-hover:opacity-90 transition-opacity" 
               />
-              <span className="text-2xl font-bold text-white tracking-tight">Foca.aí</span>
+              <span className="text-xl md:text-2xl font-bold text-white tracking-tight">Foca.aí</span>
             </Link>
             
-            <p className="text-blue-100/70 text-sm leading-relaxed mb-6">
+            <p className="text-blue-100/70 text-xs md:text-sm leading-relaxed mb-4 md:mb-6 max-w-xs">
               Seu assistente pessoal no WhatsApp para organizar finanças, saúde, estudos e agenda.
             </p>
 
-            {/* Suporte em Destaque na Coluna da Marca */}
-            <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">Suporte</span>
+            <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] md:text-xs font-bold text-blue-200 uppercase tracking-wider opacity-80">Suporte Oficial</span>
                 <a 
                   href="mailto:suportefocaaioficial@gmail.com" 
-                  className="flex items-center gap-2 text-sm text-white hover:text-blue-300 transition-colors"
+                  className="flex items-center gap-2 text-xs md:text-sm text-white hover:text-blue-300 transition-colors font-medium"
                 >
-                  <Mail className="w-4 h-4" />
+                  <Mail className="w-3.5 h-3.5" />
                   suportefocaaioficial@gmail.com
                 </a>
             </div>
           </div>
 
           {/* Product */}
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Produto</h4>
+          <div className="col-span-1">
+            <h4 className="font-bold mb-3 md:mb-4 text-white text-sm md:text-base">Produto</h4>
             <ul className="space-y-2">
               <li>
                 <a 
                   href="#como-funciona" 
                   onClick={(e) => handleScroll(e, 'como-funciona')}
-                  className="text-blue-100/70 hover:text-white text-sm transition-colors cursor-pointer"
+                  className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors cursor-pointer block py-0.5"
                 >
                   Recursos
                 </a>
@@ -70,7 +71,7 @@ export function Footer() {
                 <a 
                   href="#precos" 
                   onClick={(e) => handleScroll(e, 'precos')}
-                  className="text-blue-100/70 hover:text-white text-sm transition-colors cursor-pointer"
+                  className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors cursor-pointer block py-0.5"
                 >
                   Preços
                 </a>
@@ -79,7 +80,7 @@ export function Footer() {
                 <a 
                   href="#faq" 
                   onClick={(e) => handleScroll(e, 'faq')}
-                  className="text-blue-100/70 hover:text-white text-sm transition-colors cursor-pointer"
+                  className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors cursor-pointer block py-0.5"
                 >
                   FAQ
                 </a>
@@ -88,15 +89,15 @@ export function Footer() {
           </div>
 
           {/* Company */}
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Empresa</h4>
+          <div className="col-span-1">
+            <h4 className="font-bold mb-3 md:mb-4 text-white text-sm md:text-base">Empresa</h4>
             <ul className="space-y-2">
               <li>
                 <a 
                   href="https://palinosprodutora.com/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-blue-100/70 hover:text-white text-sm transition-colors"
+                  className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors block py-0.5"
                 >
                   Sobre nós
                 </a>
@@ -106,7 +107,7 @@ export function Footer() {
                   href="https://www.instagram.com/palinos_produtora/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-blue-100/70 hover:text-white text-sm transition-colors"
+                  className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors block py-0.5"
                 >
                   Blog
                 </a>
@@ -115,16 +116,16 @@ export function Footer() {
           </div>
 
           {/* Legal */}
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Legal</h4>
+          <div className="col-span-1 md:col-span-1">
+            <h4 className="font-bold mb-3 md:mb-4 text-white text-sm md:text-base">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/privacy" className="text-blue-100/70 hover:text-white text-sm transition-colors">
+                <Link to="/privacy" className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors block py-0.5">
                   Privacidade
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-blue-100/70 hover:text-white text-sm transition-colors">
+                <Link to="/terms" className="text-blue-100/70 hover:text-white text-xs md:text-sm transition-colors block py-0.5">
                   Termos de Uso
                 </Link>
               </li>
@@ -132,20 +133,21 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-blue-100/50 text-sm">
+        {/* Rodapé Inferior */}
+        <div className="border-t border-white/10 mt-8 md:mt-10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-blue-100/40 text-xs text-center md:text-left">
             © {new Date().getFullYear()} Foca.aí. Todos os direitos reservados.
           </p>
+          
           <div className="flex items-center gap-4">
-            {/* ÍCONE INSTAGRAM ATUALIZADO */}
             <a
               href="https://www.instagram.com/foca__ai?igsh=MXZrd21nYjI5ZmZ2dQ%3D%3D"
-              className="text-white/80 hover:text-[#E1306C] transition-colors duration-300"
+              className="bg-white/5 p-2 rounded-full text-white/80 hover:text-[#E1306C] hover:bg-white/10 transition-all duration-300"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
             >
-              <Instagram className="w-6 h-6" />
+              <Instagram className="w-5 h-5" />
             </a>
           </div>
         </div>

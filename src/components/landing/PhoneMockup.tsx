@@ -9,8 +9,10 @@ export function PhoneMockup() {
       transition={{ duration: 0.8, delay: 0.2 }}
       className="flex-1 w-full max-w-[300px] sm:max-w-[340px] lg:max-w-[360px] mx-auto perspective-1000"
     >
-      {/* Moldura do Celular Moderno */}
-      <div className="relative mx-auto border-gray-900 bg-black border-[6px] rounded-[3rem] h-[700px] w-full shadow-2xl overflow-hidden ring-1 ring-white/20">
+      {/* Moldura do Celular Moderno 
+          ALTERAÇÃO: Troquei h-[700px] por aspect-[9/19] para responsividade 
+      */}
+      <div className="relative mx-auto border-gray-900 bg-black border-[6px] rounded-[2.5rem] md:rounded-[3rem] aspect-[9/19] h-auto w-full shadow-2xl overflow-hidden ring-1 ring-white/20">
         {/* Ilha dinâmica / Câmera */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[30%] h-6 bg-black rounded-full z-30"></div>
 
@@ -20,9 +22,9 @@ export function PhoneMockup() {
         <div className="w-[3px] h-[64px] absolute -right-[9px] top-[170px] bg-gray-800 rounded-r-lg"></div>
 
         {/* TELA DO CELULAR */}
-        <div className="w-full h-full bg-[#E5DDD5] relative flex flex-col font-sans rounded-[2.5rem] overflow-hidden">
+        <div className="w-full h-full bg-[#E5DDD5] relative flex flex-col font-sans rounded-[2rem] md:rounded-[2.5rem] overflow-hidden">
           {/* Status Bar Fake */}
-          <div className="h-10 bg-[#075E54] w-full flex justify-between items-end px-6 pb-1.5 text-[12px] text-white/90 z-20 font-medium">
+          <div className="h-10 bg-[#075E54] w-full flex justify-between items-end px-6 pb-1.5 text-[12px] text-white/90 z-20 font-medium select-none">
             <span>15:48</span>
             <div className="flex gap-2 items-center">
               <Wifi className="w-4 h-4" />
@@ -38,7 +40,7 @@ export function PhoneMockup() {
 
             <div className="flex items-center gap-2.5 flex-1 cursor-pointer">
               {/* ÍCONE DE PERFIL (Fundo Branco) */}
-              <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden border border-white/20">
+              <div className="w-9 h-9 min-w-[36px] rounded-full bg-white flex items-center justify-center overflow-hidden border border-white/20">
                 <img
                   src="/logo-icon-fundo.png"
                   alt="Logo Foca.aí"
@@ -46,14 +48,14 @@ export function PhoneMockup() {
                 />
               </div>
 
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-col justify-center overflow-hidden">
                 <div className="flex items-center gap-1">
-                  <p className="font-semibold text-[15px] leading-none">Assistente - Foca.Aí</p>
+                  <p className="font-semibold text-[15px] leading-none truncate">Assistente - Foca.Aí</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 pr-1 opacity-90">
+            <div className="flex gap-4 pr-1 opacity-90 shrink-0">
               <Phone className="w-5 h-5" />
               <MoreVertical className="w-5 h-5" />
             </div>
@@ -121,8 +123,6 @@ export function PhoneMockup() {
               </div>
             </motion.div>
 
-          
-
             {/* Cartão - Registro Financeiro */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -130,7 +130,7 @@ export function PhoneMockup() {
               transition={{ delay: 2.4 }}
               className="flex justify-start relative z-[1]"
             >
-              <div className="bg-white rounded-lg rounded-tl-none p-2.5 px-3 max-w-[92%] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] text-[13.5px] text-gray-800 leading-snug relative">
+              <div className="bg-white rounded-lg rounded-tl-none p-2.5 px-3 max-w-[92%] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] text-[13.5px] text-gray-800 leading-snug relative w-full">
                 <p className="font-semibold text-gray-900 mb-2">Registro Financeiro</p>
 
                 <div className="space-y-1.5 text-[13px]">

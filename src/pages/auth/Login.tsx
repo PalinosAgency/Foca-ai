@@ -92,14 +92,13 @@ export default function Login() {
         </Alert>
       )}
 
-      {/* --- SEÇÃO GOOGLE + SEPARADOR --- */}
-      {/* AJUSTE: Reduzi mb-10 para mb-6 e space-y-6 para space-y-4 */}
+      {/* Google Login */}
       <div className="mb-6 space-y-4">
         <Button 
           variant="outline" 
           type="button" 
           onClick={handleGoogleLogin}
-          className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all hover:shadow-md text-base"
+          className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -110,10 +109,9 @@ export default function Login() {
           Entrar com Google
         </Button>
 
-        {/* Separador Estilizado */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent" />
+            <span className="w-full h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
           </div>
         </div>
       </div>
@@ -126,7 +124,7 @@ export default function Login() {
             type="email"
             placeholder="nome@exemplo.com"
             {...register('email')}
-            className="h-11 focus-visible:ring-[#0026f7]"
+            className="h-12 focus-visible:ring-[#0026f7] text-base"
           />
           {errors.email && (
             <p className="text-xs text-destructive font-medium">{errors.email.message}</p>
@@ -149,7 +147,7 @@ export default function Login() {
               type={showPassword ? 'text' : 'password'}
               placeholder="Digite sua senha"
               {...register('password')}
-              className="h-11 focus-visible:ring-[#0026f7] pr-10"
+              className="h-12 focus-visible:ring-[#0026f7] pr-10 text-base"
             />
             <button
               type="button"

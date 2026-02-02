@@ -15,7 +15,7 @@ const plan = {
   features: [
     'Finanças ilimitadas',
     'Todos os hábitos de saúde',
-    'Organização de estudos', // <--- ALTERADO AQUI
+    'Organização de estudos',
     'Agenda + Google Calendar',
     'Suporte prioritário',
     'Dashboard completo',
@@ -61,18 +61,19 @@ export function PricingSection() {
   };
 
   return (
-    <section id="precos" className="py-24 px-4 bg-[#040949] text-white">
+    // AJUSTE: py-12 no mobile, py-24 no desktop
+    <section id="precos" className="py-12 md:py-24 px-4 bg-[#040949] text-white">
       <div className="container mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-2xl md:text-4xl font-bold mb-4">
             Plano <span className="text-[#0026f7]">Simples</span>
           </h2>
-          <p className="text-blue-100/80 text-lg">
+          <p className="text-blue-100/80 text-base md:text-lg">
             Um único plano com acesso a tudo. Teste grátis por 3 dias.
           </p>
         </motion.div>
@@ -82,7 +83,8 @@ export function PricingSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative w-full max-w-sm bg-white text-[#040949] rounded-2xl p-8 shadow-2xl ring-4 ring-[#0026f7]/20"
+            // AJUSTE: p-6 no mobile, p-8 no desktop
+            className="relative w-full max-w-sm bg-white text-[#040949] rounded-2xl p-6 md:p-8 shadow-2xl ring-4 ring-[#0026f7]/20"
           >
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="px-4 py-1 rounded-full bg-[#0026f7] text-white text-xs font-bold uppercase tracking-wider shadow-lg">
@@ -90,20 +92,20 @@ export function PricingSection() {
               </span>
             </div>
 
-            {/* HEADER AJUSTADO */}
-            <div className="flex items-center justify-center gap-1.1 mb-2 mt-4">
+            <div className="flex items-center justify-center gap-2 mb-2 mt-2">
                 <img 
-                    src="/logo-icon-fundo.png" 
-                    alt="Foca.aí Logo" 
-                    className="w-16 h-16 object-contain"
+                  src="/logo-icon-fundo.png" 
+                  alt="Foca.aí Logo" 
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain"
                 />
-                <h3 className="text-3xl font-bold text-[#040949]">{plan.name}</h3>
+                <h3 className="text-2xl md:text-3xl font-bold text-[#040949]">{plan.name}</h3>
             </div>
 
             <p className="text-gray-500 text-sm mb-6 text-center">{plan.description}</p>
             
             <div className="flex items-baseline justify-center gap-1 mb-8">
-              <span className="text-5xl font-extrabold text-[#040949]">R$ {plan.price.toFixed(2).replace('.', ',')}</span>
+              {/* AJUSTE: text-4xl no mobile */}
+              <span className="text-4xl md:text-5xl font-extrabold text-[#040949]">R$ {plan.price.toFixed(2).replace('.', ',')}</span>
               <span className="text-gray-500 font-medium">/mês</span>
             </div>
 
