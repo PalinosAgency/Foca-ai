@@ -24,7 +24,6 @@ export function FinanceTab() {
          </div>
       </div>
 
-      {/* Cards Topo - 3 Colunas Fixas */}
       <div className="grid grid-cols-3 gap-5">
          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
            <div className="flex items-center justify-between mb-3">

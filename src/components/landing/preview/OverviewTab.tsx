@@ -9,7 +9,7 @@ export function OverviewTab() {
   const formatCurrency = (val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
@@ -24,7 +24,7 @@ export function OverviewTab() {
         </div>
       </div>
 
-      {/* Grid Principal (Forçado 3 colunas para desktop e mobile simulado) */}
+      {/* Grid Principal - 3 Colunas */}
       <div className="grid grid-cols-3 gap-5">
         {/* Resumo Financeiro */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 col-span-1">
