@@ -79,41 +79,40 @@ export function CartSidebar() {
             <ScrollArea className="h-full px-6 py-6">
               <div className="space-y-4">
                 {items.map((item) => (
-                  // CARD DO PRODUTO - REDESIGN PROFISSIONAL
+                  // CARD DO PRODUTO REFORMULADO
                   <div key={item.id} className="flex gap-4 p-4 rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[#0026f7]/30">
                     
-                    {/* Imagem */}
-                    <div className="h-16 w-16 rounded-xl bg-[#040949]/5 flex items-center justify-center shrink-0 p-3 border border-gray-100">
+                    {/* Imagem do Produto */}
+                    <div className="h-20 w-20 rounded-xl bg-[#040949]/5 flex items-center justify-center shrink-0 p-3 border border-gray-100 self-center">
                       <img src="/logo-icon-fundo.png" alt="Foca.aí" className="w-full h-full object-contain" />
                     </div>
                     
-                    {/* Coluna de Conteúdo */}
-                    <div className="flex-1 flex flex-col justify-between py-0.5">
+                    {/* Conteúdo */}
+                    <div className="flex-1 flex flex-col justify-between py-1">
                       
-                      {/* Linha Superior: Nome e Botão Remover */}
-                      <div className="flex justify-between items-start gap-2">
-                        <h4 className="font-bold text-[#040949] text-base leading-tight truncate">{item.name}</h4>
+                      {/* Título e Descrição */}
+                      <div>
+                        <h4 className="font-bold text-[#040949] text-base leading-tight truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-gray-500 text-xs mt-1 font-medium">
+                          {item.interval === 'yearly' ? 'Cobrança Anual' : 'Cobrança Mensal'}
+                        </p>
+                      </div>
+
+                      {/* Botões e Preço - SEPARADOS (Botão na esq, Preço na dir) */}
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
                         
-                        {/* Botão Remover (Agora no topo direito, sem sobreposição) */}
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="h-7 px-2 text-gray-400 hover:text-red-600 hover:bg-red-50 -mr-2 -mt-1 text-xs font-medium transition-colors"
+                          className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 -ml-2 text-xs font-medium transition-colors flex items-center gap-1"
                           onClick={() => removeItem(item.id)}
                         >
-                          <Trash2 className="w-3.5 h-3.5 mr-1.5 opacity-70" />
+                          <Trash2 className="w-3.5 h-3.5" />
                           Remover
                         </Button>
-                      </div>
 
-                      {/* Linha Inferior: Descrição e Preço */}
-                      <div className="flex justify-between items-end mt-3">
-                        <p className="text-gray-500 text-xs flex items-center gap-1.5 font-medium bg-gray-100/80 px-2 py-1 rounded-md">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />
-                          {/* Verifica o intervalo para mostrar o texto correto */}
-                          {item.interval === 'yearly' ? 'Assinatura Anual' : 'Assinatura Mensal'}
-                        </p>
-                        
                         <p className="font-bold text-[#0026f7] text-lg tracking-tight">
                           {item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </p>
