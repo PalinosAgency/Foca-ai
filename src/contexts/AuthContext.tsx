@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, User, Subscription } from '@/lib/api';
+import { googleLogout } from '@react-oauth/google'; // Importar logout do Google
 
 interface AuthContextType {
   user: User | null;
@@ -8,6 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
   login: (identifier: string, password: string) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>; // NOVA FUNÇÃO
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -18,38 +20,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  // IMPORTANTE: Começa true para segurar a tela de loading no F5
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshSession = useCallback(async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      
-      // Se não tem token salvo, aí sim paramos de carregar e consideramos deslogado
       if (!token) {
         setUser(null);
         setSubscription(null);
         setIsLoading(false);
         return;
       }
-
-      // Chama a API
       const session = await api.getSession();
-      
       if (session.user) {
         setUser(session.user);
         setSubscription(session.subscription);
       } else {
-        // Se a API retornou null (token inválido), desloga
-        console.warn("Sessão inválida retornada pela API");
         localStorage.removeItem('auth_token');
         setUser(null);
         setSubscription(null);
       }
     } catch (error: any) {
-      console.error("Erro ao validar sessão:", error);
-      // SÓ DESLOGA SE FOR ERRO DE AUTENTICAÇÃO (401)
-      // Se for erro de rede ou 500, mantém o usuário na tela (evita logout acidental)
       if (error.message && error.message.includes('401')) {
          localStorage.removeItem('auth_token');
          setUser(null);
@@ -63,6 +54,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshSession();
   }, [refreshSession]);
+
+  // --- NOVA FUNÇÃO DE LOGIN GOOGLE ---
+  const loginWithGoogle = async (accessToken: string) => {
+    setIsLoading(true);
+    try {
+      // Faz POST direto pro endpoint que criamos (usando fetch ou axios conforme sua lib api)
+      // Aqui assumindo fetch padrão para garantir compatibilidade
+      const res = await fetch('/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      localStorage.setItem('auth_token', data.token);
+      
+      // Atualiza estado
+      setUser(data.user);
+      await refreshSession(); // Garante dados frescos
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (identifier: string, password: string) => {
     setIsLoading(true);
@@ -78,11 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-        // Tenta avisar o backend, mas limpa local mesmo se falhar
         try { await api.logout(); } catch (e) {} 
         localStorage.removeItem('auth_token');
         setUser(null);
         setSubscription(null);
+        googleLogout(); // Limpa sessão Google
     } finally {
         setIsLoading(false);
     }
@@ -104,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         hasActiveSubscription,
         login,
+        loginWithGoogle, // Exporta a função
         logout,
         register,
         refreshSession,
