@@ -31,20 +31,20 @@ export default function Plans() {
       id: plan.id,
       name: plan.name,
       price: plan.price,
-      // @ts-ignore - forçando o tipo se necessário
+      // @ts-ignore
       interval: 'monthly',
       quantity: 1,
       type: 'subscription'
     });
     
     toast({
-      title: "Adicionado ao carrinho",
-      description: `${plan.name} foi adicionado ao seu carrinho.`
+      title: "Adicionado!",
+      description: "O plano está no seu carrinho.",
+      duration: 3000,
     });
   };
 
   const handleBuyNow = () => {
-    // 1. Adiciona ao carrinho
     addItem({
       id: plan.id,
       name: plan.name,
@@ -55,7 +55,6 @@ export default function Plans() {
       type: 'subscription'
     });
     
-    // 2. Vai para a página do carrinho
     navigate("/cart"); 
   };
 
