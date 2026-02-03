@@ -101,7 +101,7 @@ export default function Cart() {
                   
                   {/* Imagem P/M */}
                   <div className="w-16 h-16 md:w-24 md:h-24 bg-[#040949] rounded-xl md:rounded-2xl flex items-center justify-center p-2 md:p-4 shrink-0 shadow-md">
-                      <img src="/logo-icon-fundo.png" alt="Logo" className="w-full h-full object-contain" />
+                      <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
                   </div>
                   
                   <div className="flex-1 w-full">
