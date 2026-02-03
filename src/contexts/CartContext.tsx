@@ -11,8 +11,7 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  // ATUALIZAÇÃO: Aceita o parâmetro opcional openSidebar
-  addItem: (item: CartItem, openSidebar?: boolean) => void;
+  addItem: (item: CartItem, openSidebar?: boolean) => void; // <--- MUDANÇA IMPORTANTE AQUI
   removeItem: (id: string) => void;
   clearCart: () => void;
   total: number;
@@ -34,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('cart_items', JSON.stringify(items));
   }, [items]);
 
-  // ATUALIZAÇÃO: openSidebar padrão é true para manter compatibilidade
+  // Função addItem atualizada para respeitar o parâmetro openSidebar
   const addItem = (item: CartItem, openSidebar = true) => {
     setItems((prev) => {
       const exists = prev.find((i) => i.id === item.id);
@@ -44,7 +43,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...prev, item];
     });
     
-    // ATUALIZAÇÃO: Só abre se o parâmetro for true
+    // SÓ ABRE SE FOR TRUE (Padrão)
+    // Se passarmos false lá no Plans.tsx, ele NÃO entra aqui.
     if (openSidebar) {
       setIsOpen(true);
     }
