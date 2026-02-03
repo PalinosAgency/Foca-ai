@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, User, Subscription } from '@/lib/api';
-import { googleLogout } from '@react-oauth/google'; // Importar logout do Google
+import { googleLogout } from '@react-oauth/google';
 
 interface AuthContextType {
   user: User | null;
@@ -9,7 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
   login: (identifier: string, password: string) => Promise<void>;
-  loginWithGoogle: (accessToken: string) => Promise<void>; // NOVA FUNÇÃO
+  loginWithGoogle: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -55,12 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession();
   }, [refreshSession]);
 
-  // --- NOVA FUNÇÃO DE LOGIN GOOGLE ---
   const loginWithGoogle = async (accessToken: string) => {
     setIsLoading(true);
     try {
-      // Faz POST direto pro endpoint que criamos (usando fetch ou axios conforme sua lib api)
-      // Aqui assumindo fetch padrão para garantir compatibilidade
       const res = await fetch('/api/auth/google-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,9 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.setItem('auth_token', data.token);
       
-      // Atualiza estado
       setUser(data.user);
-      await refreshSession(); // Garante dados frescos
+      await refreshSession(); 
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('auth_token');
         setUser(null);
         setSubscription(null);
-        googleLogout(); // Limpa sessão Google
+        googleLogout();
     } finally {
         setIsLoading(false);
     }
@@ -120,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         hasActiveSubscription,
         login,
-        loginWithGoogle, // Exporta a função
+        loginWithGoogle,
         logout,
         register,
         refreshSession,

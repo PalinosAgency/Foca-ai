@@ -1,4 +1,4 @@
-import pool from '../../lib/db.js'; // CORRIGIDO: importação correta do pool
+import pool from '../../lib/db.js'; 
 import { signToken } from '../../lib/auth.js'; 
 
 export default async function handler(req, res) {

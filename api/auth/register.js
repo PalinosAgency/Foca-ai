@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api'; 
-import { useAuth } from '@/contexts/AuthContext'; // IMPORTANTE: Adicionado para usar o loginWithGoogle
+import { useAuth } from '@/contexts/AuthContext'; 
 import { Loader2, Eye, EyeOff, Mail, RefreshCw, AlertTriangle } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google'; // IMPORTANTE: Adicionado
+import { useGoogleLogin } from '@react-oauth/google';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
@@ -38,7 +38,7 @@ export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { loginWithGoogle } = useAuth(); // Pegamos a função do contexto
+  const { loginWithGoogle } = useAuth();
 
   const {
     register,
@@ -53,11 +53,9 @@ export default function Register() {
     reset();
   }, [reset]);
 
-  // --- CONFIGURAÇÃO DO GOOGLE (Igual ao Login) ---
   const googleRegister = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        // Usa a mesma função do contexto. O backend vai criar a conta automaticamente se não existir.
         await loginWithGoogle(tokenResponse.access_token);
         
         toast({
@@ -65,7 +63,7 @@ export default function Register() {
           description: 'Você entrou com sucesso usando o Google.',
         });
         
-        navigate('/'); // Redireciona para o Dashboard
+        navigate('/'); 
       } catch (error: any) {
         toast({
           title: 'Erro no Google',
@@ -190,12 +188,11 @@ export default function Register() {
       subtitle="Comece sua jornada de organização hoje mesmo."
     >
       
-      {/* --- SEÇÃO GOOGLE + SEPARADOR --- */}
       <div className="mb-6 space-y-4">
         <Button 
           variant="outline" 
           type="button" 
-          onClick={() => googleRegister()} // <--- VINCULADO AO HOOK AQUI
+          onClick={() => googleRegister()}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all hover:shadow-md text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -207,7 +204,6 @@ export default function Register() {
           Criar conta com Google
         </Button>
 
-        {/* Separador Estilizado */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent" />
