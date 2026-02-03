@@ -86,7 +86,7 @@ export function CartSidebar() {
                     <div className="flex gap-4">
                       {/* Imagem */}
                       <div className="w-16 h-16 bg-[#040949] rounded-xl flex items-center justify-center p-3 shrink-0 shadow-sm">
-                        <img src="/logo-icon-fundo.png" alt="Logo" className="w-full h-full object-contain" />
+                        <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
                       </div>
 
                       {/* Informações */}
