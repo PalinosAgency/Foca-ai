@@ -55,22 +55,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession();
   }, [refreshSession]);
 
+  // --- FUNÇÃO COM LOGS DE DEBUG ---
   const loginWithGoogle = async (accessToken: string) => {
+    console.log("🔵 [AuthContext] loginWithGoogle iniciado.");
+    console.log("🔵 [AuthContext] Token recebido do Google:", accessToken.substring(0, 10) + "...");
+
     setIsLoading(true);
     try {
+      console.log("🔵 [AuthContext] Enviando POST para /api/auth/google-login...");
+      
       const res = await fetch('/api/auth/google-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accessToken })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      console.log("🔵 [AuthContext] Status da resposta HTTP:", res.status);
 
+      const data = await res.json();
+      console.log("🔵 [AuthContext] Dados recebidos da API:", data);
+
+      if (!res.ok) {
+        console.error("🔴 [AuthContext] Erro retornado pela API:", data.message);
+        throw new Error(data.message);
+      }
+
+      console.log("🟢 [AuthContext] Login bem sucedido! Salvando token...");
       localStorage.setItem('auth_token', data.token);
       
       setUser(data.user);
       await refreshSession(); 
+    } catch (error) {
+      console.error("🔴 [AuthContext] Erro fatal no try/catch:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

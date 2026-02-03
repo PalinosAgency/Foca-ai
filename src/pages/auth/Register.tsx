@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api'; 
+import { useAuth } from '@/contexts/AuthContext'; // Importação do AuthContext
 import { Loader2, Eye, EyeOff, Mail, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google'; // Importação do Google
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
@@ -36,6 +38,9 @@ export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  
+  // Pegamos a função loginWithGoogle do contexto
+  const { loginWithGoogle } = useAuth(); 
 
   const {
     register,
@@ -49,6 +54,38 @@ export default function Register() {
   useEffect(() => {
     reset();
   }, [reset]);
+
+  // --- CONFIGURAÇÃO DO GOOGLE LOGIN (Com Logs) ---
+  const googleRegister = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      console.log("🟢 [Register Page] Sucesso no Popup do Google!", tokenResponse);
+      try {
+        await loginWithGoogle(tokenResponse.access_token);
+        
+        toast({
+          title: 'Conta criada!',
+          description: 'Você entrou com sucesso usando o Google.',
+        });
+        
+        navigate('/'); 
+      } catch (error: any) {
+        console.error("🔴 [Register Page] Erro ao criar conta Google no backend:", error);
+        toast({
+          title: 'Erro no Google',
+          description: error.message || 'Não foi possível criar a conta.',
+          variant: 'destructive',
+        });
+      }
+    },
+    onError: (errorResponse) => {
+      console.error("🔴 [Register Page] Erro ao fechar/cancelar popup Google:", errorResponse);
+      toast({
+        title: "Erro",
+        description: "Falha ao conectar com Google. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  });
 
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
@@ -97,13 +134,6 @@ export default function Register() {
     } finally {
       setIsResending(false);
     }
-  };
-
-  const handleGoogleRegister = () => {
-    toast({
-      title: "Em breve!",
-      description: "O cadastro com Google estará disponível nas próximas atualizações.",
-    });
   };
 
   if (isSuccess) {
@@ -167,7 +197,10 @@ export default function Register() {
         <Button 
           variant="outline" 
           type="button" 
-          onClick={handleGoogleRegister}
+          onClick={() => {
+            console.log("🔵 [Register Page] Botão Google clicado");
+            googleRegister();
+          }}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
