@@ -23,15 +23,16 @@ export default async function handler(req, res) {
   try {
     const userData = verifyToken(req);
 
-    // CORREÇÃO CRÍTICA: Se o ID não for número, o token é antigo (da época do UUID).
-    // Retornamos 401 para o frontend fazer logout automático.
-    if (isNaN(Number(userData.id))) {
-       throw new Error("Token legado inválido (ID não numérico)");
+    // CORREÇÃO: Aceita 'id' OU 'userId' para compatibilidade
+    const userId = userData.id || userData.userId;
+
+    if (!userId || isNaN(Number(userId))) {
+       throw new Error("Token inválido (ID não encontrado)");
     }
 
     const userResult = await pool.query(
       'SELECT id, name, email, phone, avatar_url, is_verified, created_at FROM users WHERE id = $1',
-      [userData.id]
+      [userId]
     );
     const user = userResult.rows[0];
 
@@ -54,7 +55,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Erro na sessão:", error.message);
-    // Retornar 401 força o frontend a limpar o token
     return res.status(401).json({ message: 'Não autorizado ou Token expirado' });
   }
 }
