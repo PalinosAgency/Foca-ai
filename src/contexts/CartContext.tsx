@@ -4,19 +4,20 @@ export interface CartItem {
   id: string;
   name: string;
   price: number;
-  interval?: 'monthly' | 'yearly'; // Opcional, pois nem todo item pode ter intervalo
+  interval?: 'monthly' | 'yearly';
   quantity: number;
   type: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: CartItem) => void;
+  // ATUALIZAÇÃO: Aceita o parâmetro opcional openSidebar
+  addItem: (item: CartItem, openSidebar?: boolean) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
   total: number;
-  isOpen: boolean; // Novo: Estado de visibilidade
-  setIsOpen: (open: boolean) => void; // Novo: Função para abrir/fechar
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -27,23 +28,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [isOpen, setIsOpen] = useState(false); // Estado local de visibilidade
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('cart_items', JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: CartItem) => {
-    // Lógica para evitar duplicatas de assinatura ou somar quantidade
+  // ATUALIZAÇÃO: openSidebar padrão é true para manter compatibilidade
+  const addItem = (item: CartItem, openSidebar = true) => {
     setItems((prev) => {
       const exists = prev.find((i) => i.id === item.id);
       if (exists) {
-        // Se já existe, não duplica (para assinaturas é melhor ser único)
         return prev; 
       }
       return [...prev, item];
     });
-    setIsOpen(true); // Abre o carrinho automaticamente ao adicionar
+    
+    // ATUALIZAÇÃO: Só abre se o parâmetro for true
+    if (openSidebar) {
+      setIsOpen(true);
+    }
   };
 
   const removeItem = (id: string) => {

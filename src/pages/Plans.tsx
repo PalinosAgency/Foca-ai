@@ -31,20 +31,21 @@ export default function Plans() {
       id: plan.id,
       name: plan.name,
       price: plan.price,
-      // @ts-ignore
+      // @ts-ignore - forçando o tipo se necessário
       interval: 'monthly',
       quantity: 1,
       type: 'subscription'
-    });
+    }, false); // <--- MUDANÇA: false impede a abertura do carrinho
     
     toast({
       title: "Adicionado!",
-      description: "O plano está no seu carrinho.",
+      description: `${plan.name} foi adicionado ao seu carrinho.`,
       duration: 3000,
     });
   };
 
   const handleBuyNow = () => {
+    // 1. Adiciona ao carrinho (sem abrir a sidebar)
     addItem({
       id: plan.id,
       name: plan.name,
@@ -53,8 +54,9 @@ export default function Plans() {
       interval: 'monthly',
       quantity: 1,
       type: 'subscription'
-    });
+    }, false); // <--- MUDANÇA: false impede a abertura do carrinho
     
+    // 2. Vai para a página do carrinho
     navigate("/cart"); 
   };
 
