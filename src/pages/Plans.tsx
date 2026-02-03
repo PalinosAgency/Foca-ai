@@ -35,7 +35,7 @@ export default function Plans() {
       interval: 'monthly',
       quantity: 1,
       type: 'subscription'
-    }, false); // <--- MUDANÇA: false impede a abertura do carrinho
+    }, false); // <--- MUDANÇA: false impede a abertura do carrinho (Requer CartContext atualizado)
     
     toast({
       title: "Adicionado!",
@@ -54,7 +54,7 @@ export default function Plans() {
       interval: 'monthly',
       quantity: 1,
       type: 'subscription'
-    }, false); // <--- MUDANÇA: false impede a abertura do carrinho
+    }, false); // <--- MUDANÇA: false impede a abertura do carrinho (Requer CartContext atualizado)
     
     // 2. Vai para a página do carrinho
     navigate("/cart"); 
