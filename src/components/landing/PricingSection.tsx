@@ -23,31 +23,36 @@ const plan = {
 };
 
 export function PricingSection() {
-  const { addItem, setIsOpen } = useCart();
+  // Removi o setIsOpen daqui, pois vamos navegar para a página do carrinho
+  const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  // Removi o toast daqui, pois não vamos usar nessa ação direta
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async () => {
     setIsLoading(true);
     
+    // Pequeno delay para feedback visual
     await new Promise(resolve => setTimeout(resolve, 600));
 
     if (isAuthenticated) {
+      // 1. Adiciona ao carrinho (SEM abrir sidebar, graças ao 'false')
       addItem({
         id: plan.id,
         name: plan.name,
         price: plan.price,
         quantity: 1,
         type: 'subscription'
-      });
-      setIsOpen(true);
-      toast({
-        title: "Plano adicionado!",
-        description: "Finalize sua assinatura no carrinho.",
-      });
+      }, false); 
+
+      // 2. Redireciona direto para o Carrinho/Checkout
+      // Isso evita a mensagem de toast cobrindo o botão
+      navigate('/cart');
+      
     } else {
+      // Se não estiver logado, manda para o registro (mantido igual)
       navigate('/register', { 
         state: { 
           from: '/',
@@ -61,7 +66,6 @@ export function PricingSection() {
   };
 
   return (
-    // AJUSTE: py-12 no mobile, py-24 no desktop
     <section id="precos" className="py-12 md:py-24 px-4 bg-[#040949] text-white">
       <div className="container mx-auto">
         <motion.div
@@ -83,7 +87,6 @@ export function PricingSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            // AJUSTE: p-6 no mobile, p-8 no desktop
             className="relative w-full max-w-sm bg-white text-[#040949] rounded-2xl p-6 md:p-8 shadow-2xl ring-4 ring-[#0026f7]/20"
           >
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -104,7 +107,6 @@ export function PricingSection() {
             <p className="text-gray-500 text-sm mb-6 text-center">{plan.description}</p>
             
             <div className="flex items-baseline justify-center gap-1 mb-8">
-              {/* AJUSTE: text-4xl no mobile */}
               <span className="text-4xl md:text-5xl font-extrabold text-[#040949]">R$ {plan.price.toFixed(2).replace('.', ',')}</span>
               <span className="text-gray-500 font-medium">/mês</span>
             </div>
