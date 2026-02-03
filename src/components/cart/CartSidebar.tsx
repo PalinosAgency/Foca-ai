@@ -37,8 +37,10 @@ export function CartSidebar() {
         </Button>
       </SheetTrigger>
       
-      {/* Sidebar com fundo cinza bem claro para destacar os cards brancos */}
-      <SheetContent className="flex flex-col w-full sm:max-w-md bg-[#F8F9FA] text-gray-900 shadow-2xl border-l border-gray-100 p-0">
+      {/* Adicionei '[&>button]:hidden' nas classes abaixo. 
+         Isso força o botão "X" padrão da biblioteca a desaparecer.
+      */}
+      <SheetContent className="flex flex-col w-full sm:max-w-md bg-[#F8F9FA] text-gray-900 shadow-2xl border-l border-gray-100 p-0 [&>button]:hidden">
         
         {/* CABEÇALHO */}
         <SheetHeader className="px-6 py-5 border-b border-gray-200 bg-white flex flex-row items-center justify-between space-y-0">
@@ -48,7 +50,8 @@ export function CartSidebar() {
             </div>
             Seu Carrinho
           </SheetTitle>
-          <div className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          {/* Badge de quantidade */}
+          <div className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-100">
             {items.length} {items.length === 1 ? 'item' : 'itens'}
           </div>
         </SheetHeader>
@@ -76,7 +79,7 @@ export function CartSidebar() {
               </Button>
             </div>
           ) : (
-            // LISTA DE ITENS - ESTILO CART.TSX ADAPTADO PARA SIDEBAR
+            // LISTA DE ITENS
             <ScrollArea className="h-full px-5 py-6">
               <div className="space-y-4">
                 {items.map((item) => (
@@ -84,15 +87,15 @@ export function CartSidebar() {
                     
                     {/* Linha Superior: Imagem e Textos */}
                     <div className="flex gap-4">
-                      {/* Imagem */}
+                      {/* Imagem com fundo Azul Escuro e Icone Correto */}
                       <div className="w-16 h-16 bg-[#040949] rounded-xl flex items-center justify-center p-3 shrink-0 shadow-sm">
                         <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
                       </div>
 
                       {/* Informações */}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <h4 className="font-bold text-base text-[#040949] leading-tight truncate">{item.name}</h4>
-                        <span className="text-[10px] font-semibold text-[#0026f7] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 mt-1 inline-block">
+                        <span className="text-[10px] font-semibold text-[#0026f7] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 mt-1 inline-block w-fit">
                           Assinatura Mensal
                         </span>
                       </div>
@@ -100,7 +103,7 @@ export function CartSidebar() {
 
                     <Separator className="bg-gray-100" />
 
-                    {/* Linha Inferior: Ações e Preço */}
+                    {/* Linha Inferior: Botão Remover e Preço Separados */}
                     <div className="flex justify-between items-center">
                       <button 
                         onClick={() => removeItem(item.id)}
