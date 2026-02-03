@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useGoogleLogin } from '@react-oauth/google'; // ÚNICA IMPORTAÇÃO NOVA
+import { useGoogleLogin } from '@react-oauth/google';
 
 const loginSchema = z.object({
   email: z.string().email('Insira um e-mail válido'),
@@ -27,7 +27,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { login, loginWithGoogle } = useAuth(); // ADICIONADO: loginWithGoogle
+  const { login, loginWithGoogle } = useAuth();
   const { addItem, setIsOpen } = useCart();
   const [searchParams] = useSearchParams();
   const registered = searchParams.get('registered');
@@ -40,14 +40,11 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  // --- LÓGICA DO GOOGLE ADICIONADA AQUI ---
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("🟢 [Login Page] Google retornou sucesso!", tokenResponse);
       try {
         await loginWithGoogle(tokenResponse.access_token);
         
-        // Mantendo a mesma lógica de redirecionamento do seu login normal
         const state = location.state as { from?: string; action?: string; plan?: any } | null;
         if (state?.action === 'add_to_cart' && state.plan) {
           addItem({
@@ -65,20 +62,17 @@ export default function Login() {
           toast({ title: "Bem-vindo de volta!" });
         }
       } catch (error) {
-        console.error("🔴 [Login Page] Erro ao processar login no contexto:", error);
         toast({
           title: "Erro no Login Google",
-          description: "Não foi possível conectar sua conta. Verifique o console.",
+          description: "Não foi possível conectar sua conta.",
           variant: "destructive"
         });
       }
     },
-    onError: (errorResponse) => {
-      console.error("🔴 [Login Page] Google retornou erro no popup:", errorResponse);
+    onError: () => {
       toast({ title: "Erro", description: "Falha ao abrir popup do Google.", variant: "destructive" });
     }
   });
-  // ----------------------------------------
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
@@ -126,15 +120,11 @@ export default function Login() {
         </Alert>
       )}
 
-      {/* Google Login */}
       <div className="mb-6 space-y-4">
         <Button 
           variant="outline" 
           type="button" 
-          onClick={() => {
-            console.log("🔵 [Login Page] Botão Google clicado!");
-            googleLogin(); // CHAMADA ATUALIZADA
-          }}
+          onClick={() => googleLogin()}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

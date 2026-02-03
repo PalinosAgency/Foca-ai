@@ -13,11 +13,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Eye, EyeOff, Mail, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
-// --- SCHEMA ATUALIZADO (SEM TELEFONE) ---
 const registerSchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
   email: z.string().email('E-mail inválido'),
-  // phone: REMOVIDO
   password: z.string().min(8, 'Mínimo de 8 caracteres'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -57,7 +55,6 @@ export default function Register() {
 
   const googleRegister = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("🟢 [Register Page] Sucesso no Popup do Google!", tokenResponse);
       try {
         await loginWithGoogle(tokenResponse.access_token);
         
@@ -68,7 +65,6 @@ export default function Register() {
         
         navigate('/'); 
       } catch (error: any) {
-        console.error("🔴 [Register Page] Erro ao criar conta Google no backend:", error);
         toast({
           title: 'Erro no Google',
           description: error.message || 'Não foi possível criar a conta.',
@@ -76,8 +72,7 @@ export default function Register() {
         });
       }
     },
-    onError: (errorResponse) => {
-      console.error("🔴 [Register Page] Erro ao fechar/cancelar popup Google:", errorResponse);
+    onError: () => {
       toast({
         title: "Erro",
         description: "Falha ao conectar com Google. Tente novamente.",
@@ -89,12 +84,10 @@ export default function Register() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      // --- ENVIO PARA API (SEM TELEFONE) ---
       await api.register({
         name: data.name,
         email: data.email,
         password: data.password,
-        // phone: REMOVIDO
       });
       
       setRegisteredEmail(data.email);
@@ -197,10 +190,7 @@ export default function Register() {
         <Button 
           variant="outline" 
           type="button" 
-          onClick={() => {
-            console.log("🔵 [Register Page] Botão Google clicado");
-            googleRegister();
-          }}
+          onClick={() => googleRegister()}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -245,8 +235,6 @@ export default function Register() {
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
-
-        {/* INPUT DE TELEFONE REMOVIDO DAQUI */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
