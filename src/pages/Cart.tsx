@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Trash2, Loader2, ShoppingCart } from "lucide-react";
+import { Trash2, Loader2, ShoppingCart, ArrowLeft } from "lucide-react"; // Adicionei ArrowLeft
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -67,8 +67,22 @@ export default function Cart() {
       <main className="flex-1 container mx-auto px-4 py-8 md:py-24 max-w-5xl pb-32 lg:pb-8"> 
         {/* pb-32 no mobile para dar espaço ao footer fixo */}
         
+        {/* Botão Voltar ao Início (Adicionado) */}
+        <div className="mt-20 md:mt-0 mb-4">
+          <Button 
+            variant="ghost" 
+            asChild 
+            className="pl-0 hover:bg-transparent text-gray-500 hover:text-[#0026f7] -ml-2 transition-colors"
+          >
+            <Link to="/" className="flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Voltar ao início
+            </Link>
+          </Button>
+        </div>
+
         {/* Header Compacto */}
-        <div className="flex items-center gap-4 mb-6 md:mb-10 border-b border-gray-200 pb-4 md:pb-6 mt-16 md:mt-0">
+        <div className="flex items-center gap-4 mb-6 md:mb-10 border-b border-gray-200 pb-4 md:pb-6">
           <div className="bg-[#0026f7] p-2 md:p-3 rounded-xl md:rounded-2xl text-white shadow-lg shadow-blue-500/20">
             <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
           </div>
@@ -122,10 +136,10 @@ export default function Cart() {
                       </div>
                       
                       <button 
-                         onClick={() => removeItem(item.id)}
-                         className="mt-3 text-gray-400 hover:text-red-600 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-red-50 pr-2 py-1 rounded-lg transition-all"
+                          onClick={() => removeItem(item.id)}
+                          className="mt-3 text-gray-400 hover:text-red-600 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-red-50 pr-2 py-1 rounded-lg transition-all"
                       >
-                         <Trash2 className="w-3.5 h-3.5" /> Remover
+                          <Trash2 className="w-3.5 h-3.5" /> Remover
                       </button>
                   </div>
                 </div>
@@ -190,15 +204,15 @@ export default function Cart() {
       {items.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 pb-6 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50 safe-area-bottom">
            <div className="flex items-center justify-between mb-4">
-              <div>
+             <div>
                  <p className="text-xs text-gray-500 font-medium uppercase">Total a pagar</p>
                  <p className="text-2xl font-extrabold text-[#0026f7]">
                     {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                  </p>
-              </div>
-              <div className="opacity-70 grayscale">
+             </div>
+             <div className="opacity-70 grayscale">
                  <img src="/Logo_Hotmart.png" alt="Hotmart" className="h-5 object-contain" />
-              </div>
+             </div>
            </div>
            <Button 
               onClick={handleCheckout}
