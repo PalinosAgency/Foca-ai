@@ -1,129 +1,238 @@
-import { Calendar, Clock, CheckCircle, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { upcomingEvents } from './mocks';
+import { 
+  Calendar as CalendarIcon, Clock, CheckCircle, CalendarDays, 
+  RefreshCw, Cloud, ChevronLeft, ChevronRight 
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function AgendaTab() {
+  // --- MOCK DATA ---
+  const eventsCount = 8;
+  const eventsTodayCount = 3;
+  const syncedCount = 5;
+  const lastUpdated = "10:45";
+
+  // Mock para "Próximos Compromissos" (UpcomingEventsCard)
+  const upcomingEvents = [
+    { id: '1', title: 'Reunião de Projeto', date: '28/01 às 14:00', synced: true },
+    { id: '2', title: 'Dentista', date: '29/01 às 09:00', synced: false },
+    { id: '3', title: 'Aula de Inglês', date: '30/01 às 19:00', synced: true },
+  ];
+
+  // Mock para "EventsList" (Eventos do dia selecionado)
+  const eventsList = [
+    { 
+      id: '1', 
+      title: 'Reunião de Projeto', 
+      time: '14:00 - 15:00', 
+      description: 'Alinhamento semanal com a equipe de desenvolvimento.',
+      synced: true 
+    },
+    { 
+      id: '2', 
+      title: 'Focar no Dashboard', 
+      time: '15:30 - 17:30', 
+      description: 'Finalizar a implementação dos componentes visuais.',
+      synced: false 
+    },
+    { 
+      id: '3', 
+      title: 'Academia', 
+      time: '18:00 - 19:00', 
+      description: 'Treino de perna.',
+      synced: true 
+    }
+  ];
+
+  // Mock visual do Calendário (Dias 1-31)
+  const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
+  const startOffset = 3; // Começa na Quarta-feira (exemplo)
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 mb-2">
-         <div className="flex items-center gap-3">
-           <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
-             <Calendar className="w-6 h-6 text-orange-500" />
-           </div>
-           <div>
-             <h2 className="text-2xl font-bold text-gray-900">Agenda</h2>
-             <p className="text-gray-500 text-sm">Seus compromissos</p>
-           </div>
-         </div>
-         
-         <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg">
-               <Clock className="w-4 h-4" />
-               <span>10:42</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 shadow-sm">
-              <Calendar className="w-4 h-4 opacity-50" />
-              <span>28 dez - 28 jan</span>
-            </div>
-         </div>
+    <div className="space-y-6 font-sans text-slate-900">
+      
+      {/* --- HEADER --- */}
+      <motion.div 
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+            <CalendarIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-[#040949]">Agenda</h1>
+            <p className="text-slate-500 mt-1">Próximos compromissos em tempo real</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+            <RefreshCw className="h-3 w-3 animate-spin" />
+            Atualizado às {lastUpdated}
+        </div>
+      </motion.div>
+
+      {/* --- METRICS ROW --- */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        {/* Total Agenda */}
+        <motion.div 
+          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-violet-300 transition-colors"
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-slate-500">Total na Agenda</span>
+            <Clock className="h-5 w-5 text-violet-500" />
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-2xl font-bold text-violet-600">{eventsCount}</span>
+          </div>
+        </motion.div>
+
+        {/* Eventos Hoje */}
+        <motion.div 
+          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-orange-300 transition-colors"
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-slate-500">Eventos Hoje</span>
+            <CalendarDays className="h-5 w-5 text-orange-500" />
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-2xl font-bold text-orange-600">{eventsTodayCount}</span>
+          </div>
+        </motion.div>
+
+        {/* Sincronizados */}
+        <motion.div 
+          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-green-300 transition-colors"
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-slate-500">Sincronizados</span>
+            <CheckCircle className="h-5 w-5 text-green-500" />
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-2xl font-bold text-green-600">{syncedCount}</span>
+          </div>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
-         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center justify-between">
-           <div>
-             <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Futuros</span>
-             <p className="text-2xl font-extrabold text-[#0026f7]">4</p>
-           </div>
-           <div className="p-2 bg-gray-50 rounded-lg"><Clock className="h-5 w-5 text-gray-400" /></div>
-         </div>
-         
-         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center justify-between">
-           <div>
-             <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Sincronizados</span>
-             <p className="text-2xl font-extrabold text-green-600">0</p>
-           </div>
-           <div className="p-2 bg-gray-50 rounded-lg"><CheckCircle className="h-5 w-5 text-gray-400" /></div>
-         </div>
+      {/* --- UPCOMING EVENTS CARD --- */}
+      <motion.div
+        className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <CalendarIcon className="h-5 w-5" />
+          </div>
+          <h3 className="font-semibold text-lg text-slate-900">Próximos Compromissos</h3>
+        </div>
 
-         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center justify-between">
-           <div>
-             <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Pendentes</span>
-             <p className="text-2xl font-extrabold text-amber-500">4</p>
-           </div>
-           <div className="p-2 bg-gray-50 rounded-lg"><AlertCircle className="h-5 w-5 text-gray-400" /></div>
-         </div>
-      </div>
-
-      <div className="bg-[#0026f7]/5 rounded-xl border border-[#0026f7]/10 p-6">
-         <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 bg-[#0026f7]/10 rounded-lg">
-                <Calendar className="w-4 h-4 text-[#0026f7]" />
+        <div className="space-y-3">
+          {upcomingEvents.map((event) => (
+            <div key={event.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate text-slate-900">{event.title}</p>
+                <p className="text-xs text-slate-500">{event.date}</p>
+              </div>
+              {event.synced && (
+                <CheckCircle className="h-4 w-4 text-green-500 ml-2" />
+              )}
             </div>
-            <h3 className="font-bold text-lg text-gray-900">Próximos Compromissos</h3>
-         </div>
-         
-         <div className="space-y-2">
-            {upcomingEvents.map((event) => (
-              <div key={event.id} className="flex items-center gap-4 p-3 bg-white rounded-lg shadow-sm border border-gray-100">
-                 <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${event.synced ? 'border-green-500 bg-green-50 text-green-600' : 'border-gray-200 bg-gray-50'}`}>
-                    {event.synced ? <CheckCircle className="w-4 h-4" /> : <div className="w-1.5 h-1.5 bg-gray-300 rounded-full" />}
-                 </div>
-                 <div className="flex-1">
-                    <p className="font-bold text-gray-900 text-sm">{event.title}</p>
-                    <p className="text-xs text-gray-500 font-medium">{event.datetime}</p>
-                 </div>
-                 <button className="text-xs font-bold text-[#0026f7] hover:underline px-3">Detalhes</button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* --- MAIN GRID (Calendar + Details) --- */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        
+        {/* Mock Visual Calendar */}
+        <motion.div
+          className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 flex justify-center h-fit shadow-sm"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+        >
+          <div className="w-full max-w-[300px]">
+            {/* Calendar Header Mock */}
+            <div className="flex items-center justify-between mb-4">
+                <button className="p-1 hover:bg-slate-100 rounded-md"><ChevronLeft className="h-4 w-4 text-slate-500"/></button>
+                <span className="text-sm font-medium text-slate-900">Janeiro 2026</span>
+                <button className="p-1 hover:bg-slate-100 rounded-md"><ChevronRight className="h-4 w-4 text-slate-500"/></button>
+            </div>
+            
+            {/* Calendar Grid Mock */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2 text-slate-400">
+                <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                {/* Empty slots for start offset */}
+                {Array.from({length: startOffset}).map((_, i) => <div key={`empty-${i}`} />)}
+                
+                {calendarDays.map((day) => {
+                    const isSelected = day === 28;
+                    return (
+                        <div 
+                           key={day} 
+                           className={`
+                             h-9 w-9 flex items-center justify-center rounded-md cursor-pointer transition-colors
+                             ${isSelected ? 'bg-violet-600 text-white shadow-md shadow-violet-200' : 'hover:bg-slate-100 text-slate-700'}
+                           `}
+                        >
+                            {day}
+                        </div>
+                    );
+                })}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Events List (Right Column) */}
+        <motion.div
+          className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-2 overflow-hidden shadow-sm"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        >
+          <h3 className="mb-4 text-lg font-semibold flex items-center gap-2 text-slate-900">
+            <div className="w-1.5 h-6 bg-violet-500 rounded-full"></div>
+            Eventos em 28 de Janeiro
+          </h3>
+          
+          <div className="space-y-3">
+            {eventsList.map((event) => (
+              <div
+                key={event.id}
+                className="group flex items-start gap-4 rounded-xl border border-slate-200 p-4 transition-all hover:shadow-sm bg-white border-l-4 border-l-violet-500"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+                
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="truncate font-semibold text-slate-900">{event.title}</h4>
+                    {event.synced && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">
+                        <Cloud className="h-3 w-3" /> Sync
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">
+                      {event.time}
+                    </span>
+                  </div>
+
+                  {event.description && (
+                    <p className="mt-2 text-sm text-slate-500 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      {event.description}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
-         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-4">
-               <button className="p-1.5 hover:bg-gray-100 rounded-lg"><ChevronLeft className="w-4 h-4 text-gray-500" /></button>
-               <h3 className="font-bold text-sm capitalize text-gray-900">janeiro 2026</h3>
-               <button className="p-1.5 hover:bg-gray-100 rounded-lg"><ChevronRight className="w-4 h-4 text-gray-500" /></button>
-            </div>
-
-            <div className="grid grid-cols-7 gap-1 text-center text-xs">
-               {['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].map((day) => (
-                  <div key={day} className="py-1 text-gray-400 font-bold text-[10px] uppercase">{day}</div>
-               ))}
-               {Array.from({length: 31}, (_, i) => {
-                  const day = i + 1;
-                  const isToday = day === 28;
-                  const isSelected = day === 28; 
-                  const hasEvent = [26, 28, 29].includes(day);
-
-                  return (
-                     <button
-                       key={i}
-                       className={`
-                         h-8 rounded-md text-xs font-medium relative transition-colors
-                         ${isSelected ? 'bg-[#0026f7] text-white shadow-sm' : 'text-gray-700 hover:bg-gray-100'}
-                         ${isToday && !isSelected ? 'bg-gray-100 font-bold' : ''}
-                       `}
-                     >
-                        {day}
-                        {hasEvent && !isSelected && (
-                           <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#0026f7]" />
-                        )}
-                     </button>
-                  )
-               })}
-            </div>
-         </div>
-
-         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
-               <Calendar className="w-8 h-8 text-gray-300" />
-            </div>
-            <h3 className="font-bold text-sm text-gray-900 mb-1">28 de Janeiro</h3>
-            <p className="text-xs text-gray-500">Sem eventos.</p>
-            <button className="mt-4 px-4 py-2 bg-[#0026f7] text-white rounded-lg font-bold text-xs shadow-md hover:bg-[#0026f7]/90 transition-colors">
-               + Novo Evento
-            </button>
-         </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
