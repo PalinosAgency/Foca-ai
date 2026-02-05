@@ -1,42 +1,39 @@
 import pool from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-
-// Em produção, esta chave deve vir do arquivo .env
-const JWT_SECRET = process.env.JWT_SECRET || 'chave-secreta-padrao-dev';
+import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
+  // CORS Setup
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Método incorreto' });
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   const { email, password } = req.body;
 
   try {
-    // 1. Busca usuário
+    // 1. Buscar usuário
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
 
-    // 2. Se não achar usuário
-    if (!user) {
-      return res.status(401).json({ message: 'Credenciais inválidas.' });
+    if (!user) return res.status(401).json({ message: 'Credenciais inválidas.' });
+
+    // 2. Verificar senha (se o usuário tiver senha)
+    if (!user.password) {
+      return res.status(401).json({ message: 'Esta conta usa login social (Google).' });
     }
 
-    // 3. Compara a senha
     const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return res.status(401).json({ message: 'Credenciais inválidas.' });
-    }
+    if (!isValid) return res.status(401).json({ message: 'Credenciais inválidas.' });
 
-    // 4. Gera o Token (O crachá de acesso)
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // 3. Gerar Token (Usando a mesma função que o Google Login usa)
+    const token = signToken({ 
+      userId: user.id, 
+      email: user.email 
+    });
 
     return res.status(200).json({
       token,
@@ -49,7 +46,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[ERRO NO LOGIN]', error);
-    return res.status(500).json({ message: 'Erro no servidor.' });
+    console.error('[LOGIN ERROR]', error);
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 }
