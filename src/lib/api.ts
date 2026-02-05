@@ -83,7 +83,8 @@ class ApiClient {
     });
   }
 
-  async login(data: { identifier: string; password: string }) {
+  // CORREÇÃO: Alterado de 'identifier' para 'email' para bater com o Backend
+  async login(data: { email: string; password: string }) {
     const response = await this.request<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),

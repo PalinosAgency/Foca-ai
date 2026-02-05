@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, User, Subscription } from '@/lib/api';
 import { googleLogout } from '@react-oauth/google';
@@ -8,7 +9,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
+  // CORREÇÃO: Alterado de 'identifier' para 'email'
+  login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
@@ -81,10 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (identifier: string, password: string) => {
+  // CORREÇÃO: Função atualizada para usar 'email'
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await api.login({ identifier, password });
+      // Agora enviamos a chave correta { email, password }
+      const response = await api.login({ email, password });
       setUser(response.user);
       await refreshSession();
     } finally {
