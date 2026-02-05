@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
+  // Configuração CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -14,21 +15,39 @@ export default async function handler(req, res) {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    // 1. Forçar minúsculo para evitar erro de digitação
+    const emailLower = email.toLowerCase();
+    
+    console.log(`[LOGIN ATTEMPT] Tentando logar: ${emailLower}`);
+
+    // 2. Buscar usuário
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [emailLower]);
     const user = result.rows[0];
 
-    if (!user) return res.status(401).json({ message: 'Credenciais inválidas.' });
+    // --- DETETIVE DE LOGS ---
+    if (!user) {
+      console.log('[LOGIN FALHOU] Usuário não encontrado no banco.');
+      return res.status(401).json({ message: 'Credenciais inválidas.' });
+    }
 
-    // CORREÇÃO AQUI: Verifica se existe 'password_hash'
+    console.log(`[LOGIN SUCESSO] Usuário encontrado: ID ${user.id}`);
+
     if (!user.password_hash) {
-       // Se não tiver hash, talvez seja conta antiga ou só Google.
+       console.log('[LOGIN FALHOU] Usuário sem senha (pode ser conta Google).');
        return res.status(401).json({ message: 'Esta conta usa login social ou senha inválida.' });
     }
 
-    // Compara com a coluna certa
+    // 3. Comparar Senha
     const isValid = await bcrypt.compare(password, user.password_hash);
-    if (!isValid) return res.status(401).json({ message: 'Credenciais inválidas.' });
+    
+    if (!isValid) {
+      console.log('[LOGIN FALHOU] A senha digitada não bate com o hash do banco.');
+      return res.status(401).json({ message: 'Credenciais inválidas.' });
+    }
 
+    // 4. Sucesso!
+    console.log('[LOGIN APROVADO] Gerando token...');
+    
     const token = signToken({ 
       userId: user.id, 
       email: user.email 
@@ -45,7 +64,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[LOGIN ERROR]', error);
+    console.error('[LOGIN CRITICAL ERROR]', error);
     return res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 }
