@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
-  // CORS Setup
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -19,20 +18,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Verificar se usuário existe
     const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (userCheck.rows.length > 0) {
       return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
     }
 
-    // 2. Criptografar senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const verificationToken = uuidv4();
 
-    // 3. Inserir no Banco
+    // CORREÇÃO AQUI: Usando 'password_hash' em vez de 'password'
     const newUser = await pool.query(
-      `INSERT INTO users (name, email, phone, password, verification_token, created_at) 
+      `INSERT INTO users (name, email, phone, password_hash, verification_token, created_at) 
        VALUES ($1, $2, $3, $4, $5, NOW()) 
        RETURNING id, name, email`,
       [name, email, phone, hashedPassword, verificationToken]

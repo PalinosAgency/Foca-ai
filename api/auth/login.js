@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
-  // CORS Setup
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -15,21 +14,21 @@ export default async function handler(req, res) {
   const { email, password } = req.body;
 
   try {
-    // 1. Buscar usuário
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
 
     if (!user) return res.status(401).json({ message: 'Credenciais inválidas.' });
 
-    // 2. Verificar senha (se o usuário tiver senha)
-    if (!user.password) {
-      return res.status(401).json({ message: 'Esta conta usa login social (Google).' });
+    // CORREÇÃO AQUI: Verifica se existe 'password_hash'
+    if (!user.password_hash) {
+       // Se não tiver hash, talvez seja conta antiga ou só Google.
+       return res.status(401).json({ message: 'Esta conta usa login social ou senha inválida.' });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    // Compara com a coluna certa
+    const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) return res.status(401).json({ message: 'Credenciais inválidas.' });
 
-    // 3. Gerar Token (Usando a mesma função que o Google Login usa)
     const token = signToken({ 
       userId: user.id, 
       email: user.email 

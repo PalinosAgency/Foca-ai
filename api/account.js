@@ -13,7 +13,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // 1. Autenticação
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'Token não fornecido.' });
     
@@ -21,13 +20,11 @@ export default async function handler(req, res) {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET não configurado.');
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    
+    // CORREÇÃO IMPORTANTE: O token gerado usa 'userId', não 'id'
+    const userId = decoded.userId || decoded.id; 
 
-    // ============================================================
-    // NOVO: CENÁRIO C - BUSCAR DADOS (GET)
-    // ============================================================
     if (req.method === 'GET') {
-      // Busca Assinatura atualizada
       const subResult = await pool.query(
         `SELECT status, plan_id, current_period_end, auto_renew 
          FROM subscriptions 
@@ -35,7 +32,6 @@ export default async function handler(req, res) {
         [userId]
       );
 
-      // Busca Dados do Usuário atualizados
       const userResult = await pool.query(
         `SELECT name, phone, email, avatar_url FROM users WHERE id = $1`,
         [userId]
@@ -47,9 +43,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ============================================================
-    // CENÁRIO A: ATUALIZAR PERFIL (PUT)
-    // ============================================================
     if (req.method === 'PUT') {
       const { name, phone, avatar_url } = req.body;
       await pool.query(
@@ -63,12 +56,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'Perfil atualizado' });
     }
 
-    // ============================================================
-    // CENÁRIO B: GERENCIAR ASSINATURA (POST)
-    // ============================================================
     if (req.method === 'POST') {
       const { action } = req.body;
-      let autoRenewValue = action === 'reactivate'; // true se reactivate, false se cancel
+      let autoRenewValue = action === 'reactivate';
 
       const result = await pool.query(
         `UPDATE subscriptions 
