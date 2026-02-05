@@ -2,7 +2,6 @@ import pool from '../lib/db.js';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
-  // 1. Configuração de CORS (Mantendo a sua configuração blindada)
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -14,28 +13,45 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // 2. Autenticação Unificada (Serve para PUT e POST)
+    // 1. Autenticação
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: 'Token não fornecido.' });
-    }
+    if (!authHeader) return res.status(401).json({ message: 'Token não fornecido.' });
     
     const token = authHeader.split(' ')[1];
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET não configurado.');
-    }
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET não configurado.');
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
     // ============================================================
-    // CENÁRIO A: ATUALIZAR PERFIL (PUT) - Seu código original
+    // NOVO: CENÁRIO C - BUSCAR DADOS (GET)
+    // ============================================================
+    if (req.method === 'GET') {
+      // Busca Assinatura atualizada
+      const subResult = await pool.query(
+        `SELECT status, plan_id, current_period_end, auto_renew 
+         FROM subscriptions 
+         WHERE user_id = $1`,
+        [userId]
+      );
+
+      // Busca Dados do Usuário atualizados
+      const userResult = await pool.query(
+        `SELECT name, phone, email, avatar_url FROM users WHERE id = $1`,
+        [userId]
+      );
+
+      return res.status(200).json({
+        user: userResult.rows[0],
+        subscription: subResult.rows[0] || null
+      });
+    }
+
+    // ============================================================
+    // CENÁRIO A: ATUALIZAR PERFIL (PUT)
     // ============================================================
     if (req.method === 'PUT') {
       const { name, phone, avatar_url } = req.body;
-
-      console.log(`[ACCOUNT] Atualizando perfil: ${userId}`);
-
       await pool.query(
         `UPDATE users 
          SET name = COALESCE($1, name), 
@@ -44,33 +60,16 @@ export default async function handler(req, res) {
          WHERE id = $4`,
         [name, phone, avatar_url, userId]
       );
-
-      // Retorna dados atualizados
-      const result = await pool.query(
-        'SELECT id, name, email, phone, avatar_url FROM users WHERE id = $1', 
-        [userId]
-      );
-      
-      return res.status(200).json({ 
-        message: 'Perfil atualizado com sucesso',
-        user: result.rows[0]
-      });
+      return res.status(200).json({ message: 'Perfil atualizado' });
     }
 
     // ============================================================
-    // CENÁRIO B: GERENCIAR ASSINATURA (POST) - Lógica Netflix
+    // CENÁRIO B: GERENCIAR ASSINATURA (POST)
     // ============================================================
     if (req.method === 'POST') {
-      const { action } = req.body; // 'cancel' ou 'reactivate'
+      const { action } = req.body;
+      let autoRenewValue = action === 'reactivate'; // true se reactivate, false se cancel
 
-      console.log(`[ACCOUNT] Gerenciando assinatura (${action}): ${userId}`);
-
-      let autoRenewValue;
-      if (action === 'cancel') autoRenewValue = false;
-      else if (action === 'reactivate') autoRenewValue = true;
-      else return res.status(400).json({ message: 'Ação inválida' });
-
-      // Atualiza apenas a renovação, mantém o status active
       const result = await pool.query(
         `UPDATE subscriptions 
          SET auto_renew = $1, updated_at = NOW()
@@ -79,12 +78,10 @@ export default async function handler(req, res) {
         [autoRenewValue, userId]
       );
 
-      if (result.rowCount === 0) {
-        return res.status(404).json({ message: 'Nenhuma assinatura encontrada para este usuário.' });
-      }
+      if (result.rowCount === 0) return res.status(404).json({ message: 'Assinatura não encontrada.' });
 
       return res.status(200).json({ 
-        message: action === 'cancel' ? 'Renovação cancelada.' : 'Assinatura reativada.',
+        message: 'Atualizado com sucesso.',
         subscription: result.rows[0]
       });
     }
@@ -93,6 +90,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[API ERROR]', error);
-    return res.status(500).json({ message: 'Erro interno no servidor', detail: error.message });
+    return res.status(500).json({ message: 'Erro interno no servidor' });
   }
 }

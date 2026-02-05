@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -38,12 +38,10 @@
     font-family: 'Outfit', sans-serif;
     -webkit-tap-highlight-color: transparent;
     
-    /* MUDANÇA CRÍTICA: 13px no mobile */
-    /* Isso afasta os elementos e faz caber mais coisa na tela */
-    font-size: 12px; 
+    /* Configuração Responsiva */
+    font-size: 14px; /* Melhor leitura no mobile */
   }
 
-  /* No Desktop mantém o padrão legível */
   @media (min-width: 768px) {
     html {
       font-size: 16px;
@@ -64,7 +62,7 @@ img, video {
   display: block;
 }
 
-/* Mantém inputs em 16px para evitar zoom automático do iOS ao digitar */
+/* Evita zoom no iOS */
 input, select, textarea, button {
   font-size: 16px !important;
 }

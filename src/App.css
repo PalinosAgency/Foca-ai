@@ -1,10 +1,11 @@
 #root {
-  /* TRAVADO EM 1024px (Tablet/Laptop View) */
-  /* Isso é menor que 1280px, então fica mais "próximo" (mais zoom) */
-  width: 1024px; 
+  /* CORREÇÃO: Usar 100% de largura permite que o site se adapte ao celular. */
+  width: 100%;
+  max-width: 1280px; /* Limita apenas em telas gigantes */
   margin: 0 auto;
   padding: 0;
   text-align: center;
+  min-height: 100vh;
 }
 
 .logo {
