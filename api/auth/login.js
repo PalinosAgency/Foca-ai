@@ -3,48 +3,44 @@ import bcrypt from 'bcryptjs';
 import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
-  // Headers CORS padrão
+  // Configuração CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   const { email, password } = req.body;
 
   try {
-    const emailLower = email.toLowerCase();
-    console.log(`[LOGIN] Tentativa para: ${emailLower}`);
+    // 1. Verificações básicas
+    if (!process.env.JWT_SECRET) {
+        throw new Error('A variável JWT_SECRET não foi carregada na Vercel!');
+    }
 
-    // 1. Busca usuário
+    const emailLower = email.toLowerCase();
+    
+    // 2. Busca Usuário
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [emailLower]);
     const user = result.rows[0];
 
     if (!user) {
-      console.log('[LOGIN] Usuário não encontrado.');
-      return res.status(401).json({ message: 'Credenciais inválidas.' });
+      return res.status(401).json({ message: 'E-mail não encontrado.' });
     }
 
-    // 2. Verifica Senha
     if (!user.password_hash) {
-       console.log('[LOGIN] Conta sem senha (provável Login Social).');
-       return res.status(401).json({ message: 'Use o login com Google.' });
+       return res.status(401).json({ message: 'Conta sem senha (use Login Google).' });
     }
 
+    // 3. Compara Senha
     const isValid = await bcrypt.compare(password, user.password_hash);
+    
     if (!isValid) {
-      console.log('[LOGIN] Senha incorreta.');
-      return res.status(401).json({ message: 'Credenciais inválidas.' });
+      return res.status(401).json({ message: 'Senha incorreta.' });
     }
 
-    // 3. Gera Token (Protegido)
-    if (!process.env.JWT_SECRET) {
-        console.error('CRÍTICO: JWT_SECRET não configurado na Vercel!');
-        return res.status(500).json({ message: 'Erro de configuração no servidor.' });
-    }
-
+    // 4. Gera Token
     const token = signToken({ userId: user.id, email: user.email });
 
     return res.status(200).json({
@@ -53,7 +49,12 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[LOGIN ERROR]', error);
-    return res.status(500).json({ message: 'Erro interno no servidor.' });
+    console.error('ERRO DETALHADO:', error);
+    // AQUI ESTÁ O TRUQUE: Enviamos o erro real para o navegador
+    return res.status(500).json({ 
+        message: 'Erro interno identificado.',
+        debug_error: error.message, // Vai mostrar o motivo exato
+        stack: error.stack 
+    });
   }
 }
