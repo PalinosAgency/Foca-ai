@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   const data = req.body;
   console.log('[WEBHOOK HOTMART] Recebido:', JSON.stringify(data));
 
-  // Verificação de Segurança
+  // Verificação de Segurança (Token da Hotmart)
   if (HOTMART_TOKEN && data.hottok && data.hottok !== HOTMART_TOKEN) {
     return res.status(401).json({ message: 'Unauthorized: Invalid Token' });
   }
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
 
   try {
     // 1. Achar o usuário pelo e-mail
-    const userRes = await pool.query('SELECT id, name FROM users WHERE email = $1', [email]);
+    // Buscamos também o telefone atual para log de debug
+    const userRes = await pool.query('SELECT id, name, phone FROM users WHERE email = $1', [email]);
     
     if (userRes.rows.length === 0) {
       console.log(`[WEBHOOK] Usuário não encontrado para o email: ${email}`);
@@ -35,31 +36,39 @@ export default async function handler(req, res) {
 
     const user = userRes.rows[0];
 
-    // 2. APROVADO
+    // 2. LÓGICA DE APROVAÇÃO
     if (status === 'APPROVED' || status === 'COMPLETED') {
       
-      // --- CAPTURA E ATUALIZAÇÃO DO TELEFONE (NOVA LÓGICA) ---
+      // --- CAPTURA E ATUALIZAÇÃO DO TELEFONE ---
+      // Objetivo: Se o cliente colocou o telefone na compra, salvamos no perfil dele.
       let phoneToUpdate = null;
 
-      // Hotmart envia de várias formas, tentamos pegar a mais completa
+      // A Hotmart pode mandar o telefone de dois jeitos:
       if (data.phone_checkout_number) {
+        // Formato completo (ex: 5511999999999)
         phoneToUpdate = data.phone_checkout_number;
       } else if (data.phone_number) {
-        // Se vier separado (DDD + Numero), juntamos. Padrão Brasil +55
+        // Formato separado (DDD + Numero)
         const ddd = data.phone_local_code || '';
         const number = data.phone_number;
         phoneToUpdate = `55${ddd}${number}`; 
       }
 
-      // Se achamos um telefone, limpamos caracteres e adicionamos o + se faltar
       if (phoneToUpdate) {
-        // Remove tudo que não é número
+        // Limpeza: remove espaços, traços e parênteses, deixa só números
         let cleanPhone = phoneToUpdate.replace(/\D/g, '');
-        // Garante que começa com +
-        cleanPhone = `+${cleanPhone}`;
-
-        console.log(`[WEBHOOK] Atualizando telefone do usuário ${user.id} para: ${cleanPhone}`);
         
+        // Garante que tem o "+" no começo (Padrão internacional/WhatsApp)
+        if (!cleanPhone.startsWith('+')) {
+            cleanPhone = `+${cleanPhone}`;
+        }
+
+        console.log(`[WEBHOOK] Atualizando telefone do usuário ${user.id} (${user.name}). De: ${user.phone} Para: ${cleanPhone}`);
+        
+        // AQUI ACONTECE A MÁGICA:
+        // Atualizamos o telefone no banco. Isso cobre dois casos:
+        // 1. Ele não tinha telefone: Agora tem.
+        // 2. Ele tinha um antigo: Atualizamos para o da compra (mais confiável para contato imediato).
         await pool.query(
             'UPDATE users SET phone = $1 WHERE id = $2',
             [cleanPhone, user.id]
@@ -67,7 +76,7 @@ export default async function handler(req, res) {
       }
       // -------------------------------------------------------
 
-      // Atualizar Assinatura
+      // 3. ATIVAR A ASSINATURA (PREMIUM)
       await pool.query(
         `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end)
          VALUES ($1, 'active', 'premium', NOW() + INTERVAL '35 days')
@@ -76,7 +85,7 @@ export default async function handler(req, res) {
         [user.id]
       );
 
-      // Enviar E-mail de Boas-vindas
+      // 4. ENVIAR E-MAIL DE CONFIRMAÇÃO
       await sendEmail({
         to: email,
         subject: 'Matrícula Ativada! 🚀',
@@ -87,7 +96,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. CANCELADO / REEMBOLSADO
+    // LÓGICA DE CANCELAMENTO
     else if (['CANCELED', 'REFUNDED', 'CHARGEBACK', 'EXPIRED'].includes(status)) {
       await pool.query(
         `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`,
