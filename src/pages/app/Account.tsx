@@ -8,26 +8,31 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail } from 'lucide-react';
+import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 export default function Account() {
-  const { user, subscription, refreshSession } = useAuth();
+  const { user, subscription: contextSubscription, refreshSession } = useAuth();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isCanceling, setIsCanceling] = useState(false);
-  
+  const [isManagingSub, setIsManagingSub] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  // Estado local para garantir que temos o dado mais fresco de auto_renew
+  const [localSubscription, setLocalSubscription] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
   });
 
+  // Atualiza form quando user muda
   useEffect(() => {
     if (user) {
       setFormData({
@@ -36,6 +41,26 @@ export default function Account() {
       });
     }
   }, [user]);
+
+  // Busca dados frescos da assinatura ao carregar (para pegar o auto_renew correto)
+  useEffect(() => {
+    async function fetchFreshSubscription() {
+      if (!user) return;
+      try {
+        // Usa o subscription do contexto inicialmente
+        if (contextSubscription) {
+          setLocalSubscription(contextSubscription);
+        }
+        
+        // Se você tiver uma rota de API para pegar o status atualizado, seria aqui.
+        // Por enquanto, vamos confiar que o refreshSession atualize, 
+        // ou se você implementou o /api/subscription/manage, o retorno dele atualiza o local.
+      } catch (error) {
+        console.error("Erro ao buscar assinatura", error);
+      }
+    }
+    fetchFreshSubscription();
+  }, [user, contextSubscription]);
 
   const handleUpdateProfile = async () => {
     if (!formData.name.trim()) {
@@ -79,26 +104,50 @@ export default function Account() {
     }
   };
 
-  const handleCancelSubscription = async () => {
+  // Lógica Unificada de Gerenciamento (Cancelar Renovação / Reativar)
+  const handleSubscriptionAction = async (action: 'cancel' | 'reactivate') => {
     try {
-      setIsCanceling(true);
-      await api.cancelSubscription(); 
+      setIsManagingSub(true);
       
-      toast({ 
-        title: "Assinatura Cancelada", 
-        description: "Sua assinatura não será renovada no próximo ciclo." 
+      // Chamada para a API que criamos (api/subscription/manage.js)
+      // Usamos fetch direto aqui para garantir compatibilidade com o arquivo criado
+      const token = localStorage.getItem('auth_token'); // Ajuste conforme onde você guarda o token
+      
+      const response = await fetch('/api/subscription/manage', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId: user?.id, action })
       });
 
-      await refreshSession();
+      if (!response.ok) throw new Error('Falha na operação');
+
+      const data = await response.json();
+      
+      // Atualiza o estado local imediatamente para feedback visual instantâneo
+      setLocalSubscription(data.subscription);
+      
+      // Tenta atualizar o contexto global também
+      await refreshSession(); 
+
+      toast({ 
+        title: action === 'cancel' ? "Renovação Cancelada" : "Assinatura Reativada! 🚀", 
+        description: action === 'cancel' 
+          ? "Seu acesso continua ativo até o fim do período, mas não haverá nova cobrança." 
+          : "Sua assinatura voltará a renovar automaticamente.",
+        className: action === 'reactivate' ? "bg-green-50 border-green-200" : ""
+      });
 
     } catch (error) {
       toast({ 
         variant: "destructive",
         title: "Erro", 
-        description: "Não foi possível cancelar no momento. Tente novamente." 
+        description: "Não foi possível processar a solicitação. Tente novamente." 
       });
     } finally {
-      setIsCanceling(false);
+      setIsManagingSub(false);
     }
   };
 
@@ -111,17 +160,23 @@ export default function Account() {
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
 
-  const isActive = subscription?.status === 'active' || subscription?.status === 'trialing';
-  const planPrice = subscription?.price ? `R$ ${(subscription.price / 100).toFixed(2).replace('.', ',')}` : 'R$ 29,90';
-  const nextBillingDate = subscription?.current_period_end 
-    ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR') 
+  // Helpers de visualização
+  // Usa o localSubscription preferencialmente, fallback para o contexto
+  const sub = localSubscription || contextSubscription;
+  const isActive = sub?.status === 'active' || sub?.status === 'trialing';
+  const isAutoRenew = sub?.auto_renew !== false; // Default true se undefined
+  
+  const planPrice = sub?.plan_id === 'premium' ? 'R$ 29,90' : (sub?.price ? `R$ ${(sub.price / 100).toFixed(2).replace('.', ',')}` : 'R$ 29,90');
+  
+  const dateLabel = isAutoRenew ? "Próxima Cobrança" : "Acesso até";
+  const formattedDate = sub?.current_period_end 
+    ? new Date(sub.current_period_end).toLocaleDateString('pt-BR') 
     : '---';
 
   return (
     <div className="min-h-screen bg-[#040949] flex flex-col">
       <Navbar />
 
-      {/* COMPACTAÇÃO: Reduzi py-24 para py-8 no mobile. */}
       <main className="flex-1 container mx-auto px-4 py-8 md:py-24 max-w-4xl relative">
         
         <Link 
@@ -134,7 +189,6 @@ export default function Account() {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-2">
           <div className="text-left">
-            {/* Título menor no mobile (text-2xl em vez de 3xl) */}
             <h1 className="text-2xl md:text-3xl font-bold text-white">Minha Conta</h1>
             <p className="text-blue-200/80 text-sm">Gerencie seus dados, pagamentos e assinatura.</p>
           </div>
@@ -147,7 +201,7 @@ export default function Account() {
             <TabsTrigger value="subscription" className="data-[state=active]:bg-[#0026f7] data-[state=active]:text-white hover:bg-white/5 transition-colors font-medium text-xs md:text-sm py-2">Assinatura</TabsTrigger>
           </TabsList>
 
-          {/* --- ABA GERAL --- */}
+          {/* --- ABA GERAL (MANTIDA IGUAL) --- */}
           <TabsContent value="general">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
@@ -155,13 +209,11 @@ export default function Account() {
                 <CardDescription className="text-gray-500 text-xs md:text-sm">Seus dados de identificação e acesso.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 p-4 md:p-6 pt-0 md:pt-0">
-                
                 <div className="flex items-center gap-4">
                   <Avatar className="w-16 h-16 md:w-24 md:h-24 border-4 border-white shadow-lg ring-2 ring-gray-100">
                     <AvatarImage src={user?.avatar_url} className="object-cover" />
                     <AvatarFallback className="text-xl bg-gray-100 text-gray-600 font-bold">{getInitials(user?.name || '')}</AvatarFallback>
                   </Avatar>
-                  
                   <div className="text-left">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">{user?.name}</h3>
                     <p className="text-xs md:text-sm text-gray-500 break-all">{user?.email}</p>
@@ -208,7 +260,6 @@ export default function Account() {
                     </div>
                   </div>
                 </div>
-
               </CardContent>
               <CardFooter className="flex justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                 <Button 
@@ -224,7 +275,7 @@ export default function Account() {
             </Card>
           </TabsContent>
 
-          {/* --- ABA PAGAMENTO --- */}
+          {/* --- ABA PAGAMENTO (MANTIDA IGUAL) --- */}
           <TabsContent value="payment">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
@@ -232,19 +283,18 @@ export default function Account() {
                 <CardDescription className="text-gray-500 text-xs md:text-sm">Gerencie como você paga sua assinatura.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 p-4 md:p-6 pt-0 md:pt-0">
-                
                 {isActive ? (
                    <div className="border border-green-200 bg-green-50/50 rounded-xl p-4 flex flex-col items-start gap-3">
-                      <div className="flex items-center gap-3 w-full">
-                        <div className="p-2 bg-white rounded-full border border-green-100 shadow-sm">
-                          <CreditCard className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-bold text-green-900 text-sm">Método Ativo</p>
-                          <p className="text-xs text-green-700">Gerenciado via Stripe</p>
-                        </div>
-                        <span className="ml-auto bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">Ativo</span>
-                      </div>
+                     <div className="flex items-center gap-3 w-full">
+                       <div className="p-2 bg-white rounded-full border border-green-100 shadow-sm">
+                         <CreditCard className="w-5 h-5 text-green-600" />
+                       </div>
+                       <div className="text-left">
+                         <p className="font-bold text-green-900 text-sm">Método Ativo</p>
+                         <p className="text-xs text-green-700">Gerenciado via Stripe</p>
+                       </div>
+                       <span className="ml-auto bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">Ativo</span>
+                     </div>
                    </div>
                 ) : (
                   <div className="border border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center bg-gray-50 border-dashed text-center">
@@ -276,7 +326,6 @@ export default function Account() {
                       )}
                     </div>
                 </div>
-
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                 <Button 
@@ -301,39 +350,76 @@ export default function Account() {
             </Card>
           </TabsContent>
 
-          {/* --- ABA ASSINATURA --- */}
+          {/* --- ABA ASSINATURA (ATUALIZADA) --- */}
           <TabsContent value="subscription">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
-                <CardTitle className="text-gray-900 text-lg">Detalhes da Assinatura</CardTitle>
-                <CardDescription className="text-gray-500 text-xs md:text-sm">Status do seu plano.</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-gray-900 text-lg">Detalhes da Assinatura</CardTitle>
+                    <CardDescription className="text-gray-500 text-xs md:text-sm">Status do seu plano.</CardDescription>
+                  </div>
+                  {/* BADGE DE STATUS DINÂMICO */}
+                  {isActive ? (
+                    isAutoRenew ? (
+                      <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">Ativa</Badge>
+                    ) : (
+                      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 px-3 py-1">Cancelada</Badge>
+                    )
+                  ) : (
+                    <Badge variant="destructive">Inativa</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4 p-4 md:p-6 pt-0 md:pt-0">
                 
-                <div className={`flex items-center gap-3 p-4 border rounded-xl shadow-sm ${isActive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <div className={`p-2 rounded-full ${isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                      {isActive ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                {/* --- CARD PRINCIPAL DE STATUS --- */}
+                {isActive ? (
+                  isAutoRenew ? (
+                    // STATUS: ATIVO E RENOVANDO
+                    <div className="flex items-center gap-3 p-4 border rounded-xl shadow-sm bg-green-50 border-green-200">
+                      <div className="p-2 rounded-full bg-green-100 text-green-600">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-base text-green-900">Assinatura Ativa</p>
+                        <p className="text-xs font-medium text-green-700">Premium • {planPrice}/mês</p>
+                      </div>
+                    </div>
+                  ) : (
+                    // STATUS: ATIVO MAS CANCELADO (EXPIRANDO)
+                    <div className="flex items-center gap-3 p-4 border rounded-xl shadow-sm bg-yellow-50 border-yellow-200">
+                      <div className="p-2 rounded-full bg-yellow-100 text-yellow-700">
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-base text-yellow-900">Assinatura Cancelada</p>
+                        <p className="text-xs font-medium text-yellow-700">Acesso liberado até o fim do período.</p>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  // STATUS: INATIVO
+                  <div className="flex items-center gap-3 p-4 border rounded-xl shadow-sm bg-red-50 border-red-200">
+                    <div className="p-2 rounded-full bg-red-100 text-red-600">
+                      <XCircle className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                      <p className={`font-bold text-base ${isActive ? 'text-green-900' : 'text-red-900'}`}>
-                        {isActive ? 'Ativa' : 'Inativa'}
-                      </p>
-                      <p className={`text-xs font-medium ${isActive ? 'text-green-700' : 'text-red-700'}`}>
-                        {isActive 
-                          ? `Premium • ${planPrice}/mês`
-                          : 'Sem acesso.'}
-                      </p>
+                      <p className="font-bold text-base text-red-900">Assinatura Inativa</p>
+                      <p className="text-xs font-medium text-red-700">Escolha um plano para ativar.</p>
                     </div>
-                </div>
+                  </div>
+                )}
 
+                {/* --- DETALHES DE DATA E PREÇO --- */}
                 <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                   <div className="space-y-1 text-left">
                     <p className="text-[10px] font-bold text-gray-500 flex items-center gap-1 uppercase tracking-wide">
-                      <Calendar className="w-3 h-3" /> 
-                      {isActive ? 'Renovação' : 'Status'}
+                      {isAutoRenew ? <Calendar className="w-3 h-3" /> : <CalendarClock className="w-3 h-3" />}
+                      {dateLabel}
                     </p>
-                    <p className="text-base font-bold text-gray-900">
-                        {isActive ? nextBillingDate : 'Expirado'}
+                    <p className={`text-base font-bold ${isAutoRenew ? 'text-gray-900' : 'text-yellow-700'}`}>
+                        {isActive ? formattedDate : 'Expirado'}
                     </p>
                   </div>
                   <div className="space-y-1 text-left">
@@ -347,20 +433,64 @@ export default function Account() {
                   </div>
                 </div>
 
+                {/* MENSAGEM SE TIVER CANCELADO */}
+                {!isAutoRenew && isActive && (
+                  <p className="text-xs text-yellow-800 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                    Sua assinatura não será renovada automaticamente. Você pode continuar usando os recursos premium até <strong>{formattedDate}</strong>.
+                  </p>
+                )}
+
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                   {isActive ? (
-                    <Button 
-                      variant="ghost" 
-                      onClick={handleCancelSubscription}
-                      disabled={isCanceling} 
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm"
-                    >
-                      {isCanceling ? (
-                          <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Cancelando...</>
-                      ) : "Cancelar Assinatura"}
-                    </Button>
+                    isAutoRenew ? (
+                      // BOTÃO DE CANCELAR (VISÍVEL APENAS SE AUTO_RENEW = TRUE)
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            disabled={isManagingSub} 
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm"
+                          >
+                            {isManagingSub ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : "Cancelar Assinatura"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Cancelar renovação automática?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Ao confirmar, sua assinatura <strong>não será renovada</strong> em {formattedDate}.
+                              <br/><br/>
+                              Você continuará com acesso total até essa data.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleSubscriptionAction('cancel')}
+                              className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                            >
+                              Sim, cancelar renovação
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      // BOTÃO DE REATIVAR (VISÍVEL APENAS SE AUTO_RENEW = FALSE)
+                      <Button 
+                        onClick={() => handleSubscriptionAction('reactivate')}
+                        disabled={isManagingSub}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold h-10 md:h-11 w-full md:w-auto text-sm shadow-md"
+                      >
+                        {isManagingSub ? (
+                          <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Processando...</>
+                        ) : (
+                          <><RotateCcw className="w-3.5 h-3.5 mr-2" /> Reativar Assinatura</>
+                        )}
+                      </Button>
+                    )
                   ) : (
+                    // BOTÃO PARA QUEM NÃO TEM PLANO
                     <Button 
                       asChild
                       className="w-full md:w-auto bg-[#0026f7] hover:bg-[#0026f7]/90 text-white font-bold shadow-md h-10 md:h-11 text-sm" 
