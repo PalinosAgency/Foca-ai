@@ -25,10 +25,11 @@ export default async function handler(req, res) {
   if (!email) return res.status(200).send('Ignored: No Email');
 
   try {
-    // 1. Achar o usuário
+    // 1. Achar o usuário pelo e-mail
     const userRes = await pool.query('SELECT id, name FROM users WHERE email = $1', [email]);
     
     if (userRes.rows.length === 0) {
+      console.log(`[WEBHOOK] Usuário não encontrado para o email: ${email}`);
       return res.status(200).send('User not found'); 
     }
 
@@ -37,6 +38,35 @@ export default async function handler(req, res) {
     // 2. APROVADO
     if (status === 'APPROVED' || status === 'COMPLETED') {
       
+      // --- CAPTURA E ATUALIZAÇÃO DO TELEFONE (NOVA LÓGICA) ---
+      let phoneToUpdate = null;
+
+      // Hotmart envia de várias formas, tentamos pegar a mais completa
+      if (data.phone_checkout_number) {
+        phoneToUpdate = data.phone_checkout_number;
+      } else if (data.phone_number) {
+        // Se vier separado (DDD + Numero), juntamos. Padrão Brasil +55
+        const ddd = data.phone_local_code || '';
+        const number = data.phone_number;
+        phoneToUpdate = `55${ddd}${number}`; 
+      }
+
+      // Se achamos um telefone, limpamos caracteres e adicionamos o + se faltar
+      if (phoneToUpdate) {
+        // Remove tudo que não é número
+        let cleanPhone = phoneToUpdate.replace(/\D/g, '');
+        // Garante que começa com +
+        cleanPhone = `+${cleanPhone}`;
+
+        console.log(`[WEBHOOK] Atualizando telefone do usuário ${user.id} para: ${cleanPhone}`);
+        
+        await pool.query(
+            'UPDATE users SET phone = $1 WHERE id = $2',
+            [cleanPhone, user.id]
+        );
+      }
+      // -------------------------------------------------------
+
       // Atualizar Assinatura
       await pool.query(
         `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end)
@@ -46,18 +76,18 @@ export default async function handler(req, res) {
         [user.id]
       );
 
-      // CORREÇÃO AQUI: URL Atualizada
+      // Enviar E-mail de Boas-vindas
       await sendEmail({
         to: email,
         subject: 'Matrícula Ativada! 🚀',
         title: `Bem-vindo(a), ${user.name || 'Estudante'}!`,
         message: 'O pagamento foi confirmado e seu acesso Premium ao Foca.aí está liberado. Nosso agente inteligente entrará em contato pelo WhatsApp em instantes.',
         buttonText: 'ACESSAR PLATAFORMA',
-        buttonLink: 'https://foca-ai-oficial.vercel.app/' // <-- URL CORRIGIDA
+        buttonLink: 'https://foca-ai-oficial.vercel.app/' 
       });
     }
 
-    // 3. CANCELADO
+    // 3. CANCELADO / REEMBOLSADO
     else if (['CANCELED', 'REFUNDED', 'CHARGEBACK', 'EXPIRED'].includes(status)) {
       await pool.query(
         `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`,
