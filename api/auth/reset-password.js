@@ -28,14 +28,17 @@ export default async function handler(req, res) {
 
     const record = tokenResult.rows[0];
 
-    // 2. Verificar validade
+    // 2. Verificar validade (expiração)
     if (new Date() > new Date(record.expires_at)) {
       return res.status(400).json({ message: 'Link expirado. Solicite um novo.' });
     }
 
-    // 3. Hash da nova senha
+    // CORREÇÃO: Removemos espaços da NOVA senha antes de salvar
+    const cleanPassword = password.trim();
+
+    // 3. Hash da nova senha limpa
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    const passwordHash = await bcrypt.hash(cleanPassword, salt);
 
     // 4. Atualizar senha do usuário
     await pool.query(
@@ -50,6 +53,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Erro no reset-password:', error);
-    return res.status(500).json({ message: 'Erro interno.' });
+    // Mensagem de erro mais detalhada para ajudar no debug se necessário
+    return res.status(500).json({ message: `Erro interno: ${error.message}` });
   }
 }

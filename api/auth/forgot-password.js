@@ -13,10 +13,13 @@ export default async function handler(req, res) {
   const { email } = req.body;
 
   try {
-    const emailLower = email.toLowerCase();
+    // CORREÇÃO: Remove espaços antes de procurar
+    const emailLower = email.trim().toLowerCase();
+    
     const userResult = await pool.query('SELECT id, name FROM users WHERE email = $1', [emailLower]);
     
     if (userResult.rows.length === 0) {
+      // Retornamos 200 por segurança (para não revelar quais emails existem)
       return res.status(200).json({ message: 'Se o e-mail existir, enviamos o link.' });
     }
 
@@ -24,7 +27,7 @@ export default async function handler(req, res) {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hora
 
-    // Agora a tabela password_reset_tokens vai existir (pelo Passo 1)
+    // Insere o token no banco
     await pool.query(
       'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
       [user.id, token, expiresAt]
