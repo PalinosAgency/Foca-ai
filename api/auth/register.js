@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '../../lib/email.js';
 
 export default async function handler(req, res) {
-  // Configuração CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
@@ -20,8 +19,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    const emailLower = email.toLowerCase(); // <--- SEMPRE MINÚSCULO
+
     // 1. Verifica duplicidade
-    const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [emailLower]);
     if (userCheck.rows.length > 0) {
       return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
     }
@@ -30,19 +31,19 @@ export default async function handler(req, res) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
-    // 3. Inserir Usuário (Status NÃO verificado)
+    // 3. Inserir Usuário
     const newUser = await pool.query(
       `INSERT INTO users (name, email, phone, password_hash, is_verified, created_at) 
        VALUES ($1, $2, $3, $4, FALSE, NOW()) 
        RETURNING id, name, email`,
-      [name, email, phone, hashedPassword]
+      [name, emailLower, phone, hashedPassword]
     );
     
     const user = newUser.rows[0];
 
-    // 4. Gerar Token e salvar na TABELA DE TOKENS (Correção para alinhar com verify-email.js)
+    // 4. Token de Verificação
     const verificationToken = uuidv4();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); 
 
     await pool.query(
       'INSERT INTO verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
@@ -50,22 +51,17 @@ export default async function handler(req, res) {
     );
 
     // 5. Enviar E-mail
-    // Ajuste a URL para o seu domínio real se não for este
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://foca-ai-oficial.vercel.app';
     const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
 
-    const emailSent = await sendEmail({
-      to: email,
+    await sendEmail({
+      to: emailLower,
       subject: 'Confirme sua conta no Foca.aí 🚀',
       title: `Bem-vindo(a), ${name}!`,
-      message: 'Falta pouco para começares. Clique no botão abaixo para confirmar teu e-mail.',
+      message: 'Clique abaixo para confirmar seu e-mail.',
       buttonText: 'CONFIRMAR MEU E-MAIL',
       buttonLink: verifyLink
     });
-
-    if (!emailSent) {
-      console.error('Falha ao enviar e-mail via Nodemailer.');
-    }
 
     return res.status(201).json({ 
       message: 'Cadastro realizado! Verifique seu e-mail.',
