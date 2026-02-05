@@ -19,7 +19,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const emailLower = email.toLowerCase(); // <--- SEMPRE MINÚSCULO
+    // AQUI ESTÁ A CORREÇÃO: .trim() remove espaços antes e depois
+    const emailLower = email.trim().toLowerCase(); 
 
     // 1. Verifica duplicidade
     const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [emailLower]);
