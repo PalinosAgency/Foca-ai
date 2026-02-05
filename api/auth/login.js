@@ -17,15 +17,15 @@ export default async function handler(req, res) {
     const { email, password } = req.body;
 
     // 2. Verificar dados
-    if (!email || !password) throw new Error(`Faltam dados. Email: ${email}, Senha: ${!!password}`);
+    if (!email || !password) throw new Error(`Faltam dados.`);
 
     // 3. TESTE CRÍTICO DAS VARIÁVEIS
-    // Se isto falhar, o erro vai aparecer na tua tela: "ERRO DEBUG: JWT_SECRET ausente..."
     if (!process.env.JWT_SECRET) {
         throw new Error('A variável JWT_SECRET não está sendo lida pelo código! Verifique se fez Redeploy.');
     }
 
-    const emailLower = email.toLowerCase();
+    // AQUI ESTÁ A CORREÇÃO: .trim() remove espaços antes e depois
+    const emailLower = email.trim().toLowerCase();
 
     // 4. Teste do Banco
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [emailLower]);
@@ -57,7 +57,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('ERRO FATAL:', error);
-    // AQUI ESTÁ A SOLUÇÃO: Enviamos o erro real para a mensagem que aparece no site
     return res.status(500).json({ 
         message: `ERRO DEBUG: ${error.message}` 
     });
