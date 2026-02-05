@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs';
 import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
-  // Configuração CORS
+  // Headers CORS padrão
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
@@ -15,56 +15,45 @@ export default async function handler(req, res) {
   const { email, password } = req.body;
 
   try {
-    // 1. Forçar minúsculo para evitar erro de digitação
     const emailLower = email.toLowerCase();
-    
-    console.log(`[LOGIN ATTEMPT] Tentando logar: ${emailLower}`);
+    console.log(`[LOGIN] Tentativa para: ${emailLower}`);
 
-    // 2. Buscar usuário
+    // 1. Busca usuário
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [emailLower]);
     const user = result.rows[0];
 
-    // --- DETETIVE DE LOGS ---
     if (!user) {
-      console.log('[LOGIN FALHOU] Usuário não encontrado no banco.');
+      console.log('[LOGIN] Usuário não encontrado.');
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
-    console.log(`[LOGIN SUCESSO] Usuário encontrado: ID ${user.id}`);
-
+    // 2. Verifica Senha
     if (!user.password_hash) {
-       console.log('[LOGIN FALHOU] Usuário sem senha (pode ser conta Google).');
-       return res.status(401).json({ message: 'Esta conta usa login social ou senha inválida.' });
+       console.log('[LOGIN] Conta sem senha (provável Login Social).');
+       return res.status(401).json({ message: 'Use o login com Google.' });
     }
 
-    // 3. Comparar Senha
     const isValid = await bcrypt.compare(password, user.password_hash);
-    
     if (!isValid) {
-      console.log('[LOGIN FALHOU] A senha digitada não bate com o hash do banco.');
+      console.log('[LOGIN] Senha incorreta.');
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
-    // 4. Sucesso!
-    console.log('[LOGIN APROVADO] Gerando token...');
-    
-    const token = signToken({ 
-      userId: user.id, 
-      email: user.email 
-    });
+    // 3. Gera Token (Protegido)
+    if (!process.env.JWT_SECRET) {
+        console.error('CRÍTICO: JWT_SECRET não configurado na Vercel!');
+        return res.status(500).json({ message: 'Erro de configuração no servidor.' });
+    }
+
+    const token = signToken({ userId: user.id, email: user.email });
 
     return res.status(200).json({
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone
-      }
+      user: { id: user.id, name: user.name, email: user.email }
     });
 
   } catch (error) {
-    console.error('[LOGIN CRITICAL ERROR]', error);
+    console.error('[LOGIN ERROR]', error);
     return res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 }
