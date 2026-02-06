@@ -285,7 +285,12 @@ export default function Account() {
                       ) : (
                         <div className="flex items-center gap-3 p-4 border rounded-xl shadow-sm bg-yellow-50 border-yellow-200">
                           <div className="p-2 rounded-full bg-yellow-100 text-yellow-700"><AlertTriangle className="w-5 h-5" /></div>
-                          <div className="text-left"><p className="font-bold text-base text-yellow-900">Renovação Cancelada</p><p className="text-xs font-medium text-yellow-700">Acesso liberado até {formattedDate}.</p></div>
+                          <div className="text-left">
+                            <p className="font-bold text-base text-yellow-900">Renovação Cancelada</p>
+                            <p className="text-xs font-medium text-yellow-700">Acesso liberado até {formattedDate}.</p>
+                            {/* AVISO ADICIONADO AQUI */}
+                            <p className="text-[11px] font-bold text-red-600 mt-1">Após esta data, será necessário realizar uma nova compra para continuar acessando.</p>
+                          </div>
                         </div>
                       )
                     ) : (
