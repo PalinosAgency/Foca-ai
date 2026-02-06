@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, RotateCcw } from 'lucide-react';
+import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, ExternalLink, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,7 +31,6 @@ export default function Account() {
     phone: user?.phone || '',
   });
 
-  // Atualiza form se o user mudar
   useEffect(() => {
     if (user) {
       setFormData({
@@ -41,7 +40,7 @@ export default function Account() {
     }
   }, [user]);
 
-  // --- BUSCAR DADOS FRESCOS (GET) ---
+  // --- BUSCAR DADOS (GET) ---
   useEffect(() => {
     async function fetchAccountData() {
       try {
@@ -92,7 +91,7 @@ export default function Account() {
 
       if (!response.ok) throw new Error('Falha ao atualizar');
 
-      await refreshSession(); // Atualiza o contexto global
+      await refreshSession();
 
       toast({ 
         title: "Perfil atualizado!", 
@@ -109,7 +108,8 @@ export default function Account() {
     setIsResetDialogOpen(true);
   };
 
-  // --- GERENCIAR ASSINATURA (POST) ---
+  // --- GERENCIAR ASSINATURA (POST - Reativar) ---
+  // Apenas para reativação. Cancelamento vai via Hotmart Redirect.
   const handleSubscriptionAction = async (action: 'cancel' | 'reactivate') => {
     try {
       setIsManagingSub(true);
@@ -127,13 +127,13 @@ export default function Account() {
       if (!response.ok) throw new Error('Falha');
 
       const data = await response.json();
-      setLocalSubscription(data.subscription); // Atualiza visualmente na hora
+      setLocalSubscription(data.subscription); 
 
       toast({ 
-        title: action === 'cancel' ? "Renovação Cancelada" : "Assinatura Reativada!", 
+        title: action === 'cancel' ? "Renovação Cancelada" : "Assinatura Reativada! 🚀", 
         description: action === 'cancel' 
           ? "Você mantém o acesso até o fim do período." 
-          : "Sua assinatura voltará a renovar.",
+          : "Sua renovação automática foi ligada novamente. Verifique seu e-mail!",
         className: action === 'reactivate' ? "bg-green-50 border-green-200" : ""
       });
 
@@ -144,29 +144,30 @@ export default function Account() {
     }
   };
 
-  // --- REDIRECIONAMENTO PARA HOTMART ---
-  const handlePaymentMethodClick = () => {
+  const handleHotmartRedirect = () => {
     window.open('https://consumer.hotmart.com/', '_blank');
   };
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
 
-  // --- CORREÇÃO DE LÓGICA VISUAL ---
   const sub = localSubscription;
 
-  const { isActive, isAutoRenew, formattedDate } = useMemo(() => {
-      if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---' };
+  const { isActive, isAutoRenew, formattedDate, isCanceledButActive } = useMemo(() => {
+      if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---', isCanceledButActive: false };
 
       const endDate = sub.current_period_end ? new Date(sub.current_period_end) : null;
       const now = new Date();
       
       const isDateValid = endDate && endDate > now;
       const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
+      
+      const canceledButValid = (sub.status === 'canceled' || sub.status === 'inactive') && isDateValid;
 
       return {
           isActive: activeStatus,
           isAutoRenew: sub.auto_renew !== false && sub.status !== 'canceled', 
-          formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---'
+          formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---',
+          isCanceledButActive: canceledButValid
       };
   }, [sub]);
 
@@ -284,10 +285,10 @@ export default function Account() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
-                <Button variant="outline" onClick={handlePaymentMethodClick} disabled={!isActive} className="w-full md:w-auto bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]">
+                <Button variant="outline" onClick={handleHotmartRedirect} disabled={!isActive} className="w-full md:w-auto bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]">
                   <CreditCard className="w-3.5 h-3.5 mr-2" /> Gerenciar
                 </Button>
-                <Button variant="outline" onClick={handlePaymentMethodClick} disabled={!isActive} className="w-full md:w-auto bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]">
+                <Button variant="outline" onClick={handleHotmartRedirect} disabled={!isActive} className="w-full md:w-auto bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]">
                   <Wallet className="w-3.5 h-3.5 mr-2" /> PIX
                 </Button>
               </CardFooter>
@@ -357,32 +358,59 @@ export default function Account() {
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                   {isActive ? (
-                    isAutoRenew ? (
+                    isCanceledButActive ? (
+                      // CENÁRIO: Cancelou mas ainda tem dias sobrando -> Botão REATIVAR COM CONFIRMAÇÃO
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" disabled={isManagingSub} className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm">
-                            {isManagingSub ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : "Cancelar Assinatura"}
-                          </Button>
+                           <Button className="bg-green-600 hover:bg-green-700 text-white font-bold h-10 md:h-11 w-full md:w-auto text-sm shadow-md">
+                             {isManagingSub ? (<><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Processando...</>) : (<><RotateCcw className="w-3.5 h-3.5 mr-2" /> Reativar Assinatura</>)}
+                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Cancelar renovação automática?</AlertDialogTitle>
-                            <AlertDialogDescription>Ao confirmar, sua assinatura <strong>não será renovada</strong> em {formattedDate}.<br/><br/>Você continuará com acesso total até essa data.</AlertDialogDescription>
+                            <AlertDialogTitle>Reativar renovação automática?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Ao confirmar, sua assinatura voltará a ser cobrada automaticamente ao final do período atual.
+                              <br/><br/>
+                              Você não perderá nenhum dia de acesso.
+                            </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleSubscriptionAction('cancel')} className="bg-red-600 hover:bg-red-700 text-white font-bold">Sim, cancelar renovação</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleSubscriptionAction('reactivate')} className="bg-green-600 hover:bg-green-700 text-white font-bold">
+                              Sim, Reativar
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     ) : (
-                      <Button onClick={() => handleSubscriptionAction('reactivate')} disabled={isManagingSub} className="bg-green-600 hover:bg-green-700 text-white font-bold h-10 md:h-11 w-full md:w-auto text-sm shadow-md">
-                        {isManagingSub ? (<><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Processando...</>) : (<><RotateCcw className="w-3.5 h-3.5 mr-2" /> Reativar Assinatura</>)}
-                      </Button>
+                      // CENÁRIO: Ativo normal (Pode Cancelar) -> REDIRECIONAMENTO SEGURO
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm">
+                            Cancelar Assinatura
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Gerenciar na Hotmart</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Para sua segurança, o cancelamento e a gestão de pagamentos são feitos diretamente no portal da Hotmart.
+                              <br/><br/>
+                              Você será redirecionado para lá.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Voltar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleHotmartRedirect} className="bg-[#0026f7] text-white font-bold">
+                              Ir para Hotmart <ExternalLink className="ml-2 w-3 h-3" />
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )
                   ) : (
                     <Button asChild className="w-full md:w-auto bg-[#0026f7] hover:bg-[#0026f7]/90 text-white font-bold shadow-md h-10 md:h-11 text-sm">
-                      {/* ALTERADO AQUI: Agora aponta para a Home com a âncora #precos */}
                       <Link to="/#precos">Ver Planos</Link>
                     </Button>
                   )}
