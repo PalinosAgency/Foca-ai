@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Trash2, Loader2, ShoppingCart, ArrowLeft, AlertCircle } from "lucide-react"; // Importei AlertCircle
+import { Trash2, Loader2, ShoppingCart, ArrowLeft, AlertCircle } from "lucide-react"; 
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -78,6 +78,7 @@ export default function Cart() {
       
       <main className="flex-1 container mx-auto px-4 py-8 md:py-24 max-w-5xl pb-40 lg:pb-8"> 
         
+        {/* Botão Voltar */}
         <div className="mt-20 md:mt-0 mb-4">
           <Button 
             variant="ghost" 
@@ -117,6 +118,7 @@ export default function Cart() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-6 md:gap-8 items-start">
             
+            {/* COLUNA DA ESQUERDA: ITENS + BENEFÍCIOS + AVISO E-MAIL */}
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 flex flex-row items-start gap-4 transition-all hover:shadow-md hover:border-blue-100">
@@ -148,13 +150,29 @@ export default function Cart() {
                 </div>
               ))}
               
+              {/* Benefícios */}
               <div className="hidden md:flex bg-blue-50 border border-blue-100 rounded-2xl p-6 flex-wrap gap-4 justify-between items-center text-sm text-[#040949]/80 font-medium">
                   <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />Acesso Imediato</div>
                   <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />Cancele quando quiser</div>
                   <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />Garantia de 7 dias</div>
               </div>
+
+              {/* --- AVISO DO E-MAIL (MOVIDO PARA CÁ) --- */}
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-2xl flex gap-3 items-start shadow-sm">
+                <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+                <div className="text-sm text-yellow-900 leading-relaxed">
+                  <p className="font-bold mb-1">Atenção Importante:</p>
+                  Na hora do pagamento, certifique-se de usar o <strong>mesmo e-mail</strong> cadastrado aqui:
+                  <div className="mt-2 inline-block bg-white px-3 py-1 rounded border border-yellow-200 font-mono text-yellow-800 font-bold">
+                    {user?.email}
+                  </div>
+                  <p className="mt-1 opacity-90 text-xs">Isso garante a liberação automática imediata do seu acesso.</p>
+                </div>
+              </div>
+
             </div>
 
+            {/* COLUNA DA DIREITA: RESUMO DO PEDIDO */}
             <div className="lg:col-span-1 hidden lg:block">
               <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-28">
                 <h3 className="font-bold text-xl mb-6 text-[#040949]">Resumo do pedido</h3>
@@ -176,14 +194,6 @@ export default function Cart() {
                       <span className="text-3xl font-extrabold text-[#0026f7]">{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                       <p className="text-xs text-gray-400 mt-1 font-medium">Em até 12x no cartão</p>
                   </div>
-                </div>
-
-                {/* --- AVISO DO E-MAIL (NOVO) --- */}
-                <div className="bg-blue-50 border-l-4 border-[#0026f7] p-3 mb-4 rounded-r-md flex gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#0026f7] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-blue-800 leading-tight">
-                    <strong>Atenção:</strong> Na hora do pagamento, use o <strong>mesmo e-mail</strong> ({user?.email}) cadastrado aqui para a liberação automática.
-                  </p>
                 </div>
 
                 {/* --- CHECKBOX DE ACEITE --- */}
@@ -231,11 +241,11 @@ export default function Cart() {
       {items.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 pb-6 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50 safe-area-bottom">
            
-           {/* --- AVISO DO E-MAIL (NOVO MOBILE) --- */}
-           <div className="bg-blue-50 border-l-4 border-[#0026f7] p-2 mb-3 rounded-r-md flex gap-2">
-              <AlertCircle className="w-3.5 h-3.5 text-[#0026f7] shrink-0 mt-0.5" />
-              <p className="text-[10px] text-blue-800 leading-tight">
-                Use o <strong>mesmo e-mail</strong> ({user?.email}) no pagamento.
+           {/* Aviso Mobile Compacto */}
+           <div className="bg-yellow-50 border-l-4 border-yellow-500 p-2 mb-3 rounded-r-md flex gap-2">
+              <AlertCircle className="w-3.5 h-3.5 text-yellow-600 shrink-0 mt-0.5" />
+              <p className="text-[10px] text-yellow-800 leading-tight">
+                Use o e-mail: <strong>{user?.email}</strong> no pagamento.
               </p>
            </div>
 
