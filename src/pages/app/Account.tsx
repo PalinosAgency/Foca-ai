@@ -20,6 +20,7 @@ export default function Account() {
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false); // Novo estado para o loading do reset
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const [localSubscription, setLocalSubscription] = useState<any>(null);
@@ -103,8 +104,34 @@ export default function Account() {
     }
   };
 
+  // --- REDEFINIR SENHA (CORRIGIDO) ---
   const handlePasswordReset = async () => {
-    setIsResetDialogOpen(true);
+    if (!user?.email) return;
+
+    setIsResetLoading(true);
+    try {
+      // Chama a API real de esqueci minha senha
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
+
+      if (response.ok) {
+        // Só abre o dialog se o email foi enviado com sucesso
+        setIsResetDialogOpen(true);
+      } else {
+        throw new Error('Falha ao enviar');
+      }
+    } catch (error) {
+      toast({ 
+        variant: "destructive", 
+        title: "Erro", 
+        description: "Não foi possível enviar o e-mail de redefinição. Tente novamente." 
+      });
+    } finally {
+      setIsResetLoading(false);
+    }
   };
 
   const handleHotmartRedirect = () => {
@@ -196,7 +223,14 @@ export default function Account() {
                     <Label className="font-bold text-gray-700 text-xs md:text-sm">Senha</Label>
                     <div className="flex gap-2">
                       <Input type="password" value="********" disabled className="bg-gray-100 text-gray-500 cursor-not-allowed" />
-                      <Button variant="outline" onClick={handlePasswordReset} className="bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]">Redefinir</Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handlePasswordReset} 
+                        disabled={isResetLoading}
+                        className="bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]"
+                      >
+                        {isResetLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Redefinir"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -288,7 +322,6 @@ export default function Account() {
                           <div className="text-left">
                             <p className="font-bold text-base text-yellow-900">Renovação Cancelada</p>
                             <p className="text-xs font-medium text-yellow-700">Acesso liberado até {formattedDate}.</p>
-                            {/* AVISO ADICIONADO AQUI */}
                             <p className="text-[11px] font-bold text-red-600 mt-1">Após esta data, será necessário realizar uma nova compra para continuar acessando.</p>
                           </div>
                         </div>
