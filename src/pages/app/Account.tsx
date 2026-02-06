@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Adicionei useMemo
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,6 @@ import { Footer } from '@/components/layout/Footer';
 import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-
-// REMOVIDO: import { sql } from '@/lib/neon'; (Isso causava o erro!)
 
 export default function Account() {
   const { user, refreshSession } = useAuth();
@@ -155,14 +153,29 @@ export default function Account() {
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
 
-  // Helpers visuais
+  // --- CORREÇÃO DE LÓGICA VISUAL ---
   const sub = localSubscription;
-  const isActive = sub?.status === 'active' || sub?.status === 'trialing';
-  const isAutoRenew = sub?.auto_renew !== false; // Se undefined, assume true
+
+  // Usa useMemo para calcular o status corretamente
+  const { isActive, isAutoRenew, formattedDate } = useMemo(() => {
+      if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---' };
+
+      const endDate = sub.current_period_end ? new Date(sub.current_period_end) : null;
+      const now = new Date();
+      
+      // Regra Inteligente: É ativo se o status for 'active' OU se a data futura existir
+      const isDateValid = endDate && endDate > now;
+      const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
+
+      return {
+          isActive: activeStatus,
+          // Se tiver active e data válida, é renovação automática. Se for canceled mas data válida, é renovação desligada.
+          isAutoRenew: sub.auto_renew !== false && sub.status !== 'canceled', 
+          formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---'
+      };
+  }, [sub]);
+
   const planPrice = 'R$ 29,90';
-  const formattedDate = sub?.current_period_end 
-    ? new Date(sub.current_period_end).toLocaleDateString('pt-BR') 
-    : '---';
 
   return (
     <div className="min-h-screen bg-[#040949] flex flex-col">
@@ -297,7 +310,7 @@ export default function Account() {
                   </div>
                   {isActive ? (
                     isAutoRenew ? <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">Ativa</Badge> 
-                    : <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 px-3 py-1">Cancelada</Badge>
+                    : <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 px-3 py-1">Acesso até {formattedDate}</Badge>
                   ) : (
                     <Badge variant="destructive">Inativa</Badge>
                   )}
