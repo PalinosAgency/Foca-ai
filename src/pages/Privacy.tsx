@@ -8,7 +8,7 @@ export default function Privacy() {
       {/* COMPACTAÇÃO: py-8 em vez de py-24 no mobile */}
       <main className="flex-grow container mx-auto px-4 py-8 md:py-24 max-w-4xl text-left">
         <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[#040949]">Política de Privacidade</h1>
-        <p className="text-sm text-gray-500 mb-6">Versão 3.0 — Em conformidade com a LGPD (Lei 13.709/2018)</p>
+        <p className="text-sm text-gray-500 mb-6">Versão 3.1 — Em conformidade com a LGPD (Lei 13.709/2018)</p>
 
         <div className="prose prose-blue max-w-none space-y-6 text-gray-700 text-sm md:text-base">
           
@@ -30,11 +30,11 @@ export default function Privacy() {
               Ao registrar saúde, medicamentos ou sintomas, você envia <strong>dados sensíveis</strong> (Art. 5º, II da LGPD).
             </p>
             <p>
-              <strong>Base Legal:</strong> Consentimento específico (Art. 11, I da LGPD).
+              <strong>Base Legal:</strong> Consentimento específico (Art. 11, I da LGPD) para fins de organização pessoal.
             </p>
           </section>
 
-          {/* 3. TABELA (Com rolagem lateral para não quebrar a tela) */}
+          {/* 3. TABELA */}
           <section>
             <h2 className="text-lg md:text-xl font-bold text-[#040949] mb-2">3. Tratamento de Dados</h2>
             <div className="overflow-x-auto border rounded-lg">
@@ -56,6 +56,11 @@ export default function Privacy() {
                     <td className="p-2 border-b">Histórico</td>
                     <td className="p-2 border-b">Texto das mensagens</td>
                     <td className="p-2 border-b">Enquanto a conta for ativa.</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border-b">Pagamento</td>
+                    <td className="p-2 border-b">Status da Assinatura</td>
+                    <td className="p-2 border-b">Dados financeiros são processados pela Hotmart. <strong>Não armazenamos cartão.</strong></td>
                   </tr>
                 </tbody>
               </table>
