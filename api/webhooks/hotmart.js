@@ -11,19 +11,24 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   const body = req.body;
-  console.log('[WEBHOOK HOTMART] Payload:', JSON.stringify(body).substring(0, 1000)); 
+  
+  // 1. LOG DE SEGURANÇA (Salva tudo que chega)
+  try {
+      await pool.query(
+          'INSERT INTO webhook_logs (event_type, payload) VALUES ($1, $2)', 
+          [body.event || 'UNKNOWN', JSON.stringify(body)]
+      );
+  } catch (e) { console.error('Erro ao salvar log', e); }
+
+  console.log('[WEBHOOK HOTMART] Processando...'); 
 
   const data = body.data || body; 
   
-  // CORREÇÃO: Busca e-mail em buyer, subscriber ou user
   const rawEmail = data.buyer?.email || data.subscriber?.email || data.user?.email || data.email;
   const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
   
   let statusRaw = data.subscription?.status || data.purchase?.status || data.status || '';
-  
-  // Força status se for evento de cancelamento
   if (body.event === 'SUBSCRIPTION_CANCELLATION') statusRaw = 'CANCELED';
-  
   const status = statusRaw.toUpperCase();
 
   const receivedToken = req.headers['x-hotmart-hottok'] || body.hottok || data.hottok;
@@ -43,6 +48,7 @@ export default async function handler(req, res) {
     const user = userRes.rows[0];
     const isApproved = ['APPROVED', 'COMPLETED', 'ACTIVE'].includes(status);
 
+    // LÓGICA DE APROVAÇÃO (Igual ao anterior)
     if (isApproved) {
       console.log(`[WEBHOOK] Aprovado para ${email}. Ativando...`);
 
@@ -103,22 +109,32 @@ export default async function handler(req, res) {
         console.error('[WEBHOOK ERROR] n8n falhou:', n8nError);
       }
     }
+    
+    // 2. LÓGICA DE CANCELAMENTO E REEMBOLSO (Nova e Melhorada)
     else if (['CANCELED', 'REFUNDED', 'CHARGEBACK', 'EXPIRED', 'INACTIVE'].includes(status)) {
-      console.log(`[WEBHOOK] Cancelamento detectado para ${email}. Status: ${status}`);
+      console.log(`[WEBHOOK] Evento de término: ${status} para ${email}`);
       
-      await pool.query(
-        `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`,
-        [user.id]
-      );
+      let query = `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`;
       
-      await sendEmail({
-        to: email,
-        subject: 'Sua assinatura foi cancelada',
-        title: 'Cancelamento Confirmado',
-        message: `Recebemos a confirmação do cancelamento da sua assinatura. Seu acesso continua válido até o fim do período atual. Após essa data, será necessário realizar uma nova compra para continuar acessando.`,
-        buttonText: 'Acessar Minha Conta',
-        buttonLink: 'https://foca-ai-oficial.vercel.app/account'
-      });
+      // Se devolveu o dinheiro, corta AGORA.
+      if (['REFUNDED', 'CHARGEBACK'].includes(status)) {
+          query = `UPDATE subscriptions SET status = 'canceled', current_period_end = NOW() - INTERVAL '1 day' WHERE user_id = $1`;
+          console.log(`[WEBHOOK] Acesso revogado imediatamente (Reembolso/Chargeback).`);
+      }
+      
+      await pool.query(query, [user.id]);
+      
+      // Só manda e-mail se foi cancelamento voluntário (não reembolso)
+      if (!['REFUNDED', 'CHARGEBACK'].includes(status)) {
+         await sendEmail({
+            to: email,
+            subject: 'Sua assinatura foi cancelada',
+            title: 'Cancelamento Confirmado',
+            message: `Recebemos a confirmação do cancelamento. Seu acesso continua válido até o fim do período atual.`,
+            buttonText: 'Acessar Minha Conta',
+            buttonLink: 'https://foca-ai-oficial.vercel.app/account'
+         });
+      }
     }
 
     return res.status(200).send('OK');

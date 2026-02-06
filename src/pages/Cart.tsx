@@ -4,10 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Trash2, Loader2, ShoppingCart, ArrowLeft } from "lucide-react"; 
+import { Trash2, Loader2, ShoppingCart, ArrowLeft, AlertCircle } from "lucide-react"; // Importei AlertCircle
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Checkbox } from "@/components/ui/checkbox"; // Importe o Checkbox do shadcn/ui
+import { Checkbox } from "@/components/ui/checkbox";
 
 const HOTMART_LINK = "https://pay.hotmart.com/R104179058N";
 
@@ -17,7 +17,7 @@ export default function Cart() {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false); // Novo estado para o aceite
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -77,9 +77,7 @@ export default function Cart() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 md:py-24 max-w-5xl pb-40 lg:pb-8"> 
-        {/* Aumentei pb-40 no mobile para caber o footer fixo + termos */}
         
-        {/* Botão Voltar ao Início */}
         <div className="mt-20 md:mt-0 mb-4">
           <Button 
             variant="ghost" 
@@ -93,7 +91,6 @@ export default function Cart() {
           </Button>
         </div>
 
-        {/* Header Compacto */}
         <div className="flex items-center gap-4 mb-6 md:mb-10 border-b border-gray-200 pb-4 md:pb-6">
           <div className="bg-[#0026f7] p-2 md:p-3 rounded-xl md:rounded-2xl text-white shadow-lg shadow-blue-500/20">
             <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
@@ -120,16 +117,12 @@ export default function Cart() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-6 md:gap-8 items-start">
             
-            {/* Lista de Itens */}
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 flex flex-row items-start gap-4 transition-all hover:shadow-md hover:border-blue-100">
-                  
-                  {/* Imagem P/M */}
                   <div className="w-16 h-16 md:w-24 md:h-24 bg-[#040949] rounded-xl md:rounded-2xl flex items-center justify-center p-2 md:p-4 shrink-0 shadow-md">
                       <img src="/logo-icon.png" alt="Logo" className="w-full h-full object-contain" />
                   </div>
-                  
                   <div className="flex-1 w-full">
                       <div className="flex flex-col md:flex-row md:items-start justify-between w-full">
                         <div>
@@ -138,7 +131,6 @@ export default function Cart() {
                              Assinatura Mensal
                            </p>
                         </div>
-                        
                         <div className="mt-2 md:mt-0 text-left md:text-right">
                            <span className="font-extrabold text-lg md:text-2xl text-[#040949]">
                              {item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -146,7 +138,6 @@ export default function Cart() {
                            <p className="text-[10px] text-gray-400 font-medium">/mês</p>
                         </div>
                       </div>
-                      
                       <button 
                           onClick={() => removeItem(item.id)}
                           className="mt-3 text-gray-400 hover:text-red-600 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-red-50 pr-2 py-1 rounded-lg transition-all"
@@ -157,7 +148,6 @@ export default function Cart() {
                 </div>
               ))}
               
-              {/* Benefícios */}
               <div className="hidden md:flex bg-blue-50 border border-blue-100 rounded-2xl p-6 flex-wrap gap-4 justify-between items-center text-sm text-[#040949]/80 font-medium">
                   <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />Acesso Imediato</div>
                   <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-[#0026f7]" />Cancele quando quiser</div>
@@ -165,7 +155,6 @@ export default function Cart() {
               </div>
             </div>
 
-            {/* Resumo Desktop */}
             <div className="lg:col-span-1 hidden lg:block">
               <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 sticky top-28">
                 <h3 className="font-bold text-xl mb-6 text-[#040949]">Resumo do pedido</h3>
@@ -189,7 +178,15 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* --- CHECKBOX DE ACEITE (DESKTOP) --- */}
+                {/* --- AVISO DO E-MAIL (NOVO) --- */}
+                <div className="bg-blue-50 border-l-4 border-[#0026f7] p-3 mb-4 rounded-r-md flex gap-2">
+                  <AlertCircle className="w-4 h-4 text-[#0026f7] shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-blue-800 leading-tight">
+                    <strong>Atenção:</strong> Na hora do pagamento, use o <strong>mesmo e-mail</strong> ({user?.email}) cadastrado aqui para a liberação automática.
+                  </p>
+                </div>
+
+                {/* --- CHECKBOX DE ACEITE --- */}
                 <div className="flex items-start space-x-2 mb-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
                   <Checkbox 
                     id="terms-desktop" 
@@ -209,7 +206,7 @@ export default function Cart() {
 
                 <Button 
                   onClick={handleCheckout}
-                  disabled={loading || !termsAccepted} // Trava se não aceitar
+                  disabled={loading || !termsAccepted} 
                   className="w-full h-16 text-lg font-bold bg-[#0026f7] hover:bg-[#0026f7]/90 text-white shadow-xl shadow-blue-900/20 rounded-xl transition-all hover:-translate-y-1 mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
@@ -234,7 +231,14 @@ export default function Cart() {
       {items.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 pb-6 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50 safe-area-bottom">
            
-           {/* --- CHECKBOX DE ACEITE (MOBILE) --- */}
+           {/* --- AVISO DO E-MAIL (NOVO MOBILE) --- */}
+           <div className="bg-blue-50 border-l-4 border-[#0026f7] p-2 mb-3 rounded-r-md flex gap-2">
+              <AlertCircle className="w-3.5 h-3.5 text-[#0026f7] shrink-0 mt-0.5" />
+              <p className="text-[10px] text-blue-800 leading-tight">
+                Use o <strong>mesmo e-mail</strong> ({user?.email}) no pagamento.
+              </p>
+           </div>
+
            <div className="flex items-start space-x-2 mb-4 p-2 bg-gray-50 rounded-lg border border-gray-100">
               <Checkbox 
                 id="terms-mobile" 
@@ -263,7 +267,7 @@ export default function Cart() {
            </div>
            <Button 
               onClick={handleCheckout}
-              disabled={loading || !termsAccepted} // Trava se não aceitar
+              disabled={loading || !termsAccepted}
               className="w-full h-14 text-lg font-bold bg-[#0026f7] hover:bg-[#0026f7]/90 text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Finalizar Compra Agora"}
@@ -271,7 +275,6 @@ export default function Cart() {
         </div>
       )}
 
-      {/* Footer Padrão */}
       <div className={items.length > 0 ? "hidden lg:block" : "block"}>
         <Footer />
       </div>
