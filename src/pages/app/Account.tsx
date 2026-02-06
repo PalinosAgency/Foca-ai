@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'; // Adicionei useMemo
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,11 +144,10 @@ export default function Account() {
     }
   };
 
+  // --- REDIRECIONAMENTO PARA HOTMART (NOVO) ---
   const handlePaymentMethodClick = () => {
-    toast({
-      title: "Gerenciamento de Pagamento",
-      description: "Para alterar seu cartão, cancele a assinatura atual e assine novamente ao final do período.",
-    });
+    // Abre o portal do consumidor da Hotmart em uma nova aba
+    window.open('https://consumer.hotmart.com/', '_blank');
   };
 
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
