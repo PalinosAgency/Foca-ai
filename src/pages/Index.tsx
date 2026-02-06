@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Sparkles, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext'; // Importação adicionada
 
 // Importando os novos componentes
 import { PhoneMockup } from '@/components/landing/PhoneMockup';
@@ -14,6 +15,8 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 
 export default function Index() {
+  const { isAuthenticated } = useAuth(); // Verifica o login
+
   return (
     <div className="min-h-screen font-sans bg-background">
       <Navbar />
@@ -49,7 +52,8 @@ export default function Index() {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button asChild size="lg" className="text-lg px-8 h-12 bg-[#0224F7] hover:bg-[#0224F7]/90 text-white shadow-lg shadow-blue-900/50 transition-all rounded-full border-0">
-                  <Link to="/comecar">
+                  {/* LÓGICA APLICADA AQUI */}
+                  <Link to={isAuthenticated ? "#precos" : "/register"}>
                     Começar Grátis
                     <ChevronRight className="w-5 h-5 ml-1" />
                   </Link>
