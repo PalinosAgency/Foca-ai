@@ -15,7 +15,6 @@ export default async function handler(req, res) {
 
     if (!userId) return res.status(401).json({ message: 'Token inválido ou não fornecido.' });
 
-    // --- GET: Buscar dados ---
     if (req.method === 'GET') {
       const subResult = await pool.query(
         `SELECT status, plan_id, current_period_end, auto_renew 
@@ -36,7 +35,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- PUT: Atualizar Perfil ---
     if (req.method === 'PUT') {
       const { name, phone, avatar_url } = req.body;
       await pool.query(

@@ -1,45 +1,33 @@
 import pool from '../../lib/db.js';
 import { sendEmail } from '../../lib/email.js';
 
-// Configurações
 const HOTMART_TOKEN = process.env.HOTMART_WEBHOOK_TOKEN;
-// URL do seu n8n (Produção)
 const N8N_WEBHOOK_URL = 'https://n8n.projetospalinos.online/webhook/hotmart-venda-aprovada';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST');
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
-  // --- TRATAMENTO INTELIGENTE DA ESTRUTURA ---
   const body = req.body;
-  console.log('[WEBHOOK HOTMART] Payload:', JSON.stringify(body).substring(0, 500)); 
+  console.log('[WEBHOOK HOTMART] Payload:', JSON.stringify(body).substring(0, 1000)); 
 
-  // 1. Extração de Dados
   const data = body.data || body; 
   
-  // CORREÇÃO FEITA AQUI: Normaliza o email para evitar erro de maiúscula/minúscula
-  const rawEmail = data.buyer?.email || data.email;
-  // Se rawEmail existir, remove espaços e deixa minúsculo. Se não, fica null.
+  // CORREÇÃO: Busca e-mail em buyer, subscriber ou user
+  const rawEmail = data.buyer?.email || data.subscriber?.email || data.user?.email || data.email;
   const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
   
-  // Extrai Status
-  let statusRaw = 
-    data.subscription?.status || 
-    data.purchase?.status ||     
-    data.status ||               
-    '';
+  let statusRaw = data.subscription?.status || data.purchase?.status || data.status || '';
+  
+  // Força status se for evento de cancelamento
+  if (body.event === 'SUBSCRIPTION_CANCELLATION') statusRaw = 'CANCELED';
   
   const status = statusRaw.toUpperCase();
 
-  // 2. Validação do Token
   const receivedToken = req.headers['x-hotmart-hottok'] || body.hottok || data.hottok;
-  
   if (HOTMART_TOKEN && receivedToken && receivedToken !== HOTMART_TOKEN) {
-    console.error('[WEBHOOK] Token Inválido:', receivedToken);
     return res.status(401).json({ message: 'Unauthorized: Invalid Token' });
   }
 
@@ -49,29 +37,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 3. Achar usuário
     const userRes = await pool.query('SELECT id, name, phone FROM users WHERE email = $1', [email]);
-    
-    if (userRes.rows.length === 0) {
-      console.log(`[WEBHOOK] Usuário não encontrado no banco: ${email}`);
-      return res.status(200).send('User not found'); 
-    }
+    if (userRes.rows.length === 0) return res.status(200).send('User not found'); 
 
     const user = userRes.rows[0];
-
-    // 4. LÓGICA DE APROVAÇÃO
     const isApproved = ['APPROVED', 'COMPLETED', 'ACTIVE'].includes(status);
 
     if (isApproved) {
       console.log(`[WEBHOOK] Aprovado para ${email}. Ativando...`);
 
-      // --- Atualização de Telefone ---
       let phoneToUpdate = null;
       let finalPhone = user.phone; 
 
       if (data.buyer?.checkout_phone) phoneToUpdate = data.buyer.checkout_phone;
       else if (data.buyer?.phone) phoneToUpdate = data.buyer.phone;
       else if (data.phone_checkout_number) phoneToUpdate = data.phone_checkout_number;
+      else if (data.subscriber?.phone?.phone) {
+         const ddd = data.subscriber.phone.dddPhone || '';
+         const num = data.subscriber.phone.phone || '';
+         phoneToUpdate = ddd + num;
+      }
 
       if (phoneToUpdate) {
         let cleanPhone = phoneToUpdate.replace(/\D/g, '');
@@ -84,7 +69,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // 5. Ativar Assinatura
       await pool.query(
         `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end)
          VALUES ($1, 'active', 'premium', NOW() + INTERVAL '35 days')
@@ -93,7 +77,6 @@ export default async function handler(req, res) {
         [user.id]
       );
 
-      // 6. Enviar E-mail do Site (Boas-vindas)
       await sendEmail({
         to: email,
         subject: 'Matrícula Ativada! 🚀',
@@ -103,7 +86,6 @@ export default async function handler(req, res) {
         buttonLink: 'https://foca-ai-oficial.vercel.app/' 
       });
 
-      // 7. AVISAR O N8N
       try {
         await fetch(N8N_WEBHOOK_URL, {
             method: 'POST',
@@ -121,9 +103,9 @@ export default async function handler(req, res) {
         console.error('[WEBHOOK ERROR] n8n falhou:', n8nError);
       }
     }
-
-    // Lógica de Cancelamento
     else if (['CANCELED', 'REFUNDED', 'CHARGEBACK', 'EXPIRED', 'INACTIVE'].includes(status)) {
+      console.log(`[WEBHOOK] Cancelamento detectado para ${email}. Status: ${status}`);
+      
       await pool.query(
         `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`,
         [user.id]
@@ -131,11 +113,11 @@ export default async function handler(req, res) {
       
       await sendEmail({
         to: email,
-        subject: 'Sua assinatura foi cancelada 😢',
-        title: 'Sentiremos sua falta!',
-        message: 'Confirmamos o cancelamento.',
-        buttonText: 'REATIVAR ASSINATURA',
-        buttonLink: 'https://foca-ai-oficial.vercel.app/'
+        subject: 'Sua assinatura foi cancelada',
+        title: 'Cancelamento Confirmado',
+        message: `Recebemos a confirmação do cancelamento da sua assinatura. Seu acesso continua válido até o fim do período atual. Após essa data, será necessário realizar uma nova compra para continuar acessando.`,
+        buttonText: 'Acessar Minha Conta',
+        buttonLink: 'https://foca-ai-oficial.vercel.app/account'
       });
     }
 

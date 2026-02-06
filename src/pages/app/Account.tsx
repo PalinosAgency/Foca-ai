@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, ExternalLink } from 'lucide-react';
+import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, ExternalLink, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 
@@ -39,7 +39,7 @@ export default function Account() {
     }
   }, [user]);
 
-  // --- BUSCAR DADOS (GET) ---
+  // --- BUSCAR DADOS ---
   useEffect(() => {
     async function fetchAccountData() {
       try {
@@ -66,7 +66,7 @@ export default function Account() {
     fetchAccountData();
   }, []);
 
-  // --- ATUALIZAR PERFIL (PUT) ---
+  // --- ATUALIZAR PERFIL ---
   const handleUpdateProfile = async () => {
     if (!formData.name.trim()) {
       toast({ variant: "destructive", title: "Erro", description: "O nome não pode estar vazio." });
@@ -107,7 +107,6 @@ export default function Account() {
     setIsResetDialogOpen(true);
   };
 
-  // --- REDIRECIONAMENTO PARA HOTMART (Cancelar e Trocar Cartão) ---
   const handleHotmartRedirect = () => {
     window.open('https://consumer.hotmart.com/', '_blank');
   };
@@ -124,8 +123,6 @@ export default function Account() {
       
       const isDateValid = endDate && endDate > now;
       const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
-      
-      // Verifica se está cancelado na Hotmart mas ainda dentro do prazo
       const canceledButValid = (sub.status === 'canceled' || sub.status === 'inactive') && isDateValid;
 
       return {
@@ -162,7 +159,6 @@ export default function Account() {
             <TabsTrigger value="subscription" className="data-[state=active]:bg-[#0026f7] data-[state=active]:text-white hover:bg-white/5 transition-colors font-medium text-xs md:text-sm py-2">Assinatura</TabsTrigger>
           </TabsList>
 
-          {/* ABA GERAL */}
           <TabsContent value="general">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
@@ -213,7 +209,6 @@ export default function Account() {
             </Card>
           </TabsContent>
 
-          {/* ABA PAGAMENTO */}
           <TabsContent value="payment">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
@@ -260,7 +255,6 @@ export default function Account() {
             </Card>
           </TabsContent>
 
-          {/* ABA ASSINATURA */}
           <TabsContent value="subscription">
             <Card className="border-0 shadow-xl bg-white">
               <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
@@ -324,12 +318,10 @@ export default function Account() {
               <CardFooter className="flex flex-col md:flex-row gap-2 justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                   {isActive ? (
                     isCanceledButActive ? (
-                      // CENÁRIO: Cancelado mas ainda tem dias sobrando
                        <Button variant="outline" className="w-full md:w-auto text-yellow-700 border-yellow-200 bg-yellow-50 cursor-not-allowed opacity-100" disabled>
                         <CalendarClock className="w-3.5 h-3.5 mr-2" /> Cancelamento Agendado
                       </Button>
                     ) : (
-                      // CENÁRIO: Ativo normal (Pode Cancelar) -> REDIRECIONAMENTO SEGURO
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm">
@@ -364,7 +356,6 @@ export default function Account() {
           </TabsContent>
         </Tabs>
 
-        {/* DIALOG DE RESET SENHA */}
         <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
           <DialogContent className="sm:max-w-md bg-white text-gray-900 w-[90%] rounded-xl">
             <DialogHeader>
