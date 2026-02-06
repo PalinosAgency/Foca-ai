@@ -9,31 +9,31 @@ import {
 const faqs = [
   {
     question: 'Como funciona o Foca.aí?',
-    answer: 'O Foca.Aí é um assistente pessoal que funciona via WhatsApp. Você envia mensagens para registrar gastos, hábitos de saúde, organização de estudos e compromissos. Tudo é organizado automaticamente e disponível no dashboard.',
+    answer: 'O Foca.aí é um assistente pessoal inteligente integrado ao seu WhatsApp. Você envia mensagens de áudio ou texto para registrar gastos, hábitos, estudos e agenda. Nossa IA processa tudo, organiza automaticamente e disponibiliza em um dashboard visual.',
   },
   {
     question: 'Preciso baixar algum aplicativo?',
-    answer: 'Não! O Foca.Aí funciona diretamente no WhatsApp que você já usa. O dashboard é acessível pelo navegador, sem necessidade de instalar nada.',
+    answer: 'Não! O Foca.aí funciona diretamente no WhatsApp que você já usa todos os dias. O painel de controle (Dashboard) é acessível por qualquer navegador no celular ou computador, sem ocupar espaço no seu telefone.',
   },
   {
     question: 'Como funciona o período de teste?',
-    answer: 'Oferecemos 3 dias grátis para você experimentar todas as funcionalidades. Após o período de teste, a cobrança é feita automaticamente no cartão cadastrado.',
+    answer: 'Oferecemos 3 dias totalmente grátis. Você tem acesso a todas as funcionalidades premium. A cobrança no cartão só ocorre automaticamente após esse período, caso você decida continuar.',
   },
   {
     question: 'Posso cancelar a qualquer momento?',
-    answer: 'Sim! Você pode cancelar sua assinatura a qualquer momento diretamente pelo site do Foca.aí (em Minha Conta), sem taxas ou burocracia.',
+    answer: 'Sim! Sem fidelidade e sem taxas surpresas. O cancelamento é gerenciado de forma segura pela Hotmart. Em "Minha Conta" no nosso site, disponibilizamos um link direto para você gerenciar ou cancelar sua assinatura com apenas alguns cliques.',
   },
   {
     question: 'Meus dados estão seguros?',
-    answer: 'Absolutamente. Utilizamos criptografia de ponta a ponta e não compartilhamos seus dados com terceiros. Sua privacidade é nossa prioridade.',
+    answer: 'Segurança é nossa prioridade. Utilizamos criptografia de ponta a ponta e seguimos rigorosamente a LGPD. Seus dados financeiros são processados exclusivamente pela Hotmart; nós não temos acesso aos números do seu cartão.',
   },
   {
     question: 'Como funciona a integração com Google Calendar?',
-    answer: 'Ao criar compromissos via WhatsApp (ex: "Reunião amanhã às 14h"), o evento é automaticamente sincronizado com seu Google Calendar.',
+    answer: 'É automática! Ao enviar um compromisso para o WhatsApp (ex: "Dentista amanhã às 14h"), a IA entende a data e o horário e cria o evento diretamente na sua agenda do Google.',
   },
   {
     question: 'Como entro em contato com o suporte?',
-    answer: 'Nosso suporte é realizado exclusivamente através do e-mail suportefocaaioficial@gmail.com. Envie sua dúvida e nossa equipe responderá o mais breve possível.',
+    answer: 'Nosso suporte é realizado através do e-mail suportefocaaioficial@gmail.com. Nossa equipe está pronta para tirar suas dúvidas e ajudar no que for preciso.',
   },
 ];
 
