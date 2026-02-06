@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: 'Como funciona o período de teste?',
-    answer: 'Oferecemos 3 dias totalmente grátis. Você tem acesso a todas as funcionalidades premium. A cobrança no cartão só ocorre automaticamente após esse período, caso você decida continuar.',
+    answer: 'Oferecemos 3 dias totalmente grátis. Você tem acesso a todas as funcionalidades premium. A cobrança só ocorre automaticamente após esse período, caso você decida continuar.',
   },
   {
     question: 'Posso cancelar a qualquer momento?',
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     question: 'Meus dados estão seguros?',
-    answer: 'Segurança é nossa prioridade. Utilizamos criptografia de ponta a ponta e seguimos rigorosamente a LGPD. Seus dados financeiros são processados exclusivamente pela Hotmart; nós não temos acesso aos números do seu cartão.',
+    answer: 'Segurança é nossa prioridade. Utilizamos criptografia de ponta a ponta e seguimos rigorosamente a LGPD. Seus dados financeiros são processados exclusivamente pela Hotmart; nós não temos acesso a nenhum dado de pagamento (seja cartão, PIX ou boleto).',
   },
   {
     question: 'Como funciona a integração com Google Calendar?',
