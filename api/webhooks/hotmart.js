@@ -14,27 +14,28 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  // --- TRATAMENTO INTELIGENTE DA ESTRUTURA (1.0 vs 2.0) ---
+  // --- TRATAMENTO INTELIGENTE DA ESTRUTURA ---
   const body = req.body;
-  console.log('[WEBHOOK HOTMART] Payload Recebido:', JSON.stringify(body).substring(0, 500) + '...'); // Log resumido
+  console.log('[WEBHOOK HOTMART] Payload:', JSON.stringify(body).substring(0, 500)); 
 
-  // 1. Extração de Dados (Compatível com Hotmart 2.0)
-  // Na v2.0, tudo fica dentro de 'data'.
+  // 1. Extração de Dados
   const data = body.data || body; 
   
-  // Extrai E-mail
-  const email = data.buyer?.email || data.email;
+  // CORREÇÃO FEITA AQUI: Normaliza o email para evitar erro de maiúscula/minúscula
+  const rawEmail = data.buyer?.email || data.email;
+  // Se rawEmail existir, remove espaços e deixa minúsculo. Se não, fica null.
+  const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
   
-  // Extrai Status (Pode estar em vários lugares)
+  // Extrai Status
   let statusRaw = 
-    data.subscription?.status || // Assinatura (ACTIVE)
-    data.purchase?.status ||     // Compra (APPROVED)
-    data.status ||               // Legado
+    data.subscription?.status || 
+    data.purchase?.status ||     
+    data.status ||               
     '';
   
   const status = statusRaw.toUpperCase();
 
-  // 2. Validação do Token (Header ou Body)
+  // 2. Validação do Token
   const receivedToken = req.headers['x-hotmart-hottok'] || body.hottok || data.hottok;
   
   if (HOTMART_TOKEN && receivedToken && receivedToken !== HOTMART_TOKEN) {
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
   }
 
   if (!email) {
-    console.log('[WEBHOOK] Ignorado: Sem e-mail no payload.');
+    console.log('[WEBHOOK] Ignorado: Sem e-mail.');
     return res.status(200).send('Ignored: No Email');
   }
 
@@ -52,42 +53,32 @@ export default async function handler(req, res) {
     const userRes = await pool.query('SELECT id, name, phone FROM users WHERE email = $1', [email]);
     
     if (userRes.rows.length === 0) {
-      console.log(`[WEBHOOK] Usuário não encontrado: ${email}`);
+      console.log(`[WEBHOOK] Usuário não encontrado no banco: ${email}`);
       return res.status(200).send('User not found'); 
     }
 
     const user = userRes.rows[0];
 
     // 4. LÓGICA DE APROVAÇÃO
-    // Hotmart envia 'APPROVED', 'COMPLETED' ou 'ACTIVE' (para assinaturas)
     const isApproved = ['APPROVED', 'COMPLETED', 'ACTIVE'].includes(status);
 
     if (isApproved) {
-      
-      // --- Atualização de Telefone (Lógica v2.0) ---
+      console.log(`[WEBHOOK] Aprovado para ${email}. Ativando...`);
+
+      // --- Atualização de Telefone ---
       let phoneToUpdate = null;
       let finalPhone = user.phone; 
 
-      // Tenta pegar o telefone de todas as formas possíveis da Hotmart
-      if (data.buyer?.checkout_phone) {
-        phoneToUpdate = data.buyer.checkout_phone;
-      } else if (data.buyer?.phone) {
-        phoneToUpdate = data.buyer.phone;
-      } else if (data.phone_checkout_number) {
-        phoneToUpdate = data.phone_checkout_number;
-      }
+      if (data.buyer?.checkout_phone) phoneToUpdate = data.buyer.checkout_phone;
+      else if (data.buyer?.phone) phoneToUpdate = data.buyer.phone;
+      else if (data.phone_checkout_number) phoneToUpdate = data.phone_checkout_number;
 
       if (phoneToUpdate) {
         let cleanPhone = phoneToUpdate.replace(/\D/g, '');
-        // Se vier sem DDI (menos de 10 dígitos é estranho, mas garantimos o 55)
-        if (cleanPhone.length <= 11 && !cleanPhone.startsWith('55')) {
-            cleanPhone = '55' + cleanPhone;
-        }
+        if (cleanPhone.length <= 11 && !cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone;
         if (!cleanPhone.startsWith('+')) cleanPhone = `+${cleanPhone}`;
 
-        // Só atualiza se for diferente do atual
         if (cleanPhone !== user.phone) {
-            console.log(`[WEBHOOK] Atualizando telefone: ${cleanPhone}`);
             await pool.query('UPDATE users SET phone = $1 WHERE id = $2', [cleanPhone, user.id]);
             finalPhone = cleanPhone;
         }
@@ -102,7 +93,7 @@ export default async function handler(req, res) {
         [user.id]
       );
 
-      // 6. Enviar E-mail
+      // 6. Enviar E-mail do Site (Boas-vindas)
       await sendEmail({
         to: email,
         subject: 'Matrícula Ativada! 🚀',
@@ -112,10 +103,8 @@ export default async function handler(req, res) {
         buttonLink: 'https://foca-ai-oficial.vercel.app/' 
       });
 
-      // 7. AVISAR O N8N (Com Payload Limpo)
+      // 7. AVISAR O N8N
       try {
-        console.log(`[WEBHOOK] Enviando 'approved' para o n8n...`);
-        
         await fetch(N8N_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -123,19 +112,17 @@ export default async function handler(req, res) {
                 name: user.name,
                 email: email,
                 phone: finalPhone,
-                status: 'approved', // Status padronizado para o n8n não se confundir
+                status: 'approved',
                 hotmart_original_status: status,
-                origin: 'hotmart_webhook_v2'
+                origin: 'hotmart_webhook_v2_site'
             })
         });
-        
-        console.log('[WEBHOOK] n8n avisado com sucesso!');
       } catch (n8nError) {
         console.error('[WEBHOOK ERROR] n8n falhou:', n8nError);
       }
     }
 
-    // Cancelamento
+    // Lógica de Cancelamento
     else if (['CANCELED', 'REFUNDED', 'CHARGEBACK', 'EXPIRED', 'INACTIVE'].includes(status)) {
       await pool.query(
         `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`,
@@ -146,7 +133,7 @@ export default async function handler(req, res) {
         to: email,
         subject: 'Sua assinatura foi cancelada 😢',
         title: 'Sentiremos sua falta!',
-        message: 'Confirmamos o cancelamento. Se mudar de ideia, estaremos aqui.',
+        message: 'Confirmamos o cancelamento.',
         buttonText: 'REATIVAR ASSINATURA',
         buttonLink: 'https://foca-ai-oficial.vercel.app/'
       });
