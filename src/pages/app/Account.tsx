@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, ExternalLink, RotateCcw } from 'lucide-react';
+import { Lock, Calendar, CheckCircle2, ArrowLeft, XCircle, Loader2, CreditCard, Wallet, Mail, AlertTriangle, CalendarClock, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 
@@ -20,7 +20,6 @@ export default function Account() {
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
-  const [isManagingSub, setIsManagingSub] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const [localSubscription, setLocalSubscription] = useState<any>(null);
@@ -108,42 +107,7 @@ export default function Account() {
     setIsResetDialogOpen(true);
   };
 
-  // --- GERENCIAR ASSINATURA (POST - Reativar) ---
-  // Apenas para reativação. Cancelamento vai via Hotmart Redirect.
-  const handleSubscriptionAction = async (action: 'cancel' | 'reactivate') => {
-    try {
-      setIsManagingSub(true);
-      const token = localStorage.getItem('auth_token');
-      
-      const response = await fetch('/api/account', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ action })
-      });
-
-      if (!response.ok) throw new Error('Falha');
-
-      const data = await response.json();
-      setLocalSubscription(data.subscription); 
-
-      toast({ 
-        title: action === 'cancel' ? "Renovação Cancelada" : "Assinatura Reativada! 🚀", 
-        description: action === 'cancel' 
-          ? "Você mantém o acesso até o fim do período." 
-          : "Sua renovação automática foi ligada novamente. Verifique seu e-mail!",
-        className: action === 'reactivate' ? "bg-green-50 border-green-200" : ""
-      });
-
-    } catch (error) {
-      toast({ variant: "destructive", title: "Erro", description: "Tente novamente mais tarde." });
-    } finally {
-      setIsManagingSub(false);
-    }
-  };
-
+  // --- REDIRECIONAMENTO PARA HOTMART (Cancelar e Trocar Cartão) ---
   const handleHotmartRedirect = () => {
     window.open('https://consumer.hotmart.com/', '_blank');
   };
@@ -161,6 +125,7 @@ export default function Account() {
       const isDateValid = endDate && endDate > now;
       const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
       
+      // Verifica se está cancelado na Hotmart mas ainda dentro do prazo
       const canceledButValid = (sub.status === 'canceled' || sub.status === 'inactive') && isDateValid;
 
       return {
@@ -326,7 +291,7 @@ export default function Account() {
                       ) : (
                         <div className="flex items-center gap-3 p-4 border rounded-xl shadow-sm bg-yellow-50 border-yellow-200">
                           <div className="p-2 rounded-full bg-yellow-100 text-yellow-700"><AlertTriangle className="w-5 h-5" /></div>
-                          <div className="text-left"><p className="font-bold text-base text-yellow-900">Renovação Cancelada</p><p className="text-xs font-medium text-yellow-700">Acesso liberado até o fim do ciclo.</p></div>
+                          <div className="text-left"><p className="font-bold text-base text-yellow-900">Renovação Cancelada</p><p className="text-xs font-medium text-yellow-700">Acesso liberado até {formattedDate}.</p></div>
                         </div>
                       )
                     ) : (
@@ -359,30 +324,10 @@ export default function Account() {
               <CardFooter className="flex flex-col md:flex-row gap-2 justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
                   {isActive ? (
                     isCanceledButActive ? (
-                      // CENÁRIO: Cancelou mas ainda tem dias sobrando -> Botão REATIVAR COM CONFIRMAÇÃO
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <Button className="bg-green-600 hover:bg-green-700 text-white font-bold h-10 md:h-11 w-full md:w-auto text-sm shadow-md">
-                             {isManagingSub ? (<><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Processando...</>) : (<><RotateCcw className="w-3.5 h-3.5 mr-2" /> Reativar Assinatura</>)}
-                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Reativar renovação automática?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Ao confirmar, sua assinatura voltará a ser cobrada automaticamente ao final do período atual.
-                              <br/><br/>
-                              Você não perderá nenhum dia de acesso.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleSubscriptionAction('reactivate')} className="bg-green-600 hover:bg-green-700 text-white font-bold">
-                              Sim, Reativar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      // CENÁRIO: Cancelado mas ainda tem dias sobrando
+                       <Button variant="outline" className="w-full md:w-auto text-yellow-700 border-yellow-200 bg-yellow-50 cursor-not-allowed opacity-100" disabled>
+                        <CalendarClock className="w-3.5 h-3.5 mr-2" /> Cancelamento Agendado
+                      </Button>
                     ) : (
                       // CENÁRIO: Ativo normal (Pode Cancelar) -> REDIRECIONAMENTO SEGURO
                       <AlertDialog>
@@ -395,15 +340,15 @@ export default function Account() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Gerenciar na Hotmart</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Para sua segurança, o cancelamento e a gestão de pagamentos são feitos diretamente no portal da Hotmart.
+                              O cancelamento é feito diretamente no portal da Hotmart.
                               <br/><br/>
-                              Você será redirecionado para lá.
+                              <strong>Atenção:</strong> Após confirmar o cancelamento, você manterá o acesso até <strong>{formattedDate}</strong>. Depois dessa data, será necessário realizar uma <strong>nova compra</strong> para voltar a usar a plataforma.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Voltar</AlertDialogCancel>
                             <AlertDialogAction onClick={handleHotmartRedirect} className="bg-[#0026f7] text-white font-bold">
-                              Ir para Hotmart <ExternalLink className="ml-2 w-3 h-3" />
+                              Ir para Hotmart e Cancelar <ExternalLink className="ml-2 w-3 h-3" />
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

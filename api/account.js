@@ -1,6 +1,5 @@
 import pool from '../lib/db.js';
 import { verifyToken } from '../lib/auth.js';
-import { sendEmail } from '../lib/email.js'; // 1. Importação nova
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -49,52 +48,6 @@ export default async function handler(req, res) {
         [name, phone, avatar_url, userId]
       );
       return res.status(200).json({ message: 'Perfil atualizado' });
-    }
-
-    // --- POST: Gerenciar Assinatura ---
-    if (req.method === 'POST') {
-      const { action } = req.body;
-      // Define se liga ou desliga a renovação
-      let autoRenewValue = action === 'reactivate';
-
-      // 2. Busca dados do usuário antes de atualizar (precisamos do email e nome)
-      const userRes = await pool.query('SELECT name, email FROM users WHERE id = $1', [userId]);
-      const user = userRes.rows[0];
-
-      // 3. Atualiza o banco
-      const result = await pool.query(
-        `UPDATE subscriptions 
-         SET auto_renew = $1, updated_at = NOW()
-         WHERE user_id = $2
-         RETURNING *`,
-        [autoRenewValue, userId]
-      );
-
-      if (result.rowCount === 0) return res.status(404).json({ message: 'Assinatura não encontrada.' });
-      
-      const updatedSub = result.rows[0];
-
-      // 4. DISPARAR E-MAIL DE REATIVAÇÃO
-      // O Cancelamento seguro é feito via Hotmart (Webhook envia o email), 
-      // mas a Reativação é feita aqui.
-      if (user && action === 'reactivate') {
-          await sendEmail({
-            to: user.email,
-            subject: 'Assinatura Reativada! 🎉',
-            title: 'Bem-vindo(a) de volta!',
-            message: `Olá, ${user.name}. Que bom ter você com a gente! Sua assinatura foi reativada e a renovação automática está ligada novamente.`,
-            buttonText: 'Voltar aos Estudos',
-            buttonLink: 'https://foca-ai-oficial.vercel.app/'
-          });
-          console.log(`[API ACCOUNT] Email de reativação enviado para ${user.email}`);
-      }
-      // Se fosse cancelamento via API (que desaconselhamos), o código de e-mail entraria aqui.
-      // Mas como vamos usar o redirect, este bloco foca na reativação.
-
-      return res.status(200).json({ 
-        message: 'Atualizado com sucesso.',
-        subscription: updatedSub
-      });
     }
 
     return res.status(405).json({ message: 'Method Not Allowed' });
