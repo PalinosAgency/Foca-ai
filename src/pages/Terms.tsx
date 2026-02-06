@@ -7,7 +7,7 @@ export default function Terms() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-24 max-w-4xl">
         <h1 className="text-3xl font-bold mb-2 text-[#040949]">Termos de Uso</h1>
-        <p className="text-gray-500 mb-8">Versão 2.0 — Atualizada em: 30 de Janeiro de 2026</p>
+        <p className="text-gray-500 mb-8">Versão 2.1 — Atualizada em: 06 de Fevereiro de 2026</p>
 
         <div className="prose prose-blue max-w-none space-y-8 text-gray-700">
           
@@ -64,9 +64,9 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-[#040949] mb-3">4. Pagamentos e Cancelamento</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Cobrança:</strong> Os pagamentos são processados de forma segura por terceiros (Hotmart/Stripe).</li>
+              <li><strong>Cobrança:</strong> Os pagamentos são processados de forma segura e integral pela <strong>Hotmart</strong>. Nós não armazenamos dados do seu cartão de crédito.</li>
               <li><strong>Renovação Automática:</strong> A assinatura renova-se automaticamente ao fim de cada ciclo.</li>
-              <li><strong>Cancelamento:</strong> Você pode cancelar a qualquer momento no painel. O acesso continua até o fim do ciclo pago.</li>
+              <li><strong>Cancelamento:</strong> Você pode cancelar a qualquer momento através do painel da Hotmart (link disponível na sua conta). O acesso continua liberado até o fim do ciclo já pago.</li>
               <li><strong>Reembolso (7 Dias):</strong> Conforme o art. 49 do CDC, garantimos o reembolso integral se solicitado em até 7 dias após a primeira compra.</li>
             </ul>
           </section>
@@ -83,7 +83,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-[#040949] mb-3">6. Disponibilidade e Garantias</h2>
             <p>
-              O Serviço é fornecido "no estado em que se encontra". Dependemos de plataformas terceiras (WhatsApp, OpenAI, Google). Não garantimos que o serviço será ininterrupto ou livre de erros em caso de falhas nestas plataformas externas.
+              O Serviço é fornecido "no estado em que se encontra". Dependemos de plataformas terceiras (WhatsApp, OpenAI, Google, Hotmart). Não garantimos que o serviço será ininterrupto ou livre de erros em caso de falhas nestas plataformas externas.
             </p>
           </section>
 
