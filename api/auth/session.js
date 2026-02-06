@@ -6,30 +6,19 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ message: 'Method Not Allowed' });
 
   try {
     const userData = verifyToken(req);
+    // Aceita tanto userId (padrão novo) quanto id (padrão antigo)
+    const userId = userData?.userId || userData?.id;
 
-    // CORREÇÃO: Aceita 'id' OU 'userId' para compatibilidade
-    const userId = userData.id || userData.userId;
+    if (!userId) throw new Error("ID de usuário não encontrado no token");
 
-    if (!userId || isNaN(Number(userId))) {
-       throw new Error("Token inválido (ID não encontrado)");
-    }
-
+    // 1. Busca Usuário
     const userResult = await pool.query(
       'SELECT id, name, email, phone, avatar_url, is_verified, created_at FROM users WHERE id = $1',
       [userId]
@@ -38,17 +27,19 @@ export default async function handler(req, res) {
 
     if (!user) return res.status(404).json({ user: null, subscription: null });
 
+    // 2. Busca Assinatura (SEM FILTRO DE STATUS)
+    // Pega a última assinatura criada, seja ela active, trialing ou canceled
     let subscription = null;
     try {
         const subResult = await pool.query(
-            'SELECT * FROM subscriptions WHERE user_id = $1 AND status = $2', 
-            [user.id, 'active']
+            'SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', 
+            [user.id]
         );
         if (subResult.rows.length > 0) {
             subscription = subResult.rows[0];
         }
     } catch (e) {
-        subscription = null;
+        console.error("Erro ao buscar assinatura:", e);
     }
 
     return res.json({ user, subscription });
