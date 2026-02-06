@@ -144,9 +144,8 @@ export default function Account() {
     }
   };
 
-  // --- REDIRECIONAMENTO PARA HOTMART (NOVO) ---
+  // --- REDIRECIONAMENTO PARA HOTMART ---
   const handlePaymentMethodClick = () => {
-    // Abre o portal do consumidor da Hotmart em uma nova aba
     window.open('https://consumer.hotmart.com/', '_blank');
   };
 
@@ -155,20 +154,17 @@ export default function Account() {
   // --- CORREÇÃO DE LÓGICA VISUAL ---
   const sub = localSubscription;
 
-  // Usa useMemo para calcular o status corretamente
   const { isActive, isAutoRenew, formattedDate } = useMemo(() => {
       if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---' };
 
       const endDate = sub.current_period_end ? new Date(sub.current_period_end) : null;
       const now = new Date();
       
-      // Regra Inteligente: É ativo se o status for 'active' OU se a data futura existir
       const isDateValid = endDate && endDate > now;
       const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
 
       return {
           isActive: activeStatus,
-          // Se tiver active e data válida, é renovação automática. Se for canceled mas data válida, é renovação desligada.
           isAutoRenew: sub.auto_renew !== false && sub.status !== 'canceled', 
           formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---'
       };
@@ -386,7 +382,8 @@ export default function Account() {
                     )
                   ) : (
                     <Button asChild className="w-full md:w-auto bg-[#0026f7] hover:bg-[#0026f7]/90 text-white font-bold shadow-md h-10 md:h-11 text-sm">
-                      <Link to="/plans">Ver Planos</Link>
+                      {/* ALTERADO AQUI: Agora aponta para a Home com a âncora #precos */}
+                      <Link to="/#precos">Ver Planos</Link>
                     </Button>
                   )}
               </CardFooter>
