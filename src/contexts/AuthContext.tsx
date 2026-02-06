@@ -9,7 +9,6 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
-  // CORREÇÃO: Alterado de 'identifier' para 'email'
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -83,11 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // CORREÇÃO: Função atualizada para usar 'email'
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Agora enviamos a chave correta { email, password }
       const response = await api.login({ email, password });
       setUser(response.user);
       await refreshSession();
@@ -114,7 +111,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAuthenticated = !!user;
-  const hasActiveSubscription = subscription?.status === 'trialing' || subscription?.status === 'active';
+
+  // --- CORREÇÃO DE LÓGICA DE ASSINATURA ---
+  // Agora calculamos se a assinatura é válida verificando o status OU a data.
+  const hasActiveSubscription = React.useMemo(() => {
+    if (!subscription) return false;
+
+    // 1. Caso Simples: Status está explicitamente ativo
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
+        return true;
+    }
+
+    // 2. Caso "Cancelado mas Pago": Status 'canceled' mas data futura
+    // Isso acontece quando desativa a renovação automática
+    if (subscription.current_period_end) {
+        const endDate = new Date(subscription.current_period_end);
+        const now = new Date();
+        // Se a data de fim for maior que agora, ainda tem acesso!
+        return endDate > now;
+    }
+
+    return false;
+  }, [subscription]);
 
   return (
     <AuthContext.Provider
