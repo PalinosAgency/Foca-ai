@@ -1,5 +1,6 @@
 import pool from '../lib/db.js';
 import { verifyToken } from '../lib/auth.js';
+import { logError } from '../lib/logger.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
 
   } catch (error) {
-    console.error('[API ACCOUNT ERROR]', error);
+    logError('API Account Error', error);
     return res.status(500).json({ message: 'Erro interno no servidor' });
   }
 }

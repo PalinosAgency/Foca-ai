@@ -1,6 +1,7 @@
 import pool from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '../../lib/email.js';
+import { logError } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // Configuração CORS (Padrão para Backend Serverless)
@@ -54,11 +55,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: 'E-mail reenviado com sucesso!' });
 
   } catch (error) {
-    console.error('[RESEND VERIFICATION ERROR]', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    logError('Resend Verification Error', error);
     return res.status(500).json({ message: 'Erro interno.' });
   }
 }

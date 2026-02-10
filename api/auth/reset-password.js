@@ -1,5 +1,6 @@
 import pool from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
+import { logError, logInfo } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // CORS
@@ -49,10 +50,16 @@ export default async function handler(req, res) {
     // 5. Limpar token usado
     await pool.query('DELETE FROM password_reset_tokens WHERE token = $1', [token]);
 
+    // ✅ Log de auditoria
+    logInfo('Password Reset Completed', {
+      userId: record.user_id,
+      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+    });
+
     return res.status(200).json({ message: 'Senha alterada com sucesso!' });
 
   } catch (error) {
-    console.error('Erro no reset-password:', error);
+    logError('Reset Password Error', error);
     // Mensagem de erro mais detalhada para ajudar no debug se necessário
     return res.status(500).json({ message: `Erro interno: ${error.message}` });
   }

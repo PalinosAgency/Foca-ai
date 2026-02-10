@@ -1,6 +1,7 @@
 import pool from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
 import { signToken } from '../../lib/auth.js';
+import { logError, logInfo, logSecurityEvent } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // CORS
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
 
     // 3. Verificar Variável de Ambiente (Causa comum de erro 500)
     if (!process.env.JWT_SECRET) {
-      console.error('[CRITICAL] JWT_SECRET não configurado!');
+      logError('JWT_SECRET não configurado', null, { critical: true });
       return res.status(500).json({ message: 'Erro de configuração do servidor.' });
     }
 
@@ -35,6 +36,10 @@ export default async function handler(req, res) {
     const user = result.rows[0];
 
     if (!user) {
+      logSecurityEvent('Login Failed - User Not Found', {
+        email: emailLower,
+        ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+      });
       return res.status(401).json({ message: 'E-mail ou senha incorretos.' });
     }
 
@@ -55,6 +60,13 @@ export default async function handler(req, res) {
     // 8. Geração do Token
     const token = signToken({ userId: user.id, email: user.email });
 
+    // ✅ Log de sucesso (auditoria)
+    logInfo('Login Successful', {
+      userId: user.id,
+      email: emailLower,
+      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+    });
+
     return res.status(200).json({
       token,
       user: { id: user.id, name: user.name, email: user.email }
@@ -62,11 +74,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     // ✅ Log detalhado apenas server-side (não exposto ao cliente)
-    console.error('[LOGIN ERROR]', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    logError('Login Error', error);
 
     // ✅ Mensagem genérica para o cliente
     return res.status(500).json({

@@ -1,5 +1,6 @@
 import pool from '../../lib/db.js';
 import { verifyToken } from '../../lib/auth.js';
+import { logError } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // --- 1. CONFIGURAÇÃO DE SEGURANÇA (CORS) ---
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Erro financeiro:", error);
+    logError('Finance Summary Error', error);
     // Retorna zeros para não quebrar a tela
     return res.json({ balance_cents: 0, income_cents: 0, expense_cents: 0 });
   }

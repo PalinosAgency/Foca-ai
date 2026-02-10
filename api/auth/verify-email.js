@@ -1,4 +1,5 @@
 import pool from '../../lib/db.js';
+import { logError, logInfo } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // CORS Headers (Igual aos outros arquivos)
@@ -42,10 +43,16 @@ export default async function handler(req, res) {
       [token]
     );
 
+    // ✅ Log de auditoria
+    logInfo('Email Verified', {
+      userId: userId,
+      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+    });
+
     return res.status(200).json({ message: 'E-mail verificado com sucesso!' });
 
   } catch (error) {
-    console.error('Erro ao verificar e-mail:', error);
+    logError('Erro ao verificar e-mail', error);
     return res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 }

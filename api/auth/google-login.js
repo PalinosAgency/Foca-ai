@@ -1,5 +1,5 @@
-import pool from '../../lib/db.js'; 
-import { signToken } from '../../lib/auth.js'; 
+import pool from '../../lib/db.js';
+import { signToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
   // Configuração de CORS
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     // 3. Se não existir, CRIA
     if (!user) {
       const randomPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-      
+
       const newUser = await pool.query(
         `INSERT INTO users (name, email, password_hash, avatar_url, google_id, is_verified, created_at) 
          VALUES ($1, $2, $3, $4, $5, true, NOW()) 
@@ -48,10 +48,10 @@ export default async function handler(req, res) {
     }
 
     // 4. Gera Token JWT
-    const token = signToken({ 
-      userId: user.id, 
+    const token = signToken({
+      userId: user.id,
       email: user.email,
-      role: user.role || 'user' 
+      role: user.role || 'user'
     });
 
     return res.status(200).json({
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Erro Google Login:', error);
+    logError('Google Login Error', error);
     return res.status(500).json({ message: 'Falha ao autenticar com Google', error: error.message });
   }
 }

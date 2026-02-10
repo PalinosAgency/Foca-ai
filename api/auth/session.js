@@ -1,5 +1,6 @@
 import pool from '../../lib/db.js';
 import { verifyToken } from '../../lib/auth.js';
+import { logError } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // CORS Headers
@@ -30,33 +31,33 @@ export default async function handler(req, res) {
     // 2. Busca Assinatura (na tabela correta onde o Webhook grava)
     let subscription = null;
     try {
-        const subResult = await pool.query(
-            'SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', 
-            [user.id]
-        );
-        
-        if (subResult.rows.length > 0) {
-            subscription = subResult.rows[0];
+      const subResult = await pool.query(
+        'SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
+        [user.id]
+      );
 
-            // --- CORREÇÃO DE STATUS INTELIGENTE ---
-            // Se o status for "canceled", mas a data ainda estiver no futuro,
-            // nós FORÇAMOS o status para 'active' para o site liberar o acesso.
-            const now = new Date();
-            const expiresAt = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
+      if (subResult.rows.length > 0) {
+        subscription = subResult.rows[0];
 
-            if (expiresAt && expiresAt > now) {
-                // O tempo ainda é válido, então visualmente é 'active'
-                subscription.status = 'active';
-            }
+        // --- CORREÇÃO DE STATUS INTELIGENTE ---
+        // Se o status for "canceled", mas a data ainda estiver no futuro,
+        // nós FORÇAMOS o status para 'active' para o site liberar o acesso.
+        const now = new Date();
+        const expiresAt = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
+
+        if (expiresAt && expiresAt > now) {
+          // O tempo ainda é válido, então visualmente é 'active'
+          subscription.status = 'active';
         }
+      }
     } catch (e) {
-        console.error("Erro ao buscar assinatura:", e);
+      logError('Erro ao buscar assinatura', e);
     }
 
     return res.json({ user, subscription });
 
   } catch (error) {
-    console.error("Erro na sessão:", error.message);
+    logError('Erro na sessão', error);
     return res.status(401).json({ message: 'Não autorizado ou Token expirado' });
   }
 }

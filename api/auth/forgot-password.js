@@ -1,6 +1,7 @@
 import pool from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '../../lib/email.js';
+import { logError, logInfo } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -46,14 +47,16 @@ export default async function handler(req, res) {
       buttonLink: resetLink
     });
 
+    // ✅ Log de auditoria
+    logInfo('Password Reset Requested', {
+      email: emailLower,
+      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+    });
+
     return res.status(200).json({ message: 'E-mail enviado.' });
 
   } catch (error) {
-    console.error('[FORGOT PASSWORD ERROR]', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    logError('Forgot Password Error', error);
     return res.status(500).json({ message: 'Erro interno ao processar pedido.' });
   }
 }

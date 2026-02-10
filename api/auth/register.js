@@ -2,6 +2,7 @@ import pool from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmail } from '../../lib/email.js';
+import { logError, logInfo, logSecurityEvent } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -25,6 +26,10 @@ export default async function handler(req, res) {
     // 1. Verifica duplicidade
     const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [emailLower]);
     if (userCheck.rows.length > 0) {
+      logSecurityEvent('Register Attempt - Email Already Exists', {
+        email: emailLower,
+        ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+      });
       return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
     }
 
@@ -72,11 +77,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     // ✅ Log detalhado server-side, mensagem genérica para cliente
-    console.error('[REGISTER ERROR]', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    logError('Register Error', error);
     return res.status(500).json({ message: 'Erro interno ao criar conta.' });
   }
 }
