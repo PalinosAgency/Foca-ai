@@ -9,15 +9,15 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  
+
   const { email } = req.body;
 
   try {
     // CORREÇÃO: Remove espaços antes de procurar
     const emailLower = email.trim().toLowerCase();
-    
+
     const userResult = await pool.query('SELECT id, name FROM users WHERE email = $1', [emailLower]);
-    
+
     if (userResult.rows.length === 0) {
       // Retornamos 200 por segurança (para não revelar quais emails existem)
       return res.status(200).json({ message: 'Se o e-mail existir, enviamos o link.' });
@@ -33,7 +33,8 @@ export default async function handler(req, res) {
       [user.id, token, expiresAt]
     );
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://foca-ai-oficial.vercel.app';
+    // ✅ Correção: usa APP_URL ao invés de NEXT_PUBLIC_APP_URL (server-side only)
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://foca-ai-oficial.vercel.app';
     const resetLink = `${appUrl}/reset-password?token=${token}`;
 
     await sendEmail({
@@ -48,7 +49,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: 'E-mail enviado.' });
 
   } catch (error) {
-    console.error('[FORGOT PASSWORD ERROR]', error);
+    console.error('[FORGOT PASSWORD ERROR]', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     return res.status(500).json({ message: 'Erro interno ao processar pedido.' });
   }
 }

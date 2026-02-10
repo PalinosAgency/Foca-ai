@@ -34,7 +34,8 @@ export default async function handler(req, res) {
     );
 
     // 4. Enviar e-mail
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://focaai.vercel.app';
+    // ✅ Correção: usa APP_URL ao invés de NEXT_PUBLIC_APP_URL (server-side only)
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://focaai.vercel.app';
     const verificationLink = `${appUrl}/verify-email?token=${token}`;
 
     const emailSent = await sendEmail({
@@ -53,7 +54,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: 'E-mail reenviado com sucesso!' });
 
   } catch (error) {
-    console.error(error);
+    console.error('[RESEND VERIFICATION ERROR]', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     return res.status(500).json({ message: 'Erro interno.' });
   }
 }

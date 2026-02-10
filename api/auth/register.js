@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     // AQUI ESTÁ A CORREÇÃO: .trim() remove espaços antes e depois
-    const emailLower = email.trim().toLowerCase(); 
+    const emailLower = email.trim().toLowerCase();
 
     // 1. Verifica duplicidade
     const userCheck = await pool.query('SELECT id FROM users WHERE email = $1', [emailLower]);
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     // 2. Criptografia
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
+
     // 3. Inserir Usuário
     const newUser = await pool.query(
       `INSERT INTO users (name, email, phone, password_hash, is_verified, created_at) 
@@ -39,12 +39,12 @@ export default async function handler(req, res) {
        RETURNING id, name, email`,
       [name, emailLower, phone, hashedPassword]
     );
-    
+
     const user = newUser.rows[0];
 
     // 4. Token de Verificação
     const verificationToken = uuidv4();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await pool.query(
       'INSERT INTO verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
@@ -52,7 +52,8 @@ export default async function handler(req, res) {
     );
 
     // 5. Enviar E-mail
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://foca-ai-oficial.vercel.app';
+    // ✅ Correção: usa APP_URL ao invés de NEXT_PUBLIC_APP_URL (server-side only)
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://foca-ai-oficial.vercel.app';
     const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
 
     await sendEmail({
@@ -64,13 +65,18 @@ export default async function handler(req, res) {
       buttonLink: verifyLink
     });
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message: 'Cadastro realizado! Verifique seu e-mail.',
       user: user
     });
 
   } catch (error) {
-    console.error('[REGISTER ERROR]', error);
+    // ✅ Log detalhado server-side, mensagem genérica para cliente
+    console.error('[REGISTER ERROR]', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
     return res.status(500).json({ message: 'Erro interno ao criar conta.' });
   }
 }

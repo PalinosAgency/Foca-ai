@@ -16,37 +16,40 @@ export default async function handler(req, res) {
     if (!req.body) throw new Error('Body vazio');
     const { email, password } = req.body;
 
-    // 2. Verificar dados básicos
-    if (!email || !password) throw new Error(`Dados faltando. Email recebido: ${email}`);
+    // 2. Verificar dados básicos - ✅ Não loga dados sensíveis
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email e senha são obrigatórios.' });
+    }
 
     // 3. Verificar Variável de Ambiente (Causa comum de erro 500)
     if (!process.env.JWT_SECRET) {
-        throw new Error('CONFIGURAÇÃO: JWT_SECRET não encontrado nas variáveis de ambiente!');
+      console.error('[CRITICAL] JWT_SECRET não configurado!');
+      return res.status(500).json({ message: 'Erro de configuração do servidor.' });
     }
 
     // 4. Tratamento do email
     const emailLower = email.trim().toLowerCase();
-    
+
     // 5. Busca no Banco
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [emailLower]);
     const user = result.rows[0];
 
     if (!user) {
-        return res.status(401).json({ message: 'E-mail não encontrado.' });
+      return res.status(401).json({ message: 'E-mail ou senha incorretos.' });
     }
 
     // 6. Verifica se tem senha (pode ser conta Google)
     if (!user.password_hash) {
-        return res.status(401).json({ message: 'Conta criada via Google. Use o botão Google.' });
+      return res.status(401).json({ message: 'Conta criada via Google. Use o botão Google.' });
     }
 
     // 7. Comparação de Senha
     // Se a senha do reset vier com espaços e aqui não tiver trim (ou vice versa), falha.
     // O trim() garante que estamos comparando limpo com limpo.
     const isValid = await bcrypt.compare(password.trim(), user.password_hash);
-    
+
     if (!isValid) {
-        return res.status(401).json({ message: 'Senha incorreta.' });
+      return res.status(401).json({ message: 'E-mail ou senha incorretos.' });
     }
 
     // 8. Geração do Token
@@ -58,10 +61,16 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('ERRO LOGIN:', error);
-    // Aqui retornamos o erro REAL para você ver na tela
-    return res.status(500).json({ 
-        message: `ERRO TÉCNICO: ${error.message}` 
+    // ✅ Log detalhado apenas server-side (não exposto ao cliente)
+    console.error('[LOGIN ERROR]', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+
+    // ✅ Mensagem genérica para o cliente
+    return res.status(500).json({
+      message: 'Erro interno do servidor. Tente novamente mais tarde.'
     });
   }
 }
