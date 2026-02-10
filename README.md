@@ -5,13 +5,17 @@
   
   **Organize sua vida de forma simples e inteligente — direto do WhatsApp!**
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+  [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](#-licença)
   [![Security: A+](https://img.shields.io/badge/Security-A%2B-green.svg)](https://securityheaders.com)
   [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
   
   [🌐 Site Oficial](https://foca-ai-oficial.vercel.app) · [📧 Suporte](mailto:suportefocaaioficial@gmail.com) · [📸 Instagram](https://www.instagram.com/foca__ai)
 </div>
+
+---
+
+> **⚠️ AVISO LEGAL**: Este repositório é de código **source-available** (código visível apenas para referência e aprendizado). **O uso, cópia, modificação ou redistribuição para fins comerciais é estritamente proibido sem autorização expressa e por escrito da Palinos Produtora.** Veja a [Licença](#-licença) para detalhes.
 
 ---
 
@@ -274,27 +278,49 @@ VITE_GOOGLE_CLIENT_ID
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Siga estes passos:
+Este é um projeto **proprietário** desenvolvido pela **Palinos Produtora**. 
 
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Add: Minha nova feature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
+O código está disponível **apenas para fins educacionais e de referência**. Contribuições externas não são aceitas no momento.
 
-### Padrão de Commits
-
-- `Add:` Nova funcionalidade
-- `Fix:` Correção de bug
-- `Update:` Atualização de código existente
-- `Docs:` Documentação
-- `Security:` Melhorias de segurança
+**Se você deseja colaborar ou usar comercialmente**, entre em contato:
+- 📧 Email: suportefocaaioficial@gmail.com
+- 📸 Instagram: [@foca__ai](https://www.instagram.com/foca__ai)
 
 ---
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+**Copyright © 2026 Palinos Produtora. Todos os direitos reservados.**
+
+Este software é **proprietário e protegido por direitos autorais**. O código-fonte está disponível publicamente **apenas para fins de referência, estudo e aprendizado**, sob as seguintes condições:
+
+### ✅ Permitido (sem autorização)
+- Visualizar o código-fonte
+- Estudar a arquitetura e implementação
+- Usar como referência educacional
+
+### ❌ Proibido (sem autorização expressa e por escrito)
+- **Uso comercial** (incluindo SaaS, aplicações internas de empresas, serviços pagos)
+- **Redistribuição** (pública ou privada, modificada ou não)
+- **Cópia** (total ou parcial) para outros projetos
+- **Modificação e uso** em produção
+- **Criação de trabalhos derivados** para fins comerciais
+
+### 📝 Licenciamento Comercial
+
+Para obter uma **licença comercial** ou autorização de uso, entre em contato:
+- 📧 **Email**: suportefocaaioficial@gmail.com
+- 🌐 **Site**: [foca-ai-oficial.vercel.app](https://foca-ai-oficial.vercel.app)
+
+**Violações desta licença estão sujeitas a ações legais.**
+
+---
+
+## ⚖️ Disclaimer
+
+ESTE SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS. EM NENHUMA CIRCUNSTÂNCIA OS AUTORES SERÃO RESPONSÁVEIS POR QUAISQUER DANOS DECORRENTES DO USO DESTE SOFTWARE.
+
+O uso não autorizado deste software para fins comerciais constitui violação de direitos autorais e está sujeito a processos judiciais.
 
 ---
 
