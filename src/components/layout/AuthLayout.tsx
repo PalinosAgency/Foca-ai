@@ -11,18 +11,18 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
   return (
     // Fundo Deep Blue da marca preenchendo a tela
     <div className="min-h-screen w-full bg-[#040949] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
-      
+
       {/* Botão Voltar (Texto claro para contraste) */}
-      <Link 
-        to="/" 
-        className="absolute top-8 left-8 flex items-center gap-2 text-blue-200 hover:text-white transition-colors text-sm font-medium group"
+      <Link
+        to="/"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 text-blue-200 hover:text-white transition-colors text-sm font-medium group"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         Voltar para o início
       </Link>
 
       <div className="w-full max-w-[420px] flex flex-col gap-8 items-center z-10">
-        
+
         {/* CABEÇALHO: Logo Composta (Ícone + Texto Foca.aí) */}
         <div className="flex flex-col items-center text-center space-y-6 mb-2">
           {/* CORREÇÃO VISUAL:
@@ -30,16 +30,16 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
               Isso garante o "F" maiúsculo conforme a diretriz da marca.
           */}
           <div className="flex flex-col items-center gap-4">
-            <img 
-              src="/logo-icon-fundo.png" 
-              alt="Ícone Foca.aí" 
-              className="h-24 w-24 object-contain drop-shadow-lg" 
+            <img
+              src="/logo-icon-fundo.png"
+              alt="Ícone Foca.aí"
+              className="h-24 w-24 object-contain drop-shadow-lg"
             />
             <span className="text-5xl font-bold tracking-tight text-white drop-shadow-md">
               Foca.aí
             </span>
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               {title}
