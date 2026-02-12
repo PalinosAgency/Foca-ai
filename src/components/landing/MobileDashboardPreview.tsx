@@ -37,10 +37,10 @@ export function MobileDashboardPreview() {
             <div className="container mx-auto">
                 <div className="text-center mb-8 px-4">
                     <h2 className="text-2xl font-bold mb-3">
-                        Painel <span className="text-[#0026f7]">Completo</span>
+                        Seu painel de controle <span className="text-[#0026f7]">completo</span>
                     </h2>
                     <p className="text-blue-100/80 text-sm max-w-xs mx-auto">
-                        Acesse todos os seus dados organizados.
+                        Acesse todos os seus dados organizados pelo computador ou celular.
                     </p>
                 </div>
 
