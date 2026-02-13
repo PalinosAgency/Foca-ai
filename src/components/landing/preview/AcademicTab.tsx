@@ -1,7 +1,7 @@
-import { 
-  GraduationCap, Brain, CalendarClock, CheckCircle2, Clock, 
-  Pencil, FileText, BookOpen, Calendar as CalendarIcon, 
-  CalendarCheck, Trash2 
+import {
+  GraduationCap, Brain, CalendarClock, CheckCircle2, Clock,
+  Pencil, FileText, BookOpen, Calendar as CalendarIcon,
+  CalendarCheck, Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,35 +22,35 @@ export function AcademicTab() {
 
   // Mock baseado no "AcademicList.tsx" e "typeConfig"
   const items = [
-    { 
-      id: '1', 
-      doc_name: 'Prova de Cálculo I', 
+    {
+      id: '1',
+      doc_name: 'Prova de Cálculo I',
       summary: 'Conteúdo: Derivadas, Limites e Integrais básicas.',
-      tag: 'prova', 
+      tag: 'prova',
       created_at: '20 de Fev às 08:00',
       isFuture: true
     },
-    { 
-      id: '2', 
-      doc_name: 'Relatório de Física', 
+    {
+      id: '2',
+      doc_name: 'Relatório de Física',
       summary: 'Análise do experimento de queda livre.',
-      tag: 'trabalho', 
+      tag: 'trabalho',
       created_at: '28 de Jan às 10:30',
       isFuture: false
     },
-    { 
-      id: '3', 
-      doc_name: 'Capítulo 4 - História', 
+    {
+      id: '3',
+      doc_name: 'Capítulo 4 - História',
       summary: 'Leitura sobre a Revolução Industrial.',
-      tag: 'leitura', 
+      tag: 'leitura',
       created_at: '26 de Jan às 14:00',
       isFuture: false
     },
-    { 
-      id: '4', 
-      doc_name: 'Lista de Exercícios', 
+    {
+      id: '4',
+      doc_name: 'Lista de Exercícios',
       summary: 'Resolver questões 1 a 10 da lista de Álgebra.',
-      tag: 'estudo', 
+      tag: 'estudo',
       created_at: '25 de Jan às 16:00',
       isFuture: false
     },
@@ -66,11 +66,11 @@ export function AcademicTab() {
 
   return (
     <div className="space-y-6 font-sans text-slate-900">
-      
+
       {/* --- HEADER --- */}
-      <motion.div 
+      <motion.div
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        initial={{ opacity: 0, y: -20 }} 
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export function AcademicTab() {
             <p className="text-slate-500 mt-1">Planejamento, estudos e provas</p>
           </div>
         </div>
-        
+
         {/* Date Selector Mock */}
         <div className="w-[200px] flex items-center justify-start text-left font-normal px-4 py-2 bg-white border border-slate-200 rounded-md text-slate-500 shadow-sm hover:bg-slate-50 transition-colors cursor-pointer">
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -93,7 +93,7 @@ export function AcademicTab() {
       {/* --- METRICS ROW --- */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         {/* Sessões Estudo */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-green-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         >
@@ -107,7 +107,7 @@ export function AcademicTab() {
         </motion.div>
 
         {/* Provas Futuras */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-red-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
         >
@@ -121,7 +121,7 @@ export function AcademicTab() {
         </motion.div>
 
         {/* Total Atividades */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-slate-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
         >
@@ -135,7 +135,7 @@ export function AcademicTab() {
         </motion.div>
 
         {/* Próxima Prova */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
         >
@@ -151,9 +151,9 @@ export function AcademicTab() {
 
       {/* --- CONTENT GRID --- */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        
+
         {/* COLUNA ESQUERDA: TagsOverview (Distribuição) */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm h-fit"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         >
@@ -162,7 +162,7 @@ export function AcademicTab() {
             {tagCounts.map((item) => {
               const totalDocs = tagCounts.reduce((acc, d) => acc + d.count, 0);
               const percentage = (item.count / totalDocs) * 100;
-              
+
               return (
                 <div key={item.tag} className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ export function AcademicTab() {
         </motion.div>
 
         {/* COLUNA DIREITA: AcademicList (Cronograma) */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2 overflow-hidden"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         >
@@ -196,7 +196,7 @@ export function AcademicTab() {
             {items.map((item) => {
               const config = typeConfig[item.tag];
               const Icon = config.icon;
-              
+
               return (
                 <div
                   key={item.id}
@@ -217,7 +217,7 @@ export function AcademicTab() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${config.bg} ${config.color}`}>
                         {config.label}

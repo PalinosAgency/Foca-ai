@@ -9,33 +9,33 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { financeDaily, financeCategories, financeTransactions } from './mocks';
+import { DashboardDatePicker } from './DashboardDatePicker';
 
-// --- CORES PADRONIZADAS ---
-const PIE_COLORS = [
-    "hsl(217, 91%, 60%)",   // finance blue
-    "hsl(142, 71%, 45%)",   // health green
-    "hsl(25, 95%, 53%)",    // training orange
-    "hsl(262, 83%, 58%)",   // schedule purple
-    "hsl(199, 89%, 48%)",   // academic cyan
-    "hsl(0, 84%, 60%)",     // destructive red
-    "hsl(45, 93%, 47%)",    // yellow
-    "hsl(280, 65%, 60%)",   // violet
-    "hsl(180, 50%, 50%)",   // teal
-];
+import { useMemo } from 'react';
+import { PIE_COLORS } from './constants';
 
 export function MobileFinanceTab() {
     const formatCurrency = (val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
     // Cálculos Mockados
-    const totalIncome = 9700;
-    const totalExpenses = 6420;
-    const balance = totalIncome - totalExpenses;
+    const { balance, totalIncome, totalExpenses, flowData } = useMemo(() => {
+        const _totalIncome = 9700;
+        const _totalExpenses = 6420;
+        const _balance = _totalIncome - _totalExpenses;
 
-    // Adaptar dados para o gráfico de fluxo (BarChart)
-    const flowData = financeDaily.map(item => ({
-        ...item,
-        dateLabel: item.date,
-    }));
+        // Adaptar dados para o gráfico de fluxo (BarChart)
+        const _flowData = financeDaily.map(item => ({
+            ...item,
+            dateLabel: item.date,
+        }));
+
+        return {
+            balance: _balance,
+            totalIncome: _totalIncome,
+            totalExpenses: _totalExpenses,
+            flowData: _flowData
+        };
+    }, []);
 
     return (
         <div className="space-y-4 font-sans text-slate-900 pb-4">
@@ -50,6 +50,15 @@ export function MobileFinanceTab() {
                     <h1 className="text-xl font-bold text-[#040949]">Finanças</h1>
                     <p className="text-xs text-slate-500">Gerencie seu fluxo</p>
                 </div>
+            </motion.div>
+
+            {/* Date Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
+                <DashboardDatePicker className="w-full" />
             </motion.div>
 
             {/* --- METRICS ROW --- */}

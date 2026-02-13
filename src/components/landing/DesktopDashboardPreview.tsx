@@ -14,62 +14,53 @@ export function DesktopDashboardPreview() {
 
     const DashboardScreen = () => (
         <>
-            <div className="bg-[#121212] rounded-t-xl md:rounded-t-2xl p-1.5 md:p-2 shadow-2xl ring-1 ring-white/10 w-full h-full">
-                <div className="bg-[#F8FAFC] rounded-lg h-full w-full relative overflow-hidden flex flex-col font-sans">
-
-                    {/* TOP NAV (Limpa) */}
-                    <div className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 z-20">
-                        <div className="flex items-center gap-12">
-                            <div className="flex items-center gap-3">
-                                <img
-                                    src="/logo-icon-fundo.png"
-                                    alt="Icon"
-                                    className="w-10 h-10 object-contain"
-                                />
-                                <span className="font-bold text-2xl tracking-tight text-[#040949]">
-                                    Foca.aí
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                {[
-                                    { id: 'visao-geral', icon: LayoutDashboard, label: 'Visão Geral' },
-                                    { id: 'financas', icon: Wallet, label: 'Finanças' },
-                                    { id: 'saude', icon: Heart, label: 'Saúde' },
-                                    { id: 'academico', icon: GraduationCap, label: 'Acadêmico' },
-                                    { id: 'agenda', icon: Calendar, label: 'Agenda' },
-                                ].map((item) => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveTab(item.id)}
-                                        className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-base font-medium transition-all ${activeTab === item.id
-                                                ? 'text-[#0026f7] bg-blue-50 shadow-sm ring-1 ring-blue-100'
-                                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'stroke-2' : 'stroke-[1.5]'}`} />
-                                        <span>{item.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div></div> {/* Lado direito vazio */}
+            {/* TOP NAV (Limpa) */}
+            <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 z-20">
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-2.5">
+                        <img
+                            src="/logo-icon-fundo.png"
+                            alt="Icon"
+                            className="w-8 h-8 object-contain"
+                        />
+                        <span className="font-bold text-xl tracking-tight text-[#040949]">
+                            Foca.aí
+                        </span>
                     </div>
 
-                    {/* CONTEÚDO */}
-                    <div className="flex-1 overflow-y-auto bg-[#F8FAFC] p-8 custom-scrollbar">
-                        {activeTab === 'visao-geral' && <OverviewTab />}
-                        {activeTab === 'financas' && <FinanceTab />}
-                        {activeTab === 'saude' && <HealthTab />}
-                        {activeTab === 'academico' && <AcademicTab />}
-                        {activeTab === 'agenda' && <AgendaTab />}
+                    <div className="flex items-center gap-1">
+                        {[
+                            { id: 'visao-geral', icon: LayoutDashboard, label: 'Geral' },
+                            { id: 'financas', icon: Wallet, label: 'Finanças' },
+                            { id: 'academico', icon: GraduationCap, label: 'Acad.' },
+                            { id: 'saude', icon: Heart, label: 'Saúde' },
+                            { id: 'agenda', icon: Calendar, label: 'Agenda' },
+                        ].map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === item.id
+                                    ? 'text-[#0026f7] bg-blue-50 shadow-sm ring-1 ring-blue-100'
+                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'stroke-2' : 'stroke-[1.5]'}`} />
+                                <span>{item.label}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
+
+
             </div>
 
-            {/* Base do Laptop */}
-            <div className="bg-[#e2e2e2] h-[1.5%] rounded-b-xl w-[96%] mx-auto shadow-md relative mt-[1px]">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[15%] h-1 bg-gray-300 rounded-b-lg"></div>
+            {/* CONTEÚDO */}
+            <div className="flex-1 overflow-y-auto bg-[#F8FAFC] p-6 custom-scrollbar scrollbar-none">
+                {activeTab === 'visao-geral' && <OverviewTab onNavigate={setActiveTab} />}
+                {activeTab === 'financas' && <FinanceTab />}
+                {activeTab === 'saude' && <HealthTab />}
+                {activeTab === 'academico' && <AcademicTab />}
+                {activeTab === 'agenda' && <AgendaTab />}
             </div>
         </>
     );
@@ -94,7 +85,40 @@ export function DesktopDashboardPreview() {
                         transition={{ duration: 0.8 }}
                         className="relative z-10 w-full aspect-[16/10]"
                     >
-                        <DashboardScreen />
+                        {/* LAPTOP FRAME */}
+                        <div className="bg-[#1a1a1a] rounded-[1.5rem] p-[3%] shadow-2xl ring-1 ring-white/5 w-full h-full relative">
+
+                            {/* Camera / Webcam */}
+                            <div className="absolute top-[1.2%] left-1/2 -translate-x-1/2 w-[0.8%] h-[0.8%] bg-[#0a0a0a] rounded-full ring-1 ring-white/10 z-30 flex items-center justify-center">
+                                <div className="w-[40%] h-[40%] bg-[#2a2a2a] rounded-full"></div>
+                            </div>
+
+                            {/* Screen Container */}
+                            <div className="bg-[#000] rounded-xl h-full w-full relative overflow-hidden ring-1 ring-black/50">
+
+                                {/* Screen Reflection (Glass Effect) */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-transparent z-20 pointer-events-none opacity-50 rounded-xl"></div>
+
+                                {/* Actual Dashboard Content */}
+                                <div className="h-full w-full bg-[#F8FAFC] flex flex-col font-sans relative z-10">
+                                    <DashboardScreen />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* LAPTOP BASE / HINGE */}
+                        <div className="relative w-[102%] -left-[1%] mt-[-1%]">
+                            {/* Hinge */}
+                            <div className="h-4 bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] w-[80%] mx-auto rounded-b-lg shadow-lg relative z-0"></div>
+                            {/* Base Top Edge */}
+                            <div className="h-2 bg-[#2a2a2a] w-full rounded-t-sm mt-[-2px]"></div>
+                            {/* Base Body */}
+                            <div className="h-3 bg-[#e2e2e2] w-full rounded-b-xl shadow-xl flex justify-center border-t border-white/20">
+                                {/* Thumb Notch */}
+                                <div className="w-[15%] h-1.5 bg-[#d4d4d4] rounded-b-md"></div>
+                            </div>
+                        </div>
+
                     </motion.div>
 
                     {/* Brilho de Fundo */}

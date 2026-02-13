@@ -7,29 +7,29 @@ import {
     ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { motion } from 'framer-motion';
-import { waterData, sleepData } from './mocks';
+import { useMemo } from 'react';
+import { waterData, sleepData, workoutLog, weightLog } from './mocks';
+import { DashboardDatePicker } from './DashboardDatePicker';
 
 export function MobileHealthTab() {
     // --- MOCK DATA ---
-    const waterGoal = 2500;
-    const sleepGoal = 8;
-    const waterToday = 1250;
-    const lastSleep = 7.2;
-    const lastWeight = 78.5;
-    const waterPercentage = (waterToday / waterGoal) * 100;
-    const sleepPercentage = (lastSleep / sleepGoal) * 100;
+    const { waterGoal, sleepGoal, waterToday, lastSleep, lastWeight, waterPercentage, sleepPercentage } = useMemo(() => {
+        const _waterGoal = 2500;
+        const _sleepGoal = 8;
+        const _waterToday = 1250;
+        const _lastSleep = 7.2;
+        const _lastWeight = 78.5;
 
-    // Mock para Histórico de Treinos
-    const workoutLog = [
-        { id: '1', item: 'Musculação', description: 'Peito e Tríceps', date: '2025-01-28', value: 60, unit: 'min' },
-        { id: '2', item: 'Corrida', description: 'Parque Ibirapuera', date: '2025-01-26', value: 5, unit: 'km' },
-    ];
-
-    // Mock para Histórico de Peso (Adicionado para Paridade)
-    const weightLog = [
-        { date: '2025-01-28', value: 78.5 },
-        { date: '2025-01-21', value: 79.2 },
-    ];
+        return {
+            waterGoal: _waterGoal,
+            sleepGoal: _sleepGoal,
+            waterToday: _waterToday,
+            lastSleep: _lastSleep,
+            lastWeight: _lastWeight,
+            waterPercentage: (_waterToday / _waterGoal) * 100,
+            sleepPercentage: (_lastSleep / _sleepGoal) * 100
+        };
+    }, []);
 
     return (
         <div className="space-y-4 font-sans text-slate-900 pb-4">
@@ -49,6 +49,15 @@ export function MobileHealthTab() {
                         <p className="text-xs text-slate-500">Monitore seus hábitos</p>
                     </div>
                 </div>
+            </motion.div>
+
+            {/* Date Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
+                <DashboardDatePicker className="w-full" />
             </motion.div>
 
             {/* --- METRICS ROW --- */}

@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3001",
+  "loginUser": "heitprojetos@gmail.com",
+  "loginPassword": "Running66",
+  "executionArgs": {
+    "projectName": "Foca-ai",
+    "projectPath": "c:\\Projetos\\Foca-ai",
+    "testIds": [],
+    "additionalInstruction": "Prioritize TC003 (Login) and ensure subsequent tests use the authenticated session.",
+    "envs": {
+      "API_KEY": "sk-user-r8Cwq-2t0PAcVr8r_UTJ81uaxTvn22SmnysvM8t2hi0tegnuGP81D4RJU2MTuMO4PIvBaXOjSiKMcoiJOfizy6m-EhvHe6i4xAstt7wXYHHRjvLDAuZuKahQR9Rxaisy8Do"
+    }
+  },
+  "serverPort": 56554,
+  "proxy": "http://af1c5a13-6502-43aa-9b59-4536e1520af9:PdVUtz3M0QJPYFYgko4DsEBTF79unoUb@tun.testsprite.com:8080"
+}

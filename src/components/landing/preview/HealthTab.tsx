@@ -1,10 +1,10 @@
-import { 
-  Heart, Calendar as CalendarIcon, Droplets, Moon, 
-  Dumbbell, Scale, CalendarDays, ChevronDown 
+import {
+  Heart, Calendar as CalendarIcon, Droplets, Moon,
+  Dumbbell, Scale, CalendarDays, ChevronDown
 } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  ResponsiveContainer, ReferenceLine 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { waterData, sleepData } from './mocks';
@@ -34,11 +34,11 @@ export function HealthTab() {
 
   return (
     <div className="space-y-6 font-sans text-slate-900">
-      
+
       {/* --- HEADER --- */}
-      <motion.div 
+      <motion.div
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        initial={{ opacity: 0, y: -20 }} 
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center gap-3">
@@ -50,7 +50,7 @@ export function HealthTab() {
             <p className="text-slate-500 mt-1">Monitore seus hábitos</p>
           </div>
         </div>
-        
+
         {/* Date Selector Only - Botão Removido */}
         <div className="w-[200px] flex items-center justify-start text-left font-normal px-4 py-2 bg-white border border-slate-200 rounded-md text-slate-500 shadow-sm hover:bg-slate-50 transition-colors cursor-pointer">
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -61,7 +61,7 @@ export function HealthTab() {
       {/* --- METRICS ROW --- */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Água */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-blue-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         >
@@ -78,7 +78,7 @@ export function HealthTab() {
         </motion.div>
 
         {/* Sono */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-orange-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
         >
@@ -92,7 +92,7 @@ export function HealthTab() {
         </motion.div>
 
         {/* Peso */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-slate-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
         >
@@ -106,7 +106,7 @@ export function HealthTab() {
         </motion.div>
 
         {/* Atividades */}
-        <motion.div 
+        <motion.div
           className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-purple-300 transition-colors"
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
         >
@@ -156,9 +156,9 @@ export function HealthTab() {
                   formatter={(value: number) => [`${value}ml`, "Água"]}
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                 />
-                <ReferenceLine 
-                  y={waterGoal} stroke="#22c55e" strokeDasharray="5 5" 
-                  label={{ value: `Meta`, position: 'right', fill: "#22c55e", fontSize: 10 }} 
+                <ReferenceLine
+                  y={waterGoal} stroke="#22c55e" strokeDasharray="5 5"
+                  label={{ value: `Meta`, position: 'right', fill: "#22c55e", fontSize: 10 }}
                 />
                 <Bar dataKey="value" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} barSize={32} />
               </BarChart>
@@ -188,9 +188,9 @@ export function HealthTab() {
                   formatter={(value: number) => [`${value}h`, "Sono"]}
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                 />
-                <ReferenceLine 
-                  y={sleepGoal} stroke="#22c55e" strokeDasharray="5 5" 
-                  label={{ value: `Meta`, position: 'right', fill: "#22c55e", fontSize: 10 }} 
+                <ReferenceLine
+                  y={sleepGoal} stroke="#22c55e" strokeDasharray="5 5"
+                  label={{ value: `Meta`, position: 'right', fill: "#22c55e", fontSize: 10 }}
                 />
                 <Bar dataKey="value" fill="hsl(25, 95%, 53%)" radius={[4, 4, 0, 0]} barSize={32} />
               </BarChart>
@@ -201,7 +201,7 @@ export function HealthTab() {
 
       {/* --- LISTS ROW --- */}
       <div className="grid gap-6 lg:grid-cols-2">
-        
+
         {/* Histórico de Treinos */}
         <motion.div
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
@@ -209,24 +209,24 @@ export function HealthTab() {
         >
           <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
             <div className="p-2 bg-purple-100 rounded-lg">
-               <Dumbbell className="h-5 w-5 text-purple-600" />
+              <Dumbbell className="h-5 w-5 text-purple-600" />
             </div>
             Histórico de treinos
           </h3>
           <div className="space-y-3">
             {workoutLog.map((workout) => (
               <div key={workout.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-100 text-purple-600 shadow-sm">
-                   <Dumbbell className="h-5 w-5" />
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <p className="font-semibold text-slate-900">{workout.item}</p>
-                   <p className="text-xs text-slate-500">{workout.description}</p>
-                 </div>
-                 <div className="text-right">
-                    <p className="font-bold text-slate-900 text-sm">{workout.value} {workout.unit}</p>
-                    <p className="text-xs text-slate-400">{workout.date.split('-').reverse().slice(0,2).join('/')}</p>
-                 </div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-100 text-purple-600 shadow-sm">
+                  <Dumbbell className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900">{workout.item}</p>
+                  <p className="text-xs text-slate-500">{workout.description}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-slate-900 text-sm">{workout.value} {workout.unit}</p>
+                  <p className="text-xs text-slate-400">{workout.date.split('-').reverse().slice(0, 2).join('/')}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -239,7 +239,7 @@ export function HealthTab() {
         >
           <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
             <div className="p-2 bg-slate-100 rounded-lg">
-               <Scale className="h-5 w-5 text-slate-600" />
+              <Scale className="h-5 w-5 text-slate-600" />
             </div>
             Histórico de peso
           </h3>
@@ -253,15 +253,15 @@ export function HealthTab() {
                   <p className="font-semibold text-slate-900">{item.value} kg</p>
                   <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
                     <CalendarDays className="h-3 w-3" />
-                    <span>{item.date.split('-').reverse().slice(0,2).join('/')}</span>
+                    <span>{item.date.split('-').reverse().slice(0, 2).join('/')}</span>
                   </div>
                 </div>
               </div>
             ))}
             <div className="flex justify-center pt-2">
-               <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors">
-                  Ver histórico completo <ChevronDown className="h-4 w-4" />
-               </button>
+              <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors">
+                Ver histórico completo <ChevronDown className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </motion.div>

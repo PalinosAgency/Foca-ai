@@ -96,3 +96,66 @@ export const academicDocs = [
 export const academicCategories = [
   { name: 'Trabalho', count: 2 },
 ];
+
+// --- NOVOS MOCKS MOBILE ---
+
+// Health
+export const workoutLog = [
+  { id: '1', item: 'Musculação', description: 'Peito e Tríceps', date: '2025-01-28', value: 60, unit: 'min' },
+  { id: '2', item: 'Corrida', description: 'Parque Ibirapuera', date: '2025-01-26', value: 5, unit: 'km' },
+];
+
+export const weightLog = [
+  { date: '2025-01-28', value: 78.5 },
+  { date: '2025-01-21', value: 79.2 },
+];
+
+// Academic
+export const academicItems = [
+  {
+    id: '1',
+    doc_name: 'Prova de Cálculo I',
+    tag: 'prova',
+    created_at: '20 de Fev',
+    isFuture: true
+  },
+  {
+    id: '2',
+    doc_name: 'Relatório de Física',
+    tag: 'trabalho',
+    created_at: '28 de Jan',
+    isFuture: false
+  },
+  {
+    id: '3',
+    doc_name: 'Capítulo 4 - História',
+    tag: 'leitura',
+    created_at: '26 de Jan',
+    isFuture: false
+  },
+];
+
+// Agenda
+export const agendaEvents = [
+  {
+    id: '1',
+    title: 'Reunião de Projeto',
+    time: '14:00',
+    description: 'Alinhamento semanal com a equipe.',
+    synced: true
+  },
+  {
+    id: '2',
+    title: 'Focar no Dashboard',
+    time: '15:30',
+    description: 'Finalizar a implementação.',
+    synced: false
+  },
+  {
+    id: '3',
+    title: 'Academia',
+    time: '18:00',
+    description: 'Treino de perna.',
+    synced: true
+  }
+];

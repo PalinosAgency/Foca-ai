@@ -3,37 +3,17 @@ import {
     RefreshCw, Cloud
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { DashboardDatePicker } from './DashboardDatePicker';
+import { agendaEvents } from './mocks';
 
 export function MobileAgendaTab() {
     // --- MOCK DATA ---
-    const eventsCount = 8;
-    const eventsTodayCount = 3;
-    const syncedCount = 5;
-
-    // Mock para "EventsList" (Eventos do dia selecionado)
-    const eventsList = [
-        {
-            id: '1',
-            title: 'Reunião de Projeto',
-            time: '14:00',
-            description: 'Alinhamento semanal com a equipe.',
-            synced: true
-        },
-        {
-            id: '2',
-            title: 'Focar no Dashboard',
-            time: '15:30',
-            description: 'Finalizar a implementação.',
-            synced: false
-        },
-        {
-            id: '3',
-            title: 'Academia',
-            time: '18:00',
-            description: 'Treino de perna.',
-            synced: true
-        }
-    ];
+    const { eventsCount, eventsTodayCount, syncedCount } = useMemo(() => ({
+        eventsCount: 8,
+        eventsTodayCount: 3,
+        syncedCount: 5
+    }), []);
 
     return (
         <div className="space-y-4 font-sans text-slate-900 pb-4">
@@ -57,6 +37,15 @@ export function MobileAgendaTab() {
                     <RefreshCw className="h-2.5 w-2.5 animate-spin" />
                     <span>10:45</span>
                 </div>
+            </motion.div>
+
+            {/* Date Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
+                <DashboardDatePicker className="w-full" />
             </motion.div>
 
             {/* --- METRICS ROW --- */}
@@ -128,7 +117,7 @@ export function MobileAgendaTab() {
                 </h3>
 
                 <div className="space-y-2">
-                    {eventsList.map((event) => (
+                    {agendaEvents.map((event) => (
                         <div
                             key={event.id}
                             className="flex items-start gap-3 rounded-lg bg-slate-50 p-2 border border-slate-100"

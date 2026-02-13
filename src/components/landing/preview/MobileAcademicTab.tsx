@@ -4,46 +4,19 @@ import {
     CalendarCheck, Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { DashboardDatePicker } from './DashboardDatePicker';
+import { ACADEMIC_TYPE_CONFIG } from './constants';
+import { academicItems } from './mocks';
 
 export function MobileAcademicTab() {
     // --- MOCK DATA ---
-    const studySessions = 12;
-    const upcomingExams = 2;
-    const totalActivities = 24;
-    const nextExamDate = "15/02";
-
-    // Mock baseado no "AcademicList.tsx" e "typeConfig"
-    const items = [
-        {
-            id: '1',
-            doc_name: 'Prova de Cálculo I',
-            tag: 'prova',
-            created_at: '20 de Fev',
-            isFuture: true
-        },
-        {
-            id: '2',
-            doc_name: 'Relatório de Física',
-            tag: 'trabalho',
-            created_at: '28 de Jan',
-            isFuture: false
-        },
-        {
-            id: '3',
-            doc_name: 'Capítulo 4 - História',
-            tag: 'leitura',
-            created_at: '26 de Jan',
-            isFuture: false
-        },
-    ];
-
-    // Configuração visual idêntica ao "AcademicList.tsx"
-    const typeConfig: any = {
-        prova: { label: "Prova", color: "text-red-600", bg: "bg-red-100", icon: FileText },
-        trabalho: { label: "Trabalho", color: "text-orange-600", bg: "bg-orange-100", icon: CalendarCheck },
-        leitura: { label: "Leitura", color: "text-blue-600", bg: "bg-blue-100", icon: BookOpen },
-        estudo: { label: "Estudo", color: "text-green-600", bg: "bg-green-100", icon: GraduationCap },
-    };
+    const { studySessions, upcomingExams, totalActivities, nextExamDate } = useMemo(() => ({
+        studySessions: 12,
+        upcomingExams: 2,
+        totalActivities: 24,
+        nextExamDate: "15/02"
+    }), []);
 
     return (
         <div className="space-y-4 font-sans text-slate-900 pb-4">
@@ -63,6 +36,15 @@ export function MobileAcademicTab() {
                         <p className="text-xs text-slate-500">Planejamento e estudos</p>
                     </div>
                 </div>
+            </motion.div>
+
+            {/* Date Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
+                <DashboardDatePicker className="w-full" />
             </motion.div>
 
             {/* --- METRICS ROW --- */}
@@ -157,8 +139,8 @@ export function MobileAcademicTab() {
             >
                 <h3 className="mb-3 text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2">Cronograma</h3>
                 <div className="space-y-2">
-                    {items.map((item) => {
-                        const config = typeConfig[item.tag];
+                    {academicItems.map((item) => {
+                        const config = ACADEMIC_TYPE_CONFIG[item.tag];
                         const Icon = config.icon;
 
                         return (

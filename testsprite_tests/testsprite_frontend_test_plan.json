@@ -1,0 +1,396 @@
+[
+  {
+    "id": "TC003",
+    "title": "User Login with Correct Credentials",
+    "description": "Check login process completes successfully with valid username and password.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid email 'heitorcrespo011970@gmail.com' and password 'Running66'."
+      },
+      {
+        "type": "action",
+        "description": "Click on the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to dashboard and JWT token is set correctly."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "User Login with Incorrect Credentials",
+    "description": "Verify login fails with incorrect username/password and error message is shown.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Input invalid or incorrect username/email and password."
+      },
+      {
+        "type": "action",
+        "description": "Click on the login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login is denied and an appropriate error message is displayed."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Password Recovery with Registered Email",
+    "description": "Validate password recovery process works for registered user emails.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the forgot password page."
+      },
+      {
+        "type": "action",
+        "description": "Submit a registered email address."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify password recovery email trigger confirmation is displayed."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Password Recovery with Unregistered Email",
+    "description": "Check system does not reveal if email is unregistered and handles input securely.",
+    "category": "security",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the forgot password page."
+      },
+      {
+        "type": "action",
+        "description": "Submit an unregistered email address."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system behaves consistently and does not disclose email unregistration."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Dashboard Displays Financial Data Correctly",
+    "description": "Ensure the dashboard displays accurate and updated income and expense information.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in with 'heitorcrespo011970@gmail.com' and 'Running66'."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify income and expense summaries reflect stored data."
+      },
+      {
+        "type": "action",
+        "description": "Add new income and expense entries via the dashboard modes."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure new entries appear correctly and totals update dynamically."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Add and Validate Financial Entry Input Fields",
+    "description": "Verify form validations for adding income and expense entries in the financial module.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in and navigate to add financial entry form on the dashboard."
+      },
+      {
+        "type": "action",
+        "description": "Input invalid data such as negative values, missing required fields, or invalid date."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that validation prevents submission and displays relevant error messages."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Health Module - Add Medication Record",
+    "description": "Test adding medication details and ensure data is correctly saved and displayed.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in with 'heitorcrespo011970@gmail.com' and 'Running66' and navigate to the health tracking section."
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid medication details including name, dosage, and schedule."
+      },
+      {
+        "type": "action",
+        "description": "Submit the medication form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the medication record appears correctly in the list with all entered data."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Health Module - Add Medical Appointment",
+    "description": "Verify that users can add medical appointments and data is shown accurately.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to health tracking page after login."
+      },
+      {
+        "type": "action",
+        "description": "Input valid medical appointment details with date, time, and doctor’s name."
+      },
+      {
+        "type": "action",
+        "description": "Submit the appointment form."
+      },
+      {
+        "type": "assertion",
+        "description": "Validate the appointment is saved and displayed in the health overview."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Health Module - Input Validation",
+    "description": "Check form validation for medication and appointment entries with invalid or missing data.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to submit medication and appointment forms with invalid entries such as empty fields or incorrect formats."
+      },
+      {
+        "type": "assertion",
+        "description": "Form submission should be blocked and relevant error messages must appear."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Hotmart Webhook Integration - Valid Payment Event Handling",
+    "description": "Validate the webhook accepts legitimate Hotmart payment events and updates user payment status.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send a Hotmart webhook event with a valid HMAC signature for a successful payment."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the payment event is accepted, authenticated, and the user payment status updates accordingly."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Hotmart Webhook - Invalid HMAC Signature",
+    "description": "Ensure webhook rejects payment events with invalid or tampered HMAC signatures.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send a Hotmart webhook event with an incorrect or missing HMAC signature."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the webhook rejects the event and does not process payment updates."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Authentication Security - JWT Token Validation and Expiry",
+    "description": "Check that JWT tokens are valid, correctly signed, and expire after set time.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in to obtain JWT token."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the token is properly signed and contains required claims."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access protected endpoints with expired token."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm access is denied and user is prompted to re-authenticate."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Security Headers Verification",
+    "description": "Validate that Content Security Policy (CSP), HSTS, CORS, and other security headers are present on all pages.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access multiple pages including landing, login, dashboard and API endpoints."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response headers include CSP, HSTS, CORS whitelisting, and other security headers."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Rate Limiting Enforcement",
+    "description": "Check the application blocks excessive or abusive requests for login or API endpoints to prevent brute force attacks.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send repeated authentication or API requests exceeding configured thresholds."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system throttles or blocks the requests and returns appropriate error messages."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "CORS Policy Restriction",
+    "description": "Verify API endpoints only accept requests from whitelisted origins.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt API calls from allowed origins."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm request is accepted."
+      },
+      {
+        "type": "action",
+        "description": "Attempt API calls from disallowed origins."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm requests are rejected via CORS policy enforcement."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Logging Functionality Check",
+    "description": "Ensure that Winston logging captures info, warning, and error levels appropriately during operations.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform actions that trigger info logs such as user login and data update."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify info logs are recorded with correct messages."
+      },
+      {
+        "type": "action",
+        "description": "Trigger warning and error conditions like invalid input or server errors."
+      },
+      {
+        "type": "assertion",
+        "description": "Check warning and error logs contain relevant details for auditing."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Landing Page Responsiveness and Accessibility",
+    "description": "Verify landing page renders correctly and is accessible across supported devices and browsers.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open landing page in multiple browsers and devices."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure layout adjusts properly and UI components meet accessibility standards."
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Environment Variables Configuration",
+    "description": "Check that the application loads all required environment variables correctly and handles missing or invalid configurations.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Start the app with correct environment variables."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all external API integrations and services function without errors."
+      },
+      {
+        "type": "action",
+        "description": "Restart the app with missing or malformed environment variables."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the application reports configuration errors and does not start improperly."
+      }
+    ]
+  }
+]

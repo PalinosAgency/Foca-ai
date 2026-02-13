@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "project": "Foca-ai",
+    "date": "2026-02-12",
+    "prepared_by": "Palinos Produtora"
+  },
+  "product_overview": "Foca.aí is an intelligent personal assistant integrated directly within WhatsApp, designed to help users efficiently organize their finances, health, studies, and schedule through a simple and accessible interface.",
+  "core_goals": [
+    "Provide a seamless and secure personal assistant experience within WhatsApp.",
+    "Enable efficient management of finances including income and expenses tracking.",
+    "Allow users to track their health with medication and appointment records.",
+    "Support academic task planning for better study organization.",
+    "Offer an intelligent agenda to manage user appointments and reminders.",
+    "Ensure high-level security standards including authentication, data protection, and webhook validation.",
+    "Integrate with third-party services such as Hotmart for payments and Google OAuth for authentication.",
+    "Deliver a responsive frontend powered by React with modern UI and accessibility standards."
+  ],
+  "key_features": [
+    "Authentication system supporting login, registration, password recovery, JWT secure tokens, and Google OAuth integration.",
+    "User dashboard for quick access to financials, health tracking, study plans, and agenda overview.",
+    "Landing page showcasing product capabilities and branding.",
+    "Integration with Hotmart webhook handling with HMAC validation for payment events.",
+    "Comprehensive security implementations including CSP, HSTS, Rate limiting, CORS whitelist, and SSL/TLS certificates.",
+    "Form validation through React Hook Form with Zod schemas ensuring data integrity.",
+    "Structured logging using Winston with multiple log levels for auditing and debugging.",
+    "Configurable environment variables for database, SMTP, authentication secrets, and API tokens.",
+    "Roadmap feature planning including WhatsApp Bot integration, notifications, financial report generation, data exports, mobile app development, and automated testing."
+  ],
+  "user_flow_summary": [
+    "User visits the landing page and accesses authentication to register or log in.",
+    "Upon successful login, user is directed to the dashboard featuring finance, health, studies, and agenda modules.",
+    "User can manage finances by adding income and expenses.",
+    "Users record medications and medical appointments to track health status.",
+    "Academic users plan their study tasks and receive notifications (planned feature).",
+    "User manages appointments and reminders via the intelligent agenda (planned feature).",
+    "User can make use of integrated payment features via Hotmart, receiving updates through secure webhooks.",
+    "System handles user session management securely with JWT tokens and session expiry.",
+    "User interacts with UI components built for accessibility and responsiveness across devices."
+  ],
+  "validation_criteria": [
+    "Authentication is fully functional with secure JWT tokens and supports Google OAuth login.",
+    "Hotmart webhook events are received and validated using HMAC tokens to ensure security.",
+    "Dashboard reflects accurate and updated data for financials, health, studies, and agenda modules.",
+    "All forms across the app validate inputs with Zod schemas and reject invalid submissions.",
+    "Security headers including CSP, HSTS, and others are correctly applied to all pages.",
+    "Rate limiting effectively blocks brute-force and abusive traffic patterns.",
+    "CORS policies permit only whitelisted origins and prevent unauthorized API access.",
+    "SSL/TLS certificates are valid, and all communications are encrypted.",
+    "Logging captures sufficient detail on errors, warnings, and info events for audit and debugging purposes.",
+    "The app runs consistently across supported browsers and employs responsive design using Tailwind CSS.",
+    "Environment variables are correctly loaded and applied for database, email, authentication, and external APIs.",
+    "Code quality standards are met as verified by linting and passed test cases if available."
+  ],
+  "code_summary": {
+    "projectName": "Foca-ai",
+    "projectType": "frontend",
+    "framework": "react",
+    "language": "typescript",
+    "buildTool": "vite",
+    "styling": "tailwind",
+    "testingFramework": "vitest",
+    "features": [
+      "Authentication (Login, Register, Forgot Password)",
+      "Dashboard",
+      "Landing Page",
+      "Hotmart Webhook Integration"
+    ],
+    "dependencies": {
+      "react": "^18.3.1",
+      "vite": "^5.4.1",
+      "tailwindcss": "^3.4.10",
+      "framer-motion": "^11.3.30"
+    }
+  }
+}

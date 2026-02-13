@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -35,6 +35,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -44,7 +45,7 @@ export default function Login() {
     onSuccess: async (tokenResponse) => {
       try {
         await loginWithGoogle(tokenResponse.access_token);
-        
+
         const state = location.state as { from?: string; action?: string; plan?: any } | null;
         if (state?.action === 'add_to_cart' && state.plan) {
           addItem({
@@ -78,7 +79,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      
+
       const state = location.state as { from?: string; action?: string; plan?: any } | null;
 
       if (state?.action === 'add_to_cart' && state.plan) {
@@ -90,18 +91,21 @@ export default function Login() {
           type: 'subscription'
         });
         setIsOpen(true);
-        navigate('/'); 
+        navigate('/');
         toast({ title: "Login realizado!", description: "Finalize sua compra no carrinho." });
       } else {
-        navigate('/'); 
+        navigate('/');
       }
 
     } catch (error: any) {
+      const errorMessage = error.message || 'Verifique suas credenciais e tente novamente.';
       toast({
         title: 'Acesso negado',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
+        description: errorMessage,
         variant: 'destructive',
       });
+      // Set root form error for persistent display
+      setError('root', { message: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -121,9 +125,16 @@ export default function Login() {
       )}
 
       <div className="mb-6 space-y-4">
-        <Button 
-          variant="outline" 
-          type="button" 
+        {errors.root && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errors.root.message}</AlertDescription>
+          </Alert>
+        )}
+
+        <Button
+          variant="outline"
+          type="button"
           onClick={() => googleLogin()}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
@@ -189,9 +200,9 @@ export default function Login() {
           )}
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full h-12 font-bold text-base shadow-md hover:shadow-lg transition-all bg-[#0026f7] hover:bg-[#0026f7]/90 text-white" 
+        <Button
+          type="submit"
+          className="w-full h-12 font-bold text-base shadow-md hover:shadow-lg transition-all bg-[#0026f7] hover:bg-[#0026f7]/90 text-white"
           disabled={isLoading}
         >
           {isLoading ? (

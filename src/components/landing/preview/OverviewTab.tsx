@@ -1,15 +1,16 @@
-import { 
-  Wallet, TrendingUp, TrendingDown, ArrowRight, Receipt, 
+import {
+  Wallet, TrendingUp, TrendingDown, ArrowRight, Receipt,
   Heart, Droplets, Moon, GraduationCap, Calendar, CheckCircle2,
   Calendar as CalendarIcon
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Label } from 'recharts';
 import { motion } from 'framer-motion';
-import { 
-  overviewExpenses, 
-  overviewTransactions, 
+import {
+  overviewExpenses,
+  overviewTransactions,
   upcomingEvents
 } from './mocks';
+import { DashboardDatePicker } from './DashboardDatePicker';
 
 // --- CORES PADRONIZADAS (Baseadas no novo Dashboard) ---
 const COLORS = {
@@ -28,14 +29,19 @@ const PIE_COLORS = [
   "hsl(199, 89%, 48%)", // Academic Cyan
 ];
 
-export function OverviewTab() {
+
+interface OverviewTabProps {
+  onNavigate?: (tabId: string) => void;
+}
+
+export function OverviewTab({ onNavigate }: OverviewTabProps) {
   const formatCurrency = (val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
   // --- MOCK DATA CALCULATIONS ---
   const totalExpenses = overviewExpenses.reduce((acc, item) => acc + item.value, 0);
   const totalIncome = 9700;
   const balance = totalIncome - totalExpenses;
-  
+
   // Health Mocks
   const waterToday = 1250;
   const waterGoal = 2500;
@@ -54,32 +60,30 @@ export function OverviewTab() {
 
   return (
     <div className="space-y-6 font-sans text-slate-900">
-      
+
       {/* --- HEADER --- */}
-      <motion.div 
+      <motion.div
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        initial={{ opacity: 0, y: -20 }} 
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div>
           <h1 className="text-3xl font-bold text-[#040949]">Bom dia, Usuário! 👋</h1>
           <p className="text-slate-500 capitalize mt-1">quarta-feira, 28 de janeiro</p>
         </div>
-        
-        {/* DateRangeSelector Visual Mock */}
-        <div className="w-[260px] flex items-center justify-start text-left font-normal px-4 py-2 bg-white border border-slate-200 rounded-md text-slate-500 shadow-sm hover:bg-slate-50 transition-colors cursor-pointer">
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          <span>21/01/26 - 28/01/26</span>
-        </div>
+
+        {/* DateRangeSelector */}
+        <DashboardDatePicker className="w-[260px]" />
       </motion.div>
 
       {/* --- SEÇÃO 1: FINANÇAS --- */}
       <section className="grid gap-6 lg:grid-cols-3">
-        
+
         {/* CARD 1: Resumo Financeiro */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer"
+          onClick={() => onNavigate?.('financas')}
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -120,9 +124,10 @@ export function OverviewTab() {
         </motion.div>
 
         {/* CARD 2: Gráfico de Despesas */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer"
+          onClick={() => onNavigate?.('financas')}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">Despesas por Categoria</h3>
@@ -130,22 +135,22 @@ export function OverviewTab() {
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="h-48">
+            <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart margin={{ top: 0, left: 0, right: 0, bottom: 0 }}>
                   <Pie
                     data={overviewExpenses}
                     cx="50%" cy="50%"
-                    innerRadius={40} outerRadius={70}
+                    innerRadius={40} outerRadius={60}
                     paddingAngle={2} dataKey="value"
                   >
                     {overviewExpenses.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     formatter={(val: number) => formatCurrency(val)}
                     contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
@@ -153,14 +158,14 @@ export function OverviewTab() {
               </ResponsiveContainer>
             </div>
 
-            <div className="space-y-2 overflow-y-auto max-h-48 custom-scrollbar">
+            <div className="space-y-3 overflow-y-auto max-h-48 custom-scrollbar pt-2">
               {overviewExpenses.map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
+                <div key={item.name} className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
-                    <span className="text-slate-500 truncate max-w-[80px]">{item.name}</span>
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
+                    <span className="text-slate-500 text-sm truncate">{item.name}</span>
                   </div>
-                  <span className="font-medium text-xs">{formatCurrency(item.value)}</span>
+                  <span className="font-semibold text-sm pl-4.5">{formatCurrency(item.value)}</span>
                 </div>
               ))}
             </div>
@@ -173,9 +178,10 @@ export function OverviewTab() {
         </motion.div>
 
         {/* CARD 3: Últimas Transações */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer"
+          onClick={() => onNavigate?.('financas')}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -209,9 +215,10 @@ export function OverviewTab() {
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 
         {/* CARD 4: Saúde */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer"
+          onClick={() => onNavigate?.('saude')}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -252,7 +259,7 @@ export function OverviewTab() {
               <div className="h-full rounded-full bg-orange-500 transition-all duration-500" style={{ width: `${sleepPct}%` }} />
             </div>
           </div>
-          
+
           <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400">
             <span>Meta: {waterGoal}ml água</span>
             <span>Meta: {sleepGoal}h sono</span>
@@ -260,9 +267,10 @@ export function OverviewTab() {
         </motion.div>
 
         {/* CARD 5: Acadêmico */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer relative overflow-hidden"
+          onClick={() => onNavigate?.('academico')}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
@@ -327,9 +335,10 @@ export function OverviewTab() {
         </motion.div>
 
         {/* CARD 6: Agenda */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-blue-300 group cursor-pointer"
+          onClick={() => onNavigate?.('agenda')}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -358,7 +367,7 @@ export function OverviewTab() {
             {upcomingEvents.slice(0, 3).map((event) => (
               <div key={event.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
                 <div className="text-center min-w-12">
-                  <p className="text-xs font-medium text-violet-600">{event.datetime.split(' ')[0].slice(0,3)}</p>
+                  <p className="text-xs font-medium text-violet-600">{event.datetime.split(' ')[0].slice(0, 3)}</p>
                   <p className="text-xs text-slate-500">{event.datetime.match(/\d{2}:\d{2}/)}</p>
                 </div>
                 <span className="text-sm truncate flex-1 text-slate-700">{event.title}</span>

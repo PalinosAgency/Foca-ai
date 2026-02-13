@@ -10,31 +10,41 @@ import {
     overviewTransactions,
     upcomingEvents
 } from './mocks';
+import { DashboardDatePicker } from './DashboardDatePicker';
 
-// --- CORES PADRONIZADAS ---
-const PIE_COLORS = [
-    "hsl(217, 91%, 60%)", // Finance Blue
-    "hsl(142, 71%, 45%)", // Health Green
-    "hsl(25, 95%, 53%)",  // Training Orange
-    "hsl(262, 83%, 58%)", // Schedule Purple
-    "hsl(199, 89%, 48%)", // Academic Cyan
-];
+import { useMemo } from 'react';
+import { PIE_COLORS } from './constants';
 
 export function MobileOverviewTab() {
     const formatCurrency = (val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
     // --- MOCK DATA CALCULATIONS ---
-    const totalExpenses = overviewExpenses.reduce((acc, item) => acc + item.value, 0);
-    const totalIncome = 9700;
-    const balance = totalIncome - totalExpenses;
+    const { totalExpenses, balance, waterPct, sleepPct } = useMemo(() => {
+        const _totalExpenses = overviewExpenses.reduce((acc, item) => acc + item.value, 0);
+        const _balance = 9700 - _totalExpenses;
 
-    // Health Mocks
+        // Health Mocks
+        const waterToday = 1250;
+        const waterGoal = 2500;
+        const _waterPct = (waterToday / waterGoal) * 100;
+
+        const sleepValue = 7.2;
+        const sleepGoal = 8;
+        const _sleepPct = (sleepValue / sleepGoal) * 100;
+
+        return {
+            totalExpenses: _totalExpenses,
+            balance: _balance,
+            waterPct: _waterPct,
+            sleepPct: _sleepPct
+        };
+    }, []);
+
+    const totalIncome = 9700;
     const waterToday = 1250;
     const waterGoal = 2500;
-    const waterPct = (waterToday / waterGoal) * 100;
     const sleepValue = 7.2;
     const sleepGoal = 8;
-    const sleepPct = (sleepValue / sleepGoal) * 100;
 
     return (
         <div className="space-y-4 font-sans text-slate-900 pb-4">
@@ -49,6 +59,15 @@ export function MobileOverviewTab() {
                     <h1 className="text-xl font-bold text-[#040949]">Bom dia, Usuário! 👋</h1>
                     <p className="text-xs text-slate-500 capitalize">quarta-feira, 28 de janeiro</p>
                 </div>
+            </motion.div>
+
+            {/* Date Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
+                <DashboardDatePicker className="w-full" />
             </motion.div>
 
             {/* --- SEÇÃO 1: FINANÇAS --- */}
