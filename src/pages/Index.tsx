@@ -9,15 +9,18 @@ import { BenefitsSection } from '@/components/landing/BenefitsSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { FAQSection } from '@/components/landing/FAQSection';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
+
 export default function Index() {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   return (
     <div className="min-h-screen font-sans bg-background">
       <Navbar />
 
       {/* --- SETOR 1: HERO (AZUL ESCURO) --- */}
-      <DesktopHero />
-      <MobileHero />
+      {/* --- SETOR 1: HERO (AZUL ESCURO) --- */}
+      {isDesktop ? <DesktopHero /> : <MobileHero />}
 
       {/* --- SETOR 2: FEATURES (BRANCO) --- */}
       <FeaturesSection />

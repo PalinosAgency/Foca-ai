@@ -22,7 +22,7 @@ export default function ForgotPassword() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
-  
+
   const { toast } = useToast();
 
   const {
@@ -43,11 +43,12 @@ export default function ForgotPassword() {
         title: 'E-mail enviado',
         description: 'Verifique sua caixa de entrada.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Tente novamente.';
       toast({
         variant: 'destructive',
         title: 'Erro ao enviar',
-        description: error.message || 'Tente novamente.',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -111,7 +112,7 @@ export default function ForgotPassword() {
               </Link>
             </Button>
 
-            <button 
+            <button
               onClick={handleResend}
               disabled={isResending}
               className="w-full py-2 text-sm text-gray-500 hover:text-[#0026f7] flex items-center justify-center gap-2 transition-colors font-medium disabled:opacity-50"
@@ -131,13 +132,13 @@ export default function ForgotPassword() {
       subtitle="Digite seu e-mail para receber um link de redefinição."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
-        
+
         {/* --- HACK DE SEGURANÇA: INPUTS FANTASMAS --- */}
         {/* Estes inputs invisíveis atraem o preenchimento automático do navegador 
             para que o campo real abaixo fique limpo. */}
         <div className="w-0 h-0 overflow-hidden opacity-0 pointer-events-none absolute" aria-hidden="true">
-            <input type="text" name="fake_email_prevent_autofill" tabIndex={-1} />
-            <input type="password" name="fake_password_prevent_autofill" tabIndex={-1} />
+          <input type="text" name="fake_email_prevent_autofill" tabIndex={-1} />
+          <input type="password" name="fake_password_prevent_autofill" tabIndex={-1} />
         </div>
         {/* ------------------------------------------- */}
 
@@ -157,9 +158,9 @@ export default function ForgotPassword() {
           )}
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full h-12 font-bold text-base bg-[#0026f7] hover:bg-[#0026f7]/90 text-white shadow-md transition-all" 
+        <Button
+          type="submit"
+          className="w-full h-12 font-bold text-base bg-[#0026f7] hover:bg-[#0026f7]/90 text-white shadow-md transition-all"
           disabled={isLoading}
         >
           {isLoading ? (

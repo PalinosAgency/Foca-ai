@@ -7,7 +7,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  
+
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState("Verificando sua conta...");
 
@@ -23,9 +23,10 @@ export default function VerifyEmail() {
         await api.verifyEmail(token); // Chama a função no api.ts
         setStatus('success');
         setMessage("Sua conta foi verificada com sucesso!");
-      } catch (error: any) {
+      } catch (error: unknown) {
         setStatus('error');
-        setMessage(error.message || "Não foi possível verificar seu e-mail.");
+        const errorMessage = error instanceof Error ? error.message : "Não foi possível verificar seu e-mail.";
+        setMessage(errorMessage);
       }
     };
 
@@ -35,7 +36,7 @@ export default function VerifyEmail() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center space-y-6">
-        
+
         {/* LOADING */}
         {status === 'loading' && (
           <>

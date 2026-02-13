@@ -21,6 +21,12 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +52,7 @@ export default function Login() {
       try {
         await loginWithGoogle(tokenResponse.access_token);
 
-        const state = location.state as { from?: string; action?: string; plan?: any } | null;
+        const state = location.state as { from?: string; action?: string; plan?: Plan } | null;
         if (state?.action === 'add_to_cart' && state.plan) {
           addItem({
             id: state.plan.id,
@@ -80,7 +86,7 @@ export default function Login() {
     try {
       await login(data.email, data.password);
 
-      const state = location.state as { from?: string; action?: string; plan?: any } | null;
+      const state = location.state as { from?: string; action?: string; plan?: Plan } | null;
 
       if (state?.action === 'add_to_cart' && state.plan) {
         addItem({
@@ -97,8 +103,8 @@ export default function Login() {
         navigate('/');
       }
 
-    } catch (error: any) {
-      const errorMessage = error.message || 'Verifique suas credenciais e tente novamente.';
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Verifique suas credenciais e tente novamente.';
       toast({
         title: 'Acesso negado',
         description: errorMessage,

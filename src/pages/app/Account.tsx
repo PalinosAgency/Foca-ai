@@ -18,16 +18,22 @@ import { Badge } from '@/components/ui/badge';
 export default function Account() {
   const { user, refreshSession } = useAuth();
   const { toast } = useToast();
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false); // Novo estado para o loading do reset
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
-  const [localSubscription, setLocalSubscription] = useState<any>(null);
+  interface Subscription {
+    current_period_end?: string;
+    status?: string;
+    auto_renew?: boolean;
+  }
+  const [localSubscription, setLocalSubscription] = useState<Subscription | null>(null);
   const [fetchingSub, setFetchingSub] = useState(true);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ name: string; email: string; phone: string }>({
     name: user?.name || '',
+    email: user?.email || '',
     phone: user?.phone || '',
   });
 
@@ -35,6 +41,7 @@ export default function Account() {
     if (user) {
       setFormData({
         name: user.name || '',
+        email: user.email || '',
         phone: user.phone || '',
       });
     }
@@ -79,7 +86,7 @@ export default function Account() {
       const token = localStorage.getItem('auth_token');
       const response = await fetch('/api/account', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -93,9 +100,9 @@ export default function Account() {
 
       await refreshSession();
 
-      toast({ 
-        title: "Perfil atualizado!", 
-        description: "Suas informações foram salvas com sucesso." 
+      toast({
+        title: "Perfil atualizado!",
+        description: "Suas informações foram salvas com sucesso."
       });
     } catch (error) {
       toast({ variant: "destructive", title: "Erro", description: "Não foi possível atualizar." });
@@ -124,10 +131,10 @@ export default function Account() {
         throw new Error('Falha ao enviar');
       }
     } catch (error) {
-      toast({ 
-        variant: "destructive", 
-        title: "Erro", 
-        description: "Não foi possível enviar o e-mail de redefinição. Tente novamente." 
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível enviar o e-mail de redefinição. Tente novamente."
       });
     } finally {
       setIsResetLoading(false);
@@ -143,21 +150,21 @@ export default function Account() {
   const sub = localSubscription;
 
   const { isActive, isAutoRenew, formattedDate, isCanceledButActive } = useMemo(() => {
-      if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---', isCanceledButActive: false };
+    if (!sub) return { isActive: false, isAutoRenew: false, formattedDate: '---', isCanceledButActive: false };
 
-      const endDate = sub.current_period_end ? new Date(sub.current_period_end) : null;
-      const now = new Date();
-      
-      const isDateValid = endDate && endDate > now;
-      const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
-      const canceledButValid = (sub.status === 'canceled' || sub.status === 'inactive') && isDateValid;
+    const endDate = sub.current_period_end ? new Date(sub.current_period_end) : null;
+    const now = new Date();
 
-      return {
-          isActive: activeStatus,
-          isAutoRenew: sub.auto_renew !== false && sub.status !== 'canceled', 
-          formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---',
-          isCanceledButActive: canceledButValid
-      };
+    const isDateValid = endDate && endDate > now;
+    const activeStatus = sub.status === 'active' || sub.status === 'trialing' || isDateValid;
+    const canceledButValid = (sub.status === 'canceled' || sub.status === 'inactive') && isDateValid;
+
+    return {
+      isActive: activeStatus,
+      isAutoRenew: sub.auto_renew !== false && sub.status !== 'canceled',
+      formattedDate: endDate ? endDate.toLocaleDateString('pt-BR') : '---',
+      isCanceledButActive: canceledButValid
+    };
   }, [sub]);
 
   const planPrice = 'R$ 29,90';
@@ -206,11 +213,11 @@ export default function Account() {
                 <div className="grid md:grid-cols-2 gap-3 md:gap-4">
                   <div className="space-y-1.5">
                     <Label className="font-bold text-gray-700 text-xs md:text-sm">Nome Completo</Label>
-                    <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-white text-gray-900 border-gray-300" placeholder="Seu nome" />
+                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="bg-white text-gray-900 border-gray-300" placeholder="Seu nome" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="font-bold text-gray-700 text-xs md:text-sm">Telefone / WhatsApp</Label>
-                    <Input value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="bg-white text-gray-900 border-gray-300" placeholder="(00) 00000-0000" />
+                    <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="bg-white text-gray-900 border-gray-300" placeholder="(00) 00000-0000" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="font-bold text-gray-700 text-xs md:text-sm">Email (Não alterável)</Label>
@@ -223,9 +230,9 @@ export default function Account() {
                     <Label className="font-bold text-gray-700 text-xs md:text-sm">Senha</Label>
                     <div className="flex gap-2">
                       <Input type="password" value="********" disabled className="bg-gray-100 text-gray-500 cursor-not-allowed" />
-                      <Button 
-                        variant="outline" 
-                        onClick={handlePasswordReset} 
+                      <Button
+                        variant="outline"
+                        onClick={handlePasswordReset}
                         disabled={isResetLoading}
                         className="bg-white border-gray-300 text-gray-700 font-bold hover:bg-gray-50 hover:text-[#0026f7]"
                       >
@@ -251,13 +258,13 @@ export default function Account() {
               </CardHeader>
               <CardContent className="space-y-4 p-4 md:p-6 pt-0 md:pt-0">
                 {isActive ? (
-                   <div className="border border-green-200 bg-green-50/50 rounded-xl p-4 flex flex-col items-start gap-3">
-                     <div className="flex items-center gap-3 w-full">
-                       <div className="p-2 bg-white rounded-full border border-green-100 shadow-sm"><CreditCard className="w-5 h-5 text-green-600" /></div>
-                       <div className="text-left"><p className="font-bold text-green-900 text-sm">Método Ativo</p><p className="text-xs text-green-700">Gerenciado via Stripe/Hotmart</p></div>
-                       <span className="ml-auto bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">Ativo</span>
-                     </div>
-                   </div>
+                  <div className="border border-green-200 bg-green-50/50 rounded-xl p-4 flex flex-col items-start gap-3">
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-white rounded-full border border-green-100 shadow-sm"><CreditCard className="w-5 h-5 text-green-600" /></div>
+                      <div className="text-left"><p className="font-bold text-green-900 text-sm">Método Ativo</p><p className="text-xs text-green-700">Gerenciado via Stripe/Hotmart</p></div>
+                      <span className="ml-auto bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">Ativo</span>
+                    </div>
+                  </div>
                 ) : (
                   <div className="border border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center bg-gray-50 border-dashed text-center">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-2"><CreditCard className="w-5 h-5 text-gray-400" /></div>
@@ -265,17 +272,17 @@ export default function Account() {
                   </div>
                 )}
                 <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Histórico</h4>
-                    <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white shadow-sm overflow-hidden">
-                      {isActive ? (
-                        <div className="p-3 flex justify-between items-center hover:bg-gray-50 transition-colors">
-                          <div className="flex flex-col text-left"><span className="font-medium text-gray-900 text-sm">Assinatura Mensal</span><span className="text-[10px] text-gray-500">Processado</span></div>
-                          <div className="flex items-center gap-2"><span className="font-bold text-gray-900 text-sm">{planPrice}</span><span className="text-green-700 bg-green-50 px-1.5 py-0.5 rounded text-[9px] font-bold border border-green-100">PAGO</span></div>
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-xs text-gray-500">Nenhuma cobrança.</div>
-                      )}
-                    </div>
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Histórico</h4>
+                  <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 bg-white shadow-sm overflow-hidden">
+                    {isActive ? (
+                      <div className="p-3 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                        <div className="flex flex-col text-left"><span className="font-medium text-gray-900 text-sm">Assinatura Mensal</span><span className="text-[10px] text-gray-500">Processado</span></div>
+                        <div className="flex items-center gap-2"><span className="font-bold text-gray-900 text-sm">{planPrice}</span><span className="text-green-700 bg-green-50 px-1.5 py-0.5 rounded text-[9px] font-bold border border-green-100">PAGO</span></div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-xs text-gray-500">Nenhuma cobrança.</div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
@@ -298,8 +305,8 @@ export default function Account() {
                     <CardDescription className="text-gray-500 text-xs md:text-sm">Status do seu plano.</CardDescription>
                   </div>
                   {isActive ? (
-                    isAutoRenew ? <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">Ativa</Badge> 
-                    : <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 px-3 py-1">Acesso até {formattedDate}</Badge>
+                    isAutoRenew ? <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">Ativa</Badge>
+                      : <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 px-3 py-1">Acesso até {formattedDate}</Badge>
                   ) : (
                     <Badge variant="destructive">Inativa</Badge>
                   )}
@@ -340,12 +347,12 @@ export default function Account() {
                           {isAutoRenew ? "Próxima Cobrança" : "Acesso até"}
                         </p>
                         <p className={`text-base font-bold ${isAutoRenew ? 'text-gray-900' : 'text-yellow-700'}`}>
-                            {isActive ? formattedDate : 'Expirado'}
+                          {isActive ? formattedDate : 'Expirado'}
                         </p>
                       </div>
                       <div className="space-y-1 text-left">
-                          <p className="text-[10px] font-bold text-gray-500 flex items-center gap-1 uppercase tracking-wide">
-                            <CheckCircle2 className="w-3 h-3" /> Valor
+                        <p className="text-[10px] font-bold text-gray-500 flex items-center gap-1 uppercase tracking-wide">
+                          <CheckCircle2 className="w-3 h-3" /> Valor
                         </p>
                         <p className="text-base font-bold text-gray-900">{isActive ? planPrice : '---'}</p>
                       </div>
@@ -354,41 +361,41 @@ export default function Account() {
                 )}
               </CardContent>
               <CardFooter className="flex flex-col md:flex-row gap-2 justify-end border-t border-gray-100 bg-gray-50/50 rounded-b-xl pt-4 pb-4 px-4 md:px-6">
-                  {isActive ? (
-                    isCanceledButActive ? (
-                       <Button variant="outline" className="w-full md:w-auto text-yellow-700 border-yellow-200 bg-yellow-50 cursor-not-allowed opacity-100" disabled>
-                        <CalendarClock className="w-3.5 h-3.5 mr-2" /> Cancelamento Agendado
-                      </Button>
-                    ) : (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm">
-                            Cancelar Assinatura
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Gerenciar na Hotmart</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              O cancelamento é feito diretamente no portal da Hotmart.
-                              <br/><br/>
-                              <strong>Atenção:</strong> Após confirmar o cancelamento, você manterá o acesso até <strong>{formattedDate}</strong>. Depois dessa data, será necessário realizar uma <strong>nova compra</strong> para voltar a usar a plataforma.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Voltar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleHotmartRedirect} className="bg-[#0026f7] text-white font-bold">
-                              Ir para Hotmart e Cancelar <ExternalLink className="ml-2 w-3 h-3" />
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )
-                  ) : (
-                    <Button asChild className="w-full md:w-auto bg-[#0026f7] hover:bg-[#0026f7]/90 text-white font-bold shadow-md h-10 md:h-11 text-sm">
-                      <Link to="/#precos">Ver Planos</Link>
+                {isActive ? (
+                  isCanceledButActive ? (
+                    <Button variant="outline" className="w-full md:w-auto text-yellow-700 border-yellow-200 bg-yellow-50 cursor-not-allowed opacity-100" disabled>
+                      <CalendarClock className="w-3.5 h-3.5 mr-2" /> Cancelamento Agendado
                     </Button>
-                  )}
+                  ) : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 font-bold h-10 md:h-11 w-full md:w-auto text-sm">
+                          Cancelar Assinatura
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Gerenciar na Hotmart</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            O cancelamento é feito diretamente no portal da Hotmart.
+                            <br /><br />
+                            <strong>Atenção:</strong> Após confirmar o cancelamento, você manterá o acesso até <strong>{formattedDate}</strong>. Depois dessa data, será necessário realizar uma <strong>nova compra</strong> para voltar a usar a plataforma.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Voltar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleHotmartRedirect} className="bg-[#0026f7] text-white font-bold">
+                            Ir para Hotmart e Cancelar <ExternalLink className="ml-2 w-3 h-3" />
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )
+                ) : (
+                  <Button asChild className="w-full md:w-auto bg-[#0026f7] hover:bg-[#0026f7]/90 text-white font-bold shadow-md h-10 md:h-11 text-sm">
+                    <Link to="/#precos">Ver Planos</Link>
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </TabsContent>

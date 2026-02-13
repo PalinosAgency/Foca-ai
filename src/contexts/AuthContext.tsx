@@ -41,11 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setSubscription(null);
       }
-    } catch (error: any) {
-      if (error.message && error.message.includes('401')) {
-         localStorage.removeItem('auth_token');
-         setUser(null);
-         setSubscription(null);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message && error.message.includes('401')) {
+        localStorage.removeItem('auth_token');
+        setUser(null);
+        setSubscription(null);
       }
     } finally {
       setIsLoading(false);
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accessToken })
       });
-      
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -72,11 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       localStorage.setItem('auth_token', data.token);
-      
+
       setUser(data.user);
-      await refreshSession(); 
-    } catch (error) {
-      throw error;
+      await refreshSession();
     } finally {
       setIsLoading(false);
     }
@@ -96,13 +94,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-        try { await api.logout(); } catch (e) {} 
-        localStorage.removeItem('auth_token');
-        setUser(null);
-        setSubscription(null);
-        googleLogout();
+      // eslint-disable-next-line
+      try { await api.logout(); } catch (e) { }
+      localStorage.removeItem('auth_token');
+      setUser(null);
+      setSubscription(null);
+      googleLogout();
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -119,16 +118,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 1. Caso Simples: Status está explicitamente ativo
     if (subscription.status === 'active' || subscription.status === 'trialing') {
-        return true;
+      return true;
     }
 
     // 2. Caso "Cancelado mas Pago": Status 'canceled' mas data futura
     // Isso acontece quando desativa a renovação automática
     if (subscription.current_period_end) {
-        const endDate = new Date(subscription.current_period_end);
-        const now = new Date();
-        // Se a data de fim for maior que agora, ainda tem acesso!
-        return endDate > now;
+      const endDate = new Date(subscription.current_period_end);
+      const now = new Date();
+      // Se a data de fim for maior que agora, ainda tem acesso!
+      return endDate > now;
     }
 
     return false;

@@ -1,7 +1,7 @@
 import {
   GraduationCap, Brain, CalendarClock, CheckCircle2, Clock,
   Pencil, FileText, BookOpen, Calendar as CalendarIcon,
-  CalendarCheck, Trash2
+  CalendarCheck, Trash2, LucideIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -57,7 +57,7 @@ export function AcademicTab() {
   ];
 
   // Configuração visual idêntica ao "AcademicList.tsx"
-  const typeConfig: any = {
+  const typeConfig: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
     prova: { label: "Prova", color: "text-red-600", bg: "bg-red-100", icon: FileText },
     trabalho: { label: "Trabalho", color: "text-orange-600", bg: "bg-orange-100", icon: CalendarCheck },
     leitura: { label: "Leitura", color: "text-blue-600", bg: "bg-blue-100", icon: BookOpen },

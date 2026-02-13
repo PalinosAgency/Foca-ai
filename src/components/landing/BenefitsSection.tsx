@@ -1,11 +1,14 @@
 import { DesktopBenefits } from './DesktopBenefits';
 import { MobileBenefits } from './MobileBenefits';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
+
 export function BenefitsSection() {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   return (
     <>
-      <DesktopBenefits />
-      <MobileBenefits />
+      {isDesktop ? <DesktopBenefits /> : <MobileBenefits />}
     </>
   );
 }

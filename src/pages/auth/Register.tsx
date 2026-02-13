@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; 
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api'; 
-import { useAuth } from '@/contexts/AuthContext'; 
+import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Eye, EyeOff, Mail, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -29,7 +29,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
@@ -37,8 +37,8 @@ export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
-  const { loginWithGoogle } = useAuth(); 
+
+  const { loginWithGoogle } = useAuth();
 
   const {
     register,
@@ -57,17 +57,18 @@ export default function Register() {
     onSuccess: async (tokenResponse) => {
       try {
         await loginWithGoogle(tokenResponse.access_token);
-        
+
         toast({
           title: 'Conta criada!',
           description: 'Você entrou com sucesso usando o Google.',
         });
-        
-        navigate('/'); 
-      } catch (error: any) {
+
+        navigate('/');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Não foi possível criar a conta.';
         toast({
           title: 'Erro no Google',
-          description: error.message || 'Não foi possível criar a conta.',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
@@ -87,21 +88,23 @@ export default function Register() {
       await api.register({
         name: data.name,
         email: data.email,
+        phone: '', // Telefone opcional no cadastro inicial
         password: data.password,
       });
-      
+
       setRegisteredEmail(data.email);
       setIsSuccess(true);
-      
+
       toast({
         title: 'Cadastro realizado!',
         description: 'Verifique seu e-mail para ativar a conta.',
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Tente novamente mais tarde.';
       toast({
         title: 'Erro no cadastro',
-        description: error.message || 'Tente novamente mais tarde.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -118,11 +121,12 @@ export default function Register() {
         title: 'E-mail reenviado!',
         description: 'Verifique sua caixa de entrada e SPAM.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Tente novamente.';
       toast({
         variant: 'destructive',
         title: 'Erro ao reenviar',
-        description: error.message || 'Tente novamente.',
+        description: errorMessage,
       });
     } finally {
       setIsResending(false);
@@ -139,7 +143,7 @@ export default function Register() {
           <div className="bg-blue-50 p-5 rounded-full ring-8 ring-blue-50/50">
             <Mail className="w-10 h-10 text-[#0026f7]" />
           </div>
-          
+
           <div className="space-y-4 w-full">
             <div className="space-y-2">
               <p className="text-gray-600">
@@ -149,7 +153,7 @@ export default function Register() {
                 {registeredEmail}
               </p>
             </div>
-            
+
             <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl text-sm text-amber-900 text-left shadow-sm">
               <div className="flex items-center gap-2 mb-2 text-amber-700 font-semibold">
                 <AlertTriangle className="w-4 h-4" />
@@ -166,8 +170,8 @@ export default function Register() {
             <Button asChild className="w-full h-12 text-base font-bold bg-[#0026f7] hover:bg-[#0026f7]/90 text-white shadow-md">
               <Link to="/login">Já confirmei, ir para Login</Link>
             </Button>
-            
-            <button 
+
+            <button
               onClick={handleResendEmail}
               disabled={isResending}
               className="w-full py-2 text-sm text-gray-500 hover:text-[#0026f7] flex items-center justify-center gap-2 transition-colors font-medium disabled:opacity-50"
@@ -187,9 +191,9 @@ export default function Register() {
       subtitle="Comece sua jornada de organização hoje mesmo."
     >
       <div className="mb-6 space-y-4">
-        <Button 
-          variant="outline" 
-          type="button" 
+        <Button
+          variant="outline"
+          type="button"
           onClick={() => googleRegister()}
           className="w-full h-12 font-bold bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm text-base"
         >
@@ -210,14 +214,14 @@ export default function Register() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
-        
+
         <div className="space-y-2">
           <Label htmlFor="name" className="font-bold text-base">Nome completo</Label>
-          <Input 
-            id="name" 
-            placeholder="Ex: João Silva" 
-            {...register('name')} 
-            autoComplete="off" 
+          <Input
+            id="name"
+            placeholder="Ex: João Silva"
+            {...register('name')}
+            autoComplete="off"
             className="h-12 text-base"
           />
           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
@@ -225,12 +229,12 @@ export default function Register() {
 
         <div className="space-y-2">
           <Label htmlFor="email" className="font-bold text-base">Seu melhor e-mail</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="nome@exemplo.com" 
-            {...register('email')} 
-            autoComplete="off" 
+          <Input
+            id="email"
+            type="email"
+            placeholder="nome@exemplo.com"
+            {...register('email')}
+            autoComplete="off"
             className="h-12 text-base"
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
@@ -240,17 +244,17 @@ export default function Register() {
           <div className="space-y-2">
             <Label htmlFor="password" className="font-bold text-base">Senha</Label>
             <div className="relative">
-              <Input 
-                id="password" 
-                type={showPassword ? 'text' : 'password'} 
-                placeholder="Mín. 8 chars" 
-                {...register('password')} 
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Mín. 8 chars"
+                {...register('password')}
                 className="h-12 pr-10 text-base"
                 autoComplete="new-password"
               />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)} 
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -258,21 +262,21 @@ export default function Register() {
             </div>
             {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="font-bold text-base">Confirmar</Label>
             <div className="relative">
-              <Input 
-                id="confirmPassword" 
-                type={showConfirmPassword ? 'text' : 'password'} 
-                placeholder="Repita a senha" 
-                {...register('confirmPassword')} 
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Repita a senha"
+                {...register('confirmPassword')}
                 className="h-12 pr-10 text-base"
                 autoComplete="new-password"
               />
-              <button 
-                type="button" 
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -282,9 +286,9 @@ export default function Register() {
           </div>
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full h-12 font-bold text-base mt-2 shadow-md hover:shadow-lg transition-all bg-[#0026f7] hover:bg-[#0026f7]/90 text-white" 
+        <Button
+          type="submit"
+          className="w-full h-12 font-bold text-base mt-2 shadow-md hover:shadow-lg transition-all bg-[#0026f7] hover:bg-[#0026f7]/90 text-white"
           disabled={isLoading}
         >
           {isLoading ? (

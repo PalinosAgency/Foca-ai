@@ -10,9 +10,9 @@ export const PIE_COLORS = [
     "hsl(180, 50%, 50%)",   // Teal
 ];
 
-import { FileText, CalendarCheck, BookOpen, GraduationCap } from 'lucide-react';
+import { FileText, CalendarCheck, BookOpen, GraduationCap, LucideIcon } from 'lucide-react';
 
-export const ACADEMIC_TYPE_CONFIG: any = {
+export const ACADEMIC_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
     prova: { label: "Prova", color: "text-red-600", bg: "bg-red-100", icon: FileText },
     trabalho: { label: "Trabalho", color: "text-orange-600", bg: "bg-orange-100", icon: CalendarCheck },
     leitura: { label: "Leitura", color: "text-blue-600", bg: "bg-blue-100", icon: BookOpen },

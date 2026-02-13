@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface DashboardDatePickerProps extends React.HTMLAttributes<HTMLDivElement> { }
+type DashboardDatePickerProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function DashboardDatePicker({ className }: DashboardDatePickerProps) {
     const [date, setDate] = React.useState<Date | undefined>(new Date());
