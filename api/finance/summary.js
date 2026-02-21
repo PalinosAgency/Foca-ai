@@ -3,25 +3,35 @@ import { verifyToken } from '../../lib/auth.js';
 import { logError } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
-  // --- 1. CONFIGURAÇÃO DE SEGURANÇA (CORS) ---
-
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  // 1. Verificar autenticação (retorna 401 explicitamente, não 500/200)
+  let user;
   try {
-    const user = verifyToken(req); // Pega o ID do usuário logado
+    user = verifyToken(req);
+  } catch {
+    return res.status(401).json({ message: 'Token inválido ou ausente.' });
+  }
 
-    // Query segura
+  if (!user?.id && !user?.userId) {
+    return res.status(401).json({ message: 'Token inválido ou ausente.' });
+  }
+
+  const userId = user.id || user.userId;
+
+  // 2. Processar requisição autenticada
+  try {
     const result = await pool.query(`
       SELECT 
         COALESCE(SUM(CASE WHEN type = 'income' THEN amount_cents ELSE 0 END), 0) as income,
         COALESCE(SUM(CASE WHEN type = 'expense' THEN amount_cents ELSE 0 END), 0) as expense
       FROM transactions 
       WHERE user_id = $1
-    `, [user.id]);
+    `, [userId]);
 
     const income = parseInt(result.rows[0].income);
     const expense = parseInt(result.rows[0].expense);
@@ -35,7 +45,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     logError('Finance Summary Error', error);
-    // Retorna zeros para não quebrar a tela
-    return res.json({ balance_cents: 0, income_cents: 0, expense_cents: 0 });
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 }

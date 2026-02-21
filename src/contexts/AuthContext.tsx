@@ -1,7 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api, User, Subscription } from '@/lib/api';
-import { googleLogout } from '@react-oauth/google';
 
 interface AuthContextType {
   user: User | null;
@@ -10,7 +9,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -56,29 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession();
   }, [refreshSession]);
 
-  const loginWithGoogle = async (accessToken: string) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/auth/google-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken })
-      });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Falha no login Google');
-      }
-
-      localStorage.setItem('auth_token', data.token);
-
-      setUser(data.user);
-      await refreshSession();
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -99,7 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('auth_token');
       setUser(null);
       setSubscription(null);
-      googleLogout();
     } finally {
       setIsLoading(false);
     }
@@ -142,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         hasActiveSubscription,
         login,
-        loginWithGoogle,
         logout,
         register,
         refreshSession,

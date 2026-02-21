@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "stress": "node stress-test.mjs",
+    "stress:medium": "node stress-test.mjs --users 50 --requests 8",
+    "stress:heavy": "node stress-test.mjs --users 100 --requests 10"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

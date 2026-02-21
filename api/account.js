@@ -4,15 +4,21 @@ import { logError } from '../lib/logger.js';
 
 export default async function handler(req, res) {
 
-
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // 1. Verificar autenticação primeiro (401, não 500)
+  let userData;
   try {
-    const userData = verifyToken(req);
-    const userId = userData?.userId || userData?.id;
+    userData = verifyToken(req);
+  } catch {
+    return res.status(401).json({ message: 'Token inválido ou não fornecido.' });
+  }
 
-    if (!userId) return res.status(401).json({ message: 'Token inválido ou não fornecido.' });
+  const userId = userData?.userId || userData?.id;
+  if (!userId) return res.status(401).json({ message: 'Token inválido ou não fornecido.' });
 
+  // 2. Processar a requisição autenticada
+  try {
     if (req.method === 'GET') {
       const subResult = await pool.query(
         `SELECT status, plan_id, current_period_end, auto_renew 
