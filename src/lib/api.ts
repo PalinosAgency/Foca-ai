@@ -97,6 +97,19 @@ class ApiClient {
     return response;
   }
 
+  async loginWithGoogle(accessToken: string) {
+    const response = await this.request<{ token: string; user: User }>('/auth/google-login', {
+      method: 'POST',
+      body: JSON.stringify({ accessToken }),
+    });
+
+    if (response.token) {
+      localStorage.setItem('auth_token', response.token);
+    }
+
+    return response;
+  }
+
   async logout() {
     localStorage.removeItem('auth_token');
     // Se precisar chamar o backend para invalidar sessão:

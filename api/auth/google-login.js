@@ -1,5 +1,6 @@
 import pool from '../../lib/db.js';
 import { signToken } from '../../lib/auth.js';
+import { logError } from '../../lib/logger.js';
 
 export default async function handler(req, res) {
   // Configuração de CORS

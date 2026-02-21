@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>;
   refreshSession: () => Promise<void>;
 }
 
@@ -84,6 +85,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await api.register(data);
   };
 
+  const loginWithGoogle = async (accessToken: string) => {
+    setIsLoading(true);
+    try {
+      await api.loginWithGoogle(accessToken);
+      await refreshSession();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isAuthenticated = !!user;
 
   // --- CORREÇÃO DE LÓGICA DE ASSINATURA ---
@@ -119,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         register,
+        loginWithGoogle,
         refreshSession,
       }}
     >
