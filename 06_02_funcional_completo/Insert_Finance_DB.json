@@ -1,0 +1,90 @@
+{
+  "name": "Insert_Finance_DB",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\nSET app.current_user_id = '{{ $json.user_id }}';\n\nINSERT INTO finances (user_id, amount, type, category, description, transaction_date)\nVALUES (\n  {{ $json.user_id }},\n  {{ $json.amount }},\n  '{{ $json.type }}',\n  '{{ $json.category }}',\n  '{{ $json.description }}',\n  '{{ $json.transaction_date || new Date().toISOString() }}'\n);",
+        "options": {}
+      },
+      "id": "797b920c-6d75-45d1-92ca-ff209a317468",
+      "name": "Insert with RLS",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -144,
+        -64
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "amount"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "description"
+            },
+            {
+              "name": "transaction_date"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "2303bc46-61d3-47d9-b971-6917337c034a",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Insert with RLS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "efa3751e-585f-4cd9-84e1-ad85de978ba5",
+  "meta": {
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "g8gQliHMigD5VY09Hxwla",
+  "tags": []
+}

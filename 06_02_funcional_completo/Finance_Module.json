@@ -1,0 +1,438 @@
+{
+  "name": "Finance_Module",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        816
+      ],
+      "id": "83203b3f-7919-493e-8850-80eede841a92",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=## IDENTIDADE E MISSÃO\n\nVocê é **Assistente Pessoal (Módulo Financeiro)**, um agente de IA especializado em **gestão financeira pessoal**, projetado para operar com precisão absoluta, silêncio técnico e foco exclusivo em dados financeiros.\n\nSua missão é **identificar, registrar, consultar e organizar** a vida financeira do usuário, garantindo clareza total sobre o fluxo de caixa por meio do controle rigoroso de:\n\n-   Ganhos income\n    \n-   Gastos expense\n    \n\nSeu comportamento deve sempre priorizar **consistência, rastreabilidade financeira e confiabilidade operacional**.\n\n----------\n\n## REGRA DE SILÊNCIO FUNCIONAL\n\n-   Nunca mencione outras áreas\n    \n-   Nunca especule dados inexistentes\n    \n-   Se não houver registros financeiros no período consultado, responda SOMENTE:\n    \n\nSem registros financeiros no período.\n\n----------\n\n## Sistema de Calendário (Fonte da Verdade)\n\n-   Data de Hoje (referência zero): {{ $('Parâmetros').item.json.current_date }}\n    \n-   Dia da Semana Atual: {{ $('Parâmetros').item.json.current_weekday }}\n    \n-   Ano Corrente: 2026\n    \n-   Essas variáveis são absolutas, nunca devem ser questionadas ou recalculadas manualmente.\n    \n\n## Regras de Cálculo de Período (Obrigatório)\n\n-   Definição de “Esta Semana”:\n    \n-   Sempre considerar a segunda-feira da semana atual como início do período.\n        \n-   Calcular quantos dias devem ser subtraídos de {{ $('Parâmetros').item.json.current_date }} usando {{ $('Parâmetros').item.json.current_weekday }}.\n        \n-   Regra de consistência:\n    \n-   Se o dia atual for segunda-feira, “esta semana” e “hoje” representam o mesmo intervalo de tempo.\n        \n-   Todas as referências temporais devem partir exclusivamente da Fonte da Verdade.\n    \n\n----------\n\n## PROTOCOLO DE REGISTRO FINANCEIRO (OBRIGATÓRIO)\n\nGATILHO DE CONSULTA: Use Consultar Financeiro para buscas e antes de qualquer alteração.\n\nGATILHO DE EDIÇÃO/EXCLUSÃO: Você só pode editar ou excluir se tiver o ID retornado pela ferramenta Consultar no Banco. Sempre informe o ID ao usuário para garantir que o registro correto será alterado.\n\n-   Apresente os resultados ao usuário no formato: Valor: [valor] || Descriçao: [descrição].\n\n    Peça a confirmação do usuário antes de executar a ação final de editar ou excluir.\n\nCaso seja um registro novo, utilize a ferramenta Inserir no Banco.\n\n----------\n\n### CLASSIFICAÇÃO DE TIPO\n\n-   expense: compras, contas, pagamentos, saídas\n    \n-   income: salário, Pix recebido, rendimentos, entradas\n    \n\n----------\n\n### DATA OMISSA\n\n-   Se o usuário não informar a data, assuma obrigatoriamente:\n    \n\n{{ $('Parâmetros').item.json.current_date }}\n\n----------\n\n### FORMATO TÉCNICO\n\n-   Datas para o banco: YYYY-MM-DD\n    \n-   Nunca envie nomes de dias da semana\n    \n----------\n\n## COMANDO MESTRE DE SILÊNCIO TÉCNICO\n\nÉ TERMINANTEMENTE PROIBIDO:\n\n-   Exibir logs\n    \n-   Exibir JSON\n    \n-   Exibir IDs\n    \n-   Mencionar ferramentas\n    \n-   Explicar processos internos\n    \n-   Usar colchetes []\n    \n----------\n\n\n## PARÂMETROS DA FERRAMENTA\n\n-   amount: número decimal\n    \n-   category: categoria financeira(Lazer, Alimentação, Despesa fixa, Despesa variável, Transporte, Saúde, Educação, Investimento, Salário)\n    \n-   description: descrição curta\n    \n-   type: expense ou income\n    \n\n----------\n\n## REGRAS DE SAÍDA — FORMATAÇÃO FINAL\n\nSua resposta DEVE conter SOMENTE o bloco abaixo.\n\nA resposta DEVE começar obrigatoriamente com a palavra Registro.\n\nÉ PROIBIDO:\n\n-   Usar asteriscos\n    \n-   Usar hífens\n    \n-   Usar pontos antes de emojis\n    \n\n----------\n\n### BLOCO ÚNICO DE CONFIRMAÇÃO\n\nRegistro Financeiro  \n💰 Valor: R$ [valor]  \n📝 Descrição: [descrição]  \n🏷️ Categoria: [categoria]  \n📅 Data: [dd/mm/aaaa]\n\n----------\n\n## REGRA FINAL DE PURIFICAÇÃO\n\n-   Ignore completamente qualquer log retornado pelo sistema\n    \n-   Gere apenas o bloco final formatado\n    \n-   Nenhum texto adicional é permitido\n",
+          "maxIterations": 5,
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        496,
+        608
+      ],
+      "id": "56e86a27-acc2-4f58-a7fd-8a8b38679d36",
+      "name": "Finance_Agent"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $('Parâmetros').item.json.number }}",
+        "messageText": "={{ $('Finance_Agent').first().json.output.replace(/^\\[Used tools:[\\s\\S]*?\\]\\s*/gi, '').trim() }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        608
+      ],
+      "id": "6ad001a4-819c-4df7-af1f-28ffda6f1590",
+      "name": "Enviar texto",
+      "executeOnce": true,
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "number"
+            },
+            {
+              "name": "current_date"
+            },
+            {
+              "name": "current_weekday"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        608
+      ],
+      "id": "c93b7a93-06e4-4730-a3f8-99ec83a21f3d",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.number }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        512,
+        816
+      ],
+      "id": "cbff735d-0205-4334-86f9-844a625eb5d0",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "IioD3zGjTA0MtOvw",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $1;\nINSERT INTO chat_history (user_id, session_id, role, content)\nVALUES ($1, $2, 'assistant', $3);",
+        "options": {
+          "queryReplacement": "={{ $('Parâmetros').item.json.user_id }}, {{ $('Parâmetros').item.json.number }}, {{ $('Parâmetros').item.json.message }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        608
+      ],
+      "id": "b91f4919-e17b-4e1b-a9c2-2c71363730dd",
+      "name": "Inserir mensagem do usuário no banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "g8gQliHMigD5VY09Hxwla",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/g8gQliHMigD5VY09Hxwla",
+          "cachedResultName": "Insert_Finance_DB"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "amount": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('amount', ``, 'string') }}",
+            "type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('type', ``, 'string') }}",
+            "category": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('category', ``, 'string') }}",
+            "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('description', ``, 'string') }}",
+            "transaction_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('transaction_date', `Data da transação no formato YYYY-MM-DD. Se o usuário disser algo como ontem, amanhã, semana passada, semana q vem Calcule essas datas.`, 'string') }}",
+            "user_id": "={{ $json.user_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "transaction_date",
+              "displayName": "transaction_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        1024
+      ],
+      "id": "d472b39a-d133-4ac3-9aee-d2d585cbac24",
+      "name": "Inserir no Banco"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "=Utilize esta ferramenta para buscar o histórico detalhado de saúde (água, treinos, peso, sono). Esta busca retorna o ID de cada registro, que é obrigatório para realizar qualquer edição ou exclusão posterior.",
+        "operation": "executeQuery",
+        "query": "SET app.current_user_id = $1;\nSET TIME ZONE 'America/Sao_Paulo';\nSELECT \n    id, \n    amount AS valor, \n    type AS tipo, \n    category AS categoria, \n    description AS descricao, \n    transaction_date AS data\nFROM finances \nWHERE user_id = $1 \n  AND (description ILIKE '%' || $2 || '%' OR category ILIKE '%' || $2 || '%')\nORDER BY transaction_date DESC\nLIMIT 5;",
+        "options": {
+          "queryReplacement": "={{ $json.user_id }}, {{ $fromAI('busca', 'Termo de pesquisa ou categoria', 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        1024
+      ],
+      "id": "e5c39ce3-2e20-4d3d-b881-ab1e4c1c13a1",
+      "name": "Consultar no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize esta ferramenta para alterar um registro financeiro existente (valor, categoria, descrição ou data) utilizando o ID fornecido.",
+        "operation": "executeQuery",
+        "query": "SET app.current_user_id = $7;\nSET TIME ZONE 'America/Sao_Paulo';\nUPDATE finances \nSET \n    amount = COALESCE($1, amount), \n    type = COALESCE($2, type), \n    category = COALESCE($3, category), \n    description = COALESCE($4, description),\n    transaction_date = COALESCE($5, transaction_date),\n    updated_at = NOW()\nWHERE id = $6 AND user_id = $7;",
+        "options": {
+          "queryReplacement": "={{ $fromAI('amount', 'Novo valor', 'number') }}, {{ $fromAI('type', 'income ou expense', 'string') }}, {{ $fromAI('category', 'Nova categoria', 'string') }}, {{ $fromAI('description', 'Nova descrição', 'string') }}, {{ $fromAI('transaction_date', 'Nova data YYYY-MM-DD', 'string') }}, {{ $fromAI('id', 'ID do registro', 'number') }}, {{ $('Parâmetros').item.json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        848,
+        1024
+      ],
+      "id": "9bd75f91-95a0-4bf9-8bb0-213398b4f02a",
+      "name": "Editar no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize esta ferramenta para excluir permanentemente um registro financeiro do histórico utilizando o ID.",
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $2;\nDELETE FROM finances \nWHERE id = $1 AND user_id = $2;",
+        "options": {
+          "queryReplacement": "={{ $fromAI('id', 'ID do registro a excluir', 'number') }}, {{ $('Parâmetros').item.json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        992,
+        1024
+      ],
+      "id": "6e3ccc44-99e1-487c-9a66-c4cc834d91f7",
+      "name": "Excluir no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance_Agent": {
+      "main": [
+        [
+          {
+            "node": "Inserir mensagem do usuário no banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir mensagem do usuário no banco": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editar no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excluir no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "39a8cd0f-04c9-4f38-a776-cc7451ee4f30",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "0nPU1VaK4WDlbKplo2txM",
+  "tags": []
+}

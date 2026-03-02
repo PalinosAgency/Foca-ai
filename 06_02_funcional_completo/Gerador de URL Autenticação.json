@@ -1,0 +1,165 @@
+{
+  "name": "Gerador de URL Autenticação",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "number"
+            },
+            {
+              "name": "name"
+            },
+            {
+              "name": "tipo_mensagem"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ad868d49-a6ae-411e-bdc4-f76d0673503e",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.projetospalinos.online/message/sendText/Tim_Number",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n{\n  \"number\": $('Parâmetros').item.json.number,\n  \"text\": ($json.tipo_mensagem === 'reconexao' \n    ? \"*🔐 ATUALIZAÇÃO DE SEGURANÇA*\\n\\nOlá \" + $('Parâmetros').item.json.name + \"! Para garantir a segurança dos seus dados, o Google solicitou uma nova validação da sua conta.\\n\\nSua agenda está pausada no momento. *Clique no link abaixo para reativar em 10 segundos:* \\n\" + $json.oauth_url\n    : \"*🗓️ CONFIGURAÇÃO DA AGENDA*\\n\\nOlá \" + $('Parâmetros').item.json.name + \"! Notei que você ainda não tem sua conta google sincronizada conosco. Para que eu possa gerenciar seus compromissos no Google Calendário, preciso da sua autorização.\\n\\n👇 *Clique abaixo para autorizar:* \\n\" + $json.oauth_url)\n} \n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f54584a5-1e72-4b2c-8c06-93d28b20e8a9",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7aCu0afYXRUZdd4R",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79d4f2c2-55c7-4360-bffd-ff57b4974099",
+              "name": "=oauth_url",
+              "value": "={{\"https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https://n8n.projetospalinos.online/webhook/google-callback&response_type=code&scope=\" + encodeURIComponent(\"https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events\") + \"&access_type=offline&prompt=consent&state=\" + $json.user_id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        256
+      ],
+      "id": "8118efd2-8617-4e8c-b190-ee63daf6297e",
+      "name": "Gerar URL de Autenticação Curta",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79d4f2c2-55c7-4360-bffd-ff57b4974099",
+              "name": "=oauth_url",
+              "value": "={{\"https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https://n8n.projetospalinos.online/webhook/google-callback&response_type=code&scope=\" + encodeURIComponent(\"https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events\") + \"&access_type=offline&prompt=consent&state=\" + $json.user_id}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "360a5289-166f-46fb-be5d-51d63039ff2a",
+      "name": "Gerar URL de Autenticação Original"
+    }
+  ],
+  "pinData": {
+    "Parâmetros": [
+      {
+        "json": {
+          "user_id": 393,
+          "number": "5522997028004",
+          "name": "Miguel",
+          "tipo_mensagem": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Gerar URL de Autenticação Original",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar URL de Autenticação Original": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar URL de Autenticação Curta": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "97e26919-61bd-4259-8a93-9a2c9ec16de3",
+  "meta": {
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "rgP_dYVV74LycU6aP_ygU",
+  "tags": []
+}

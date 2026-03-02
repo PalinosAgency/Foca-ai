@@ -1,0 +1,475 @@
+{
+  "name": "Google_Token_Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "name"
+            },
+            {
+              "name": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1248,
+        96
+      ],
+      "id": "b7ab374e-8f80-4717-b822-0229268f5e21",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $1;\nSELECT google_access_token, google_refresh_token, google_token_expires_at \nFROM users WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{$json.user_id}}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1040,
+        96
+      ],
+      "id": "97cb871a-e6f1-4b5f-a2c6-9cde8a683c8d",
+      "name": "Consultar Chaves",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth2.googleapis.com/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "YOUR_CLIENT_ID"
+            },
+            {
+              "name": "client_secret",
+              "value": "YOUR_CLIENT_SECRET"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $(\"Consultar Chaves\").item.json[\"google_refresh_token\"] }}"
+            },
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "05273497-b3da-40fc-a1ec-4e238b3a86b5",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nUPDATE users SET google_access_token = $1, google_token_expires_at = $2 WHERE id = $3;",
+        "options": {
+          "queryReplacement": "={{ $json.access_token }}, {{ $now.plus({ seconds: $json.expires_in }).toFormat('yyyy-MM-dd HH:mm:ss') }}, {{ $('Parâmetros').first().json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "33fdd4c8-e498-49bd-9976-4aa5ae4dc168",
+      "name": "Atualizar Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "361594e4-0420-4205-a77d-4a166e072a80",
+              "name": "active_token",
+              "value": "={{ $node[\"Consultar Chaves\"].json[\"google_access_token\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        192
+      ],
+      "id": "f79e38e8-1547-420f-8e96-da49d1231587",
+      "name": "Saída do Token Existente"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "344de821-69c0-4b54-a97c-7bb2ef497a7e",
+              "name": "active_token",
+              "value": "={{ $(\"HTTP Request\").item.json[\"access_token\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d3536c47-ca2f-475b-95ed-226fb0a86469",
+      "name": "Saída New Token"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nUPDATE users SET google_refresh_token = NULL, google_access_token = NULL, google_token_expires_at = NULL WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Parâmetros').first().json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        288,
+        480
+      ],
+      "id": "657fbabb-6acb-4b8b-b3f0-9b36c5e07b51",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Limpa o Banco e Reenvia o Link de autenticação pro Usuário",
+        "height": 288,
+        "width": 480,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "c80570ec-5dfa-4e49-af84-c19812f2203d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dd759a92-c937-4b51-8958-cb5df7b6a018",
+              "leftValue": "google_refresh_token",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -832,
+        96
+      ],
+      "id": "93d43525-1d80-434d-8b17-789257383fdd",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c28818b9-ea67-49dc-90ff-188450cd56a5",
+              "leftValue": "={{ $now.toMillis() }}",
+              "rightValue": "={{ DateTime.fromISO($json.google_token_expires_at).minus({ minutes: 10 }).toMillis() }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -352,
+        80
+      ],
+      "id": "b11f1e6a-0fa5-4e8b-8415-695c452b3e3b",
+      "name": "If",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rgP_dYVV74LycU6aP_ygU",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rgP_dYVV74LycU6aP_ygU",
+          "cachedResultName": "Gerador de URL Autenticação"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Parâmetros').first().json.user_id }}",
+            "number": "={{ $('Parâmetros').first().json.number }}",
+            "name": "={{ $('Parâmetros').first().json.name }}",
+            "tipo_mensagem": "=reconexao"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tipo_mensagem",
+              "displayName": "tipo_mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        480
+      ],
+      "id": "7ab0c22c-7763-477b-8b7c-7777c09c5598",
+      "name": "Call 'Gerador de URL Autenticação'"
+    }
+  ],
+  "pinData": {
+    "Parâmetros": [
+      {
+        "json": {
+          "user_id": 393,
+          "name": "Miguel",
+          "number": "5522997028004"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Consultar Chaves",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Chaves": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Banco",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Banco": {
+      "main": [
+        [
+          {
+            "node": "Saída New Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Call 'Gerador de URL Autenticação'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Saída do Token Existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "15dfef8a-bf44-467d-bfbf-2385eebb5d9a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "AVi9g7CMKzCtqQg2dL8tb",
+  "tags": []
+}

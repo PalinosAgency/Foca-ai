@@ -1,0 +1,321 @@
+{
+  "name": "Search_Event_Calendar",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "time_min"
+            },
+            {
+              "name": "time_max"
+            },
+            {
+              "name": "title"
+            },
+            {
+              "name": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        96
+      ],
+      "id": "58a5afb9-64fb-4e0e-81b9-440928d3d7be",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('Parâmetros').first().json.title || '' }}"
+            },
+            {
+              "name": "timeMin",
+              "value": "={{ $('Parâmetros').first().json.time_min }}"
+            },
+            {
+              "name": "timeMax",
+              "value": "={{ $('Parâmetros').first().json.time_max }}"
+            },
+            {
+              "name": "singleEvents",
+              "value": "true"
+            },
+            {
+              "name": "orderBy",
+              "value": "startTime"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.active_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -416,
+        96
+      ],
+      "id": "33529990-5e4b-44cf-be40-f38dca65dcdc",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7d3f3f45-88df-4770-8412-859f53613abc",
+              "leftValue": "={{ $json.items.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -208,
+        96
+      ],
+      "id": "fb8b03b7-0c96-4d6c-a773-4dc750c6bae6",
+      "name": "Encontrou evento?"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $('Parâmetros').first().json.number}}",
+        "messageText": "Não encontrei nenhum compromisso no período solicitado.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        32,
+        304
+      ],
+      "id": "41727381-6b3f-4c63-a325-d73b73467afb",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $node[\"HTTP Request\"].json.items;\nlet message = \"*🗓️ SEUS COMPROMISSOS ENCONTRADOS:*\\n\\n\";\n\nitems.forEach((event, index) => {\n  // Formata a data/hora para o padrão brasileiro\n  const start = new Date(event.start.dateTime || event.start.date);\n  const time = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });\n  const date = start.toLocaleDateString('pt-BR');\n\n  message += `*${index + 1}. ${event.summary}*\\n`;\n  message += `⏰ ${date} às ${time}\\n`;\n});\n\nreturn { message,\n       raw_events: items\n       };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f614c094-b04d-4b5a-9ae3-7b751388efb2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{$('Parâmetros').item.json.number}}",
+        "messageText": "={{$json.message}}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d1106cff-689a-458f-93f9-eb2a454668c4",
+      "name": "Enviar texto1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "AVi9g7CMKzCtqQg2dL8tb",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/AVi9g7CMKzCtqQg2dL8tb",
+          "cachedResultName": "Google_Token_Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{$json.user_id}}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        96
+      ],
+      "id": "d403592f-bc17-4b88-aa2d-589a11e96d7a",
+      "name": "Call 'Google_Token_Manager'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Call 'Google_Token_Manager'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Encontrou evento?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encontrou evento?": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Google_Token_Manager'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1d02c6e4-7b71-4ace-be77-b32c76aa1a56",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "CRLxyTxOqYLFNa19u-4xj",
+  "tags": []
+}

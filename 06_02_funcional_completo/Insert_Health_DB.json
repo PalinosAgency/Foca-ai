@@ -1,0 +1,93 @@
+{
+  "name": "Insert_Health_DB",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\nSET app.current_user_id = '{{ $json.user_id }}';\n\nINSERT INTO health (user_id, category, item, value,unit, calendario, description)\nVALUES (\n  {{ $json.user_id }},\n  '{{ $json.category }}',\n  '{{ $json.item }}',\n  {{ $json.value }},\n  '{{ $json.unit }}',\n  '{{ $json.calendario || new Date().toISOString() }}',\n  '{{ $json.description}}'\n);",
+        "options": {}
+      },
+      "id": "f17c5103-beda-4391-b92f-3cfd9ca6b9fe",
+      "name": "Health Insert with RLS",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "category"
+            },
+            {
+              "name": "item"
+            },
+            {
+              "name": "value"
+            },
+            {
+              "name": "calendario"
+            },
+            {
+              "name": "unit"
+            },
+            {
+              "name": "description"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "53d9b7cc-4ff8-4e3e-91c4-1ce1e8113966",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Health Insert with RLS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "106199f9-a085-409a-8820-162b3d600ea8",
+  "meta": {
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "Db12s9k7p98OnNk5Yfhf9",
+  "tags": []
+}

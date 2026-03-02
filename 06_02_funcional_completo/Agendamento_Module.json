@@ -1,0 +1,605 @@
+{
+  "name": "Agendamento_Module",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "fe139abc-d67a-4a13-9d56-372b5ea3389f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "number"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "current_date"
+            },
+            {
+              "name": "current_weekday"
+            },
+            {
+              "name": "name"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4f836cd7-b2d1-4c90-bc89-868b117329ef",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=## Identidade e Missão\nVocê é o Especialista em Agendamento do Assistente Pessoal. Sua função é gerenciar o Google Calendar e o Banco de Dados com precisão técnica.\n\n## Contexto Temporal (OBRIGATÓRIO)\n- Data de Hoje: {{ $json.current_date }}\n- Dia da Semana: {{ $json.current_weekday }}\n- Ano: 2026\n- Para pedidos de 'esta semana', considere sempre do momento atual até o próximo domingo às 23:59:59. Nunca ultrapasse o domingo da semana vigente.\n\n\n##REGRA DE EXISTÊNCIA(CRÍTICO)\n- VOCE NUNCA DEVE RESPONDER ENVIAR UMA MENSAGEM PARA O USUÁRIO SEM ANTES PASSAR POR ALGUMA FERRAMENTA. SEMPRE EM TODAS OCASIÕES VOCÊ DEVE ACIONAR UMA FERRAMENTA(DELETAR, CONSULTAR, AGENDAR OU EDITAR).\n-NUNCA FALE COM O USUÁRIO QUE DEU ERRO NA EXECUÇÃO, NÃO SE JUSTIFIQUE, APENAS DIGA QUE NÃO FOI POSSÍVEL\n\n\n## Protocolo de Execução (Siga esta ordem)\n1. PARA AGENDAR: Use para Agendar. \n2. PARA CONSULTAR: Use 'Consultar'. Não invente compromissos.\n3. PARA DELETAR: Você não pode deletar sem antes 'Consultar' para obter o google_event_id. É um processo de dois passos.\n4. PARA EDITAR: Use a ferramenta 'Editar' e nunca tente editar um compromisso sem antes usar a ferramenta 'Consultar'. Você precisa do google_event_id que está nos metadados para realizar qualquer alteração.\n\n\n## PROCESSO DE PENSAMENTO\nAntes de responder ao usuário, você deve:\n1. Identificar a intenção (Agendar, Consultar ou Deletar).\n2. Verificar se tem todos os parâmetros (Data, Hora, Título).\n3. Executar a ferramenta correspondente.\n4. Se a ferramenta retornar erro ou pedir parâmetros, pergunte ao usuário.\n\n\n## Regras de Dados\n- Formato para ferramentas: ISO8601 (YYYY-MM-DDTHH:mm:ss).\n- Se a hora for omitida: Use 09:00:00.\n- Fuso Horário: Adicione sempre -03:00 ao final do horário.\n\n## Formatação da Resposta Final (Obrigatório)\nResponda EXATAMENTE neste formato, convertendo a data para dd/mm/yy:\n\n🗓️ Compromisso Agendado\n📍 Título: [Título]\n⏰ Horário: [dd/mm/yy] às [HH:mm]\n✅ Tudo pronto no seu Google Calendar.\n\n\n-  Se houver mais de um compromisso, repita o bloco acima para cada item, separando-os por uma linha horizontal: \"---\"",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "df388e31-e462-41e7-ae74-dc2daac3a7ed",
+      "name": "Agente_Agendamento"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{$('Parâmetros').item.json.number}}",
+        "messageText": "={{ \n  $('Agente_Agendamento').first().json.output.substring($('Agente_Agendamento').first().json.output.indexOf('🗓️'))\n    .replace(/(\\d{4})-(\\d{2})-(\\d{2})/g, (match, y, m, d) => `${d}/${m}/${y.slice(-2)}`)\n    .trim() \n}}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        784,
+        0
+      ],
+      "id": "17b92123-bf8b-4814-9e82-5ac9317450c3",
+      "name": "Enviar texto",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use esta ferramenta para criar um evento no Google Calendar. O usuário poderá pedir como reunião, compromisso, lembrete, quaisquer menção disso use essa ferramenta.  Você deve fornecer o título, a data de início e a data de fim.",
+        "workflowId": {
+          "__rl": true,
+          "value": "gb2DuBP4PmMDFGO5Qv9Wp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gb2DuBP4PmMDFGO5Qv9Wp",
+          "cachedResultName": "Create_Event_Calendar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('title', `Título curto do evento`, 'string') }}",
+            "start_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('start_date', `Data e hora de início em formato ISO8601`, 'string') }}",
+            "end_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('end_date', `Data e hora de término em formato ISO8601`, 'string') }}",
+            "user_id": "={{ $json.user_id }}",
+            "number": "={{ $json.number }}",
+            "name": "={{ $json.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        272
+      ],
+      "id": "307c4993-8916-4613-af73-0a68d279940d",
+      "name": "Agendar"
+    },
+    {
+      "parameters": {
+        "description": "=Use esta ferramenta para buscar compromissos. IMPORTANTE: Você deve obrigatoriamente fornecer:\n\n    time_min e time_max (formatados em ISO8601 com fuso -03:00).\n\n    title (Se o usuário não disser um título específico, envie uma string vazia \"\" ou uma palavra-chave do assunto). Se o usuário pedir 'amanhã', calcule o início (00:00:00) e o fim (23:59:59) do dia de amanhã com base no dia de hoje = {{ $json.current_date }}.",
+        "workflowId": {
+          "__rl": true,
+          "value": "CRLxyTxOqYLFNa19u-4xj",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/CRLxyTxOqYLFNa19u-4xj",
+          "cachedResultName": "Search_Event_Calendar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "time_min": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('time_min', `Início do período de busca (ex: início do dia)`, 'string') }}",
+            "time_max": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('time_max', `Fim do período de busca (ex: fim do dia)`, 'string') }}",
+            "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('title', `Titulo curto do Evento\n`, 'string') }}",
+            "number": "={{ $json.number }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "time_min",
+              "displayName": "time_min",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "time_max",
+              "displayName": "time_max",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        272
+      ],
+      "id": "0ebd70ef-2ee8-476d-9316-4b149748f2a0",
+      "name": "Consultar"
+    },
+    {
+      "parameters": {
+        "description": "=Use esta ferramenta para excluir um evento. O parâmetro google_event_id deve ser extraído obrigatoriamente dos metadados técnicos retornados pela ferramenta 'Consultar'",
+        "workflowId": {
+          "__rl": true,
+          "value": "sW5hEAvOHn6U_27an0Xv0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/sW5hEAvOHn6U_27an0Xv0",
+          "cachedResultName": "Delete_Event_Google"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "number": "={{ $json.number }}",
+            "google_event_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('google_event_id', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "google_event_id",
+              "displayName": "google_event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        272
+      ],
+      "id": "8427b0c5-5837-4093-90af-92a608014617",
+      "name": "Deletar"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "B2dQIDTClQl8m0wBL2Cs5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/B2dQIDTClQl8m0wBL2Cs5",
+          "cachedResultName": "Update_Event_Calendar"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "google_event_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('google_event_id', `O ID técnico do evento retornado pela consulta`, 'string') }}",
+            "number": "={{ $json.number }}",
+            "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('title', `Novo título ou título atual`, 'string') }}",
+            "start_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('start_date', `Nova data/hora de início ISO8601`, 'string') }}",
+            "end_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('end_date', `Nova data/hora de término ISO8601`, 'string') }}",
+            "user_id": "={{ $json.user_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "google_event_id",
+              "displayName": "google_event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        272
+      ],
+      "id": "ac0f8da9-e1f1-45c4-960a-2d4790e4dc89",
+      "name": "Editar"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.number }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        208
+      ],
+      "id": "a72fabb4-b0e2-4adf-9203-1c90ac620274",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "IioD3zGjTA0MtOvw",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nINSERT INTO chat_history (user_id, session_id, role, content)\nVALUES ($1, $2, 'assistant', $3);",
+        "options": {
+          "queryReplacement": "={{ $('Parâmetros').first().json.user_id }}, {{ $('Parâmetros').first().json.number }}, {{ $('Parâmetros').first().json.message }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        0
+      ],
+      "id": "eff2cc8f-3b2a-4ea5-a664-3651b61b7344",
+      "name": "Inserir mensagem do usuário no banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente_Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Inserir mensagem do usuário no banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deletar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente_Agendamento",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir mensagem do usuário no banco": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d9c93257-63bd-446e-a086-76b0034f6bf4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "h60_FusV4ufYOnsED0KOg",
+  "tags": []
+}

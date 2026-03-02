@@ -1,0 +1,348 @@
+{
+  "name": "Update_Event_Calendar",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "number"
+            },
+            {
+              "name": "google_event_id"
+            },
+            {
+              "name": "title"
+            },
+            {
+              "name": "start_date"
+            },
+            {
+              "name": "end_date"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -384,
+        160
+      ],
+      "id": "73936e62-48aa-4162-a479-5cbc461bdb5d",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/primary/events/{{ $('Parâmetros').item.json.google_event_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $node[\"Call 'Google_Token_Manager'\"].json.active_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"summary\": \"={{ $('Parâmetros').first().json.title || undefined }}\",\n  \"start\": {\n    \"dateTime\": \"={{ $('Parâmetros').first().json.start_date || undefined }}\"\n  },\n  \"end\": {\n    \"dateTime\": \"={{ $('Parâmetros').first().json.end_date || undefined }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1008,
+        160
+      ],
+      "id": "76089e52-a4e8-4028-b943-560566398cc5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nUPDATE agendamento \nSET title = $1, start_time = $2, end_time = $3 \nWHERE google_event_id = $4 AND user_id = $5;",
+        "options": {
+          "queryReplacement": "={{ [ $('Parâmetros').item.json.title, $('Parâmetros').item.json.start_date, $('Parâmetros').item.json.end_date, $('Parâmetros').item.json.google_event_id, $('Parâmetros').item.json.user_id ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1216,
+        160
+      ],
+      "id": "0adab59d-c7c8-45a5-a7c9-fd99a3ce5dbe",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "timeMin",
+              "value": "={{ $('Parâmetros').item.json.start_date }}"
+            },
+            {
+              "name": "timeMax",
+              "value": "={{ $('Parâmetros').item.json.end_date }}"
+            },
+            {
+              "name": "singleEvents",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.active_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        160
+      ],
+      "id": "6ba515f9-b858-4ca9-85e5-f3daf5702a10",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $json.items || [];\nconst editingEventId = $('Parâmetros').item.json.google_event_id;\n\n// Filtra todos os eventos, removendo o que estamos tentando editar agora\nconst conflicts = items.filter(event => event.id !== editingEventId);\n\nreturn {\n  hasConflict: conflicts.length > 0,\n  conflictCount: conflicts.length,\n  conflictingTitles: conflicts.map(e => e.summary).join(', ')\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        160
+      ],
+      "id": "d2566978-d0a5-427e-9e2c-bfffd9f0eb92",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4ae46564-14f9-4f12-8a1c-72576a787de6",
+              "leftValue": "={{ $json.hasConflict }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        160
+      ],
+      "id": "27df83fb-47d8-4f07-9e11-f2948f468bcc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{$('Parâmetros').item.json.number }}",
+        "messageText": "=Ops! Não consegui alterar para esse horário pois você já tem um compromisso: {{ $json.conflictingTitles }}. Deseja escolher outro horário?",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        720,
+        416
+      ],
+      "id": "1d68f516-781e-407a-8b3d-93b2f1a58f96",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "AVi9g7CMKzCtqQg2dL8tb",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/AVi9g7CMKzCtqQg2dL8tb",
+          "cachedResultName": "Google_Token_Manager"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{$('Parâmetros').item.json.user_id}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        160
+      ],
+      "id": "0e3e6182-213b-4eab-bfd1-a8d42365f0d7",
+      "name": "Call 'Google_Token_Manager'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Call 'Google_Token_Manager'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Google_Token_Manager'": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "4bf1b1ee-59c5-48ae-b452-a0b916609b50",
+  "meta": {
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "rkKfv5kusAybBsWxWCQSy",
+  "tags": []
+}

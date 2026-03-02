@@ -1,0 +1,283 @@
+{
+  "name": "CallBack_Google",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "google-callback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2301924c-02a9-4283-a16c-153ba1cfd879",
+      "name": "Webhook",
+      "webhookId": "36740c09-40c5-42e2-b2d7-e6773de5bb2d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://oauth2.googleapis.com/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "={{ $json.query.code }}"
+            },
+            {
+              "name": "client_id",
+              "value": "YOUR_CLIENT_ID"
+            },
+            {
+              "name": "client_secret",
+              "value": "YOUR_CLIENT_SECRET"
+            },
+            {
+              "name": "redirect_uri",
+              "value": "https://n8n.projetospalinos.online/webhook/google-callback"
+            },
+            {
+              "name": "grant_type",
+              "value": "authorization_code"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "2faa5924-98c7-4155-905d-c59d65d10ec3",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nUPDATE users \nSET \n    google_access_token = $1, \n    google_refresh_token = $2, \n    google_token_expires_at = $3 \nWHERE id = $4;\n",
+        "options": {
+          "queryReplacement": "={{ $node[\"HTTP Request\"].json[\"access_token\"] }}, {{ $node[\"HTTP Request\"].json[\"refresh_token\"] }}, {{ $now.plus({ seconds: $json.expires_in }).toISO() }}, {{ $node[\"Webhook\"].json[\"query\"][\"state\"] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        0
+      ],
+      "id": "5956255d-1822-46f6-a2e9-8b1101c56e33",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSELECT phone FROM users WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').first().json[\"query\"][\"state\"] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        0
+      ],
+      "id": "53d3240c-b978-45aa-ac58-335af6e010d1",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $json.phone }}",
+        "messageText": "=✅ Login concluído! Agora seu módulo de agenda está ativo e pronto para uso. Como posso te ajudar hoje?",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        816,
+        0
+      ],
+      "id": "219f36ad-7a95-43ab-a773-c40802c7d7ca",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $json.phone }}",
+        "messageText": "=❌ Ops! Ocorreu uma falha ao vincular sua conta Google. Por favor, tente gerar o link novamente ou fale com o suporte.",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        704,
+        336
+      ],
+      "id": "8af26605-b36f-4151-abd2-be2d2c18a110",
+      "name": "Enviar texto1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html lang=\"pt-br\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Erro na Conexão</title>\n    <style>\n        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #fff1f1; }\n        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; border-top: 5px solid #ff4d4d; }\n        h1 { color: #ff4d4d; }\n        p { color: #666; font-size: 18px; }\n        .btn { background-color: #666; color: white; padding: 12px 20px; text-decoration: none; border-radius: 20px; display: inline-block; margin-top: 20px; }\n    </style>\n</head>\n<body>\n    <div class=\"card\">\n        <h1>❌ Falha na Autenticação</h1>\n        <p>Não foi possível vincular sua conta Google neste momento.</p>\n        <p>Isso pode acontecer se o link expirar ou se a permissão for negada.</p>\n        <a href=\"javascript:window.close();\" class=\"btn\">FECHAR ESTA TELA</a>\n    </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        704,
+        480
+      ],
+      "id": "d21c5230-c586-4624-b6d5-687efba7ab7a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html lang=\"pt-br\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Sucesso!</title>\n    <style>\n        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }\n        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }\n        h1 { color: #25D366; }\n        .btn { background-color: #25D366; color: white; padding: 15px 25px; text-decoration: none; border-radius: 25px; display: inline-block; margin-top: 20px; font-weight: bold; }\n    </style>\n</head>\n<body>\n    <div class=\"card\">\n        <h1>✅ Tudo pronto!</h1>\n        <p>Sua agenda foi vinculada. Você será redirecionado para o WhatsApp em instantes...</p>\n        <a href=\"whatsapp://send?text=Opa! Já vinculei minha conta.\" class=\"btn\">VOLTAR PARA O WHATSAPP</a>\n    </div>\n\n    <script>\n        // Tenta redirecionar automaticamente após 3 segundos\n        setTimeout(function() {\n            window.location.href = \"whatsapp://send\";\n        }, 3000);\n    </script>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "73687782-49db-48ac-a772-2998ccfb96e3",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "7fd951ed-ebaa-49d4-a807-0be14e036a33",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "2U_yv2GeXNIBW8AIerZdp",
+  "tags": []
+}

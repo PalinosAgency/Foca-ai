@@ -1,0 +1,2064 @@
+{
+  "name": "Saas Wpp",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d938267-ce9e-45f7-bdd2-c8168772e1c7",
+              "name": "name",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "57199a69-0f1f-41a1-8d08-99c7bf855e6d",
+              "name": "number",
+              "value": "={{ $json.body.data.key.remoteJid.split('@')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "75b203b6-3c6e-4e4c-9f44-cbc762269197",
+              "name": "message",
+              "value": "={{ $json.body.data.message.conversation || $json.body.data.message.extendedTextMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "abf37a60-b1c0-4e39-a51e-6b26bc48f673",
+              "name": "tipo",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "23292af3-5813-437b-9ea2-70e523fc7a55",
+              "name": "id_message",
+              "value": "={{ $json.body?.data?.key?.id || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -15456,
+        352
+      ],
+      "id": "d0175389-5808-48c5-83a5-deb9445aacda",
+      "name": "Coleta de Dados"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\n-- 1. Define o contexto de segurança RLS na mesma conexão\nSET app.current_user_id = {{ $('Identificar Usuário').first().json.id }};\n\n-- 2. Insere a mensagem tratando aspas simples para segurança e estabilidade\nINSERT INTO messages (phone, message, message_id)\nVALUES (\n  '{{ $('Coleta de Dados').first().json.number }}',\n  '{{ $json.message }}',\n  '{{ $('Webhook').first().json.body.data.key.id }}'\n)\nON CONFLICT DO NOTHING;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -12688,
+        304
+      ],
+      "id": "619d767a-0bda-4ae5-b188-71036fbe75d2",
+      "name": "Registra mensagem temp",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -12496,
+        304
+      ],
+      "id": "52ec9202-b68f-46c7-9fc2-9b68f59f1136",
+      "name": "Pausa Buffer",
+      "webhookId": "f4041736-b064-4a07-8920-727b2e4b44ab"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "message",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        -11648,
+        304
+      ],
+      "id": "43a85afe-c028-4315-bc51-cfe6a28833fb",
+      "name": "Agrupar Mensagens"
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "get-media-base64",
+        "instanceName": "Tim_Number",
+        "messageId": "={{ $('Coleta de Dados').first().json.id_message }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -13840,
+        -16
+      ],
+      "id": "5872e752-cfba-4085-8cb1-091aa5db6b4c",
+      "name": "TRANSFORMA URL EM BASE64",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -13440,
+        -16
+      ],
+      "id": "6ddf049f-0dcd-4c93-bca0-7532b186ea91",
+      "name": "Analisa audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "\"Analise esta imagem.\n\n    Se for comprovante/nota fiscal: Extraia Valor Total, Data e Estabelecimento. Responda APENAS: 'Gastei [Valor] em [Estabelecimento] referente a [Itens/Categoria]'.\n\n    Se for texto: Transcreva o texto completo.\n\n    Se for foto genérica: Descreva o que vê em 1 frase. Não use introduções como 'A imagem mostra...'.\"",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -13408,
+        608
+      ],
+      "id": "2842d15c-07f4-4410-a95b-b57072ed159c",
+      "name": "Analisa imagem",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "get-media-base64",
+        "instanceName": "Tim_Number",
+        "messageId": "={{ $('Coleta de Dados').first().json.id_message }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -13808,
+        608
+      ],
+      "id": "2004ca6d-27c0-4810-9010-9606eac75b94",
+      "name": "TRANSFORMA URL EM BASE",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {
+          "fileName": "image.jpg",
+          "mimeType": "={{ $json.data.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -13600,
+        608
+      ],
+      "id": "9a3224ff-0a22-48c2-b277-2cbea26278f0",
+      "name": "Converte Arquivo em Imagem"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {
+          "fileName": "audio.mp4",
+          "mimeType": "audio/mp4"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -13632,
+        -16
+      ],
+      "id": "8d154046-b793-455d-80c1-63356156c248",
+      "name": "Converte Arquivo em Audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cccdafdf-2b78-460c-a594-7c583eea83e2",
+              "name": "=message",
+              "value": "={{ $('Agrupar Mensagens').first().json.concatenated_message}} ",
+              "type": "string"
+            },
+            {
+              "id": "b9e33af9-8c07-4c33-b927-9e850ce06de6",
+              "name": "=user_id",
+              "value": "={{ $('Identificar Usuário').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "85e61ff5-e242-4605-b14c-7684594f267b",
+              "name": "number",
+              "value": "={{ $('Coleta de Dados').first().json.number }}",
+              "type": "string"
+            },
+            {
+              "id": "99d933ea-f7da-43a9-a3f9-95327ef45da9",
+              "name": "date",
+              "value": "={{ $now.setZone('America/Sao_Paulo').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "82ee7edf-71f5-4998-87b8-c0b63c30a83a",
+              "name": "name",
+              "value": "={{ $('Coleta de Dados').first().json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6cc3c380-48ed-4871-951d-911ab7a4a289",
+              "name": "weekday",
+              "value": "={{ $now.setZone('America/Sao_Paulo').toFormat('EEEE') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10672,
+        336
+      ],
+      "id": "a8e65226-0b04-48a9-a3ba-2cd8d063be12",
+      "name": "Saída Canônica",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Coleta de Dados').first().json.tipo }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e4410cdc-4efa-40de-b2b0-7cbae88a0bda"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2ddbde44-20b5-4538-b89e-3e31a0765851",
+                    "leftValue": "={{ $('Coleta de Dados').first().json.tipo }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagem"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Texto"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -14144,
+        304
+      ],
+      "id": "a1dee626-a878-4300-898c-da70ebaa5294",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7197789f-1021-4922-ae4d-a45e297f1ef3",
+              "leftValue": "={{ $('Webhook').first().json.body.data.key.fromMe }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -14992,
+        352
+      ],
+      "id": "1be1490f-1365-4139-9973-be70a6be2859",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "message",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -11840,
+        304
+      ],
+      "id": "1a181a47-0ae1-4534-a129-f7066297960e",
+      "name": "Remove Duplicates",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM messages \nWHERE phone = $1 \nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ $('Coleta de Dados').first().json.number }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -12304,
+        304
+      ],
+      "id": "70b7e743-0013-4c3b-a3a1-0eae96d4325d",
+      "name": "Busca e Limpa",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7de3ebf2-fd64-44d6-9249-7e15bfd58e7d",
+              "leftValue": "={{ $json.hasOwnProperty('message') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -12080,
+        304
+      ],
+      "id": "6f7de7dd-8963-48f6-92a9-16adb4bf22ee",
+      "name": "Filter",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET app.current_user_id = $2;\nSELECT id, name, status, google_refresh_token, subscription_expires_at FROM users WHERE phone = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Coleta de Dados').first().json.number }}, {{$json.id}}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -15136,
+        352
+      ],
+      "id": "d9be4079-86ab-43ba-a9e1-2993fb1fedf4",
+      "name": "Verificar Matrícula",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bae1a61c-0719-470e-94e1-2d2c4d0c9f95",
+              "leftValue": "={{ DateTime.fromISO($json.subscription_expires_at).toMillis() }}",
+              "rightValue": "={{ $now.toMillis() }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -14816,
+        336
+      ],
+      "id": "372e4b71-ab61-467e-9176-729f8bfc961f",
+      "name": "Validar Acesso"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{$('Coleta de Dados').first().json.number }}",
+        "messageText": "=Olá {{ $('Coleta de Dados').first().json.name }}! Identifiquei que sua assinatura do Foca.Aí não está ativa no momento. Para ter acesso ao Foca.Aí e evoluir em todas as suas áreas pessoais, acesse nosso site: https://foca-ai-oficial.vercel.app/. Se você já é aluno e acredita que isso é um erro, entre em contato com nosso suporte. suportefocaaioficial@gmail.com",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -14656,
+        544
+      ],
+      "id": "37bdc000-d28c-470c-aac6-f730f81c1400",
+      "name": "Mensagem Acesso Negado",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Saída Canônica').first().json.message }}",
+        "options": {
+          "systemMessage": "## Você é um classificador de intenções profissional. Analise a mensagem e identifique as áreas mencionadas. Responda APENAS as palavras-chave separadas por vírgula: AGENDAMENTO, FINANCE, HEALTH, ACADEMIC, CHAT, DASHBOARD.\n\n## Regras de Classificação:\n\n- AGENDAMENTO (PRIORIDADE): Compromissos de trabalho, médicos ou tarefas gerais. Use se houver verbos como \"marque\", \"agende\", \"crie\". (Ignorar se o assunto for escolar/universitário).\n\n- FINANCE: Tudo sobre dinheiro (R$, valores), gastos, ganhos, investimentos. Inclui ações de \"editar\", \"mudar\", \"excluir\" ou \"corrigir\" registros financeiros.\n\n- HEALTH: Treinos, água, peso, sono, dieta. Inclui ações de \"alterar\", \"apagar\", \"corrigir\" ou \"editar\" dados de saúde e exercícios.\n\n- ACADEMIC: Estudos, provas, resumos, matérias ou compromissos universitários. Inclui QUALQUER ação de \"editar\", \"mudar\", \"alterar\", \"excluir\" ou \"apagar\" registros de estudos e notas.\n\n- CHAT: Saudações ou conversas que não envolvam registros nos bancos de dados acima.\n\n- DASHBOARD: Menção direta a ver gráficos ou o painel de controle.\n\n## Regra de Contexto (CRÍTICO)\n- Se o usuário estiver respondendo a uma pergunta anterior do assistente (ex: confirmando um ID ou enviando um título solicitado), MANTENHA a classificação da intenção anterior.\n\nResponda APENAS a palavra-chave. Nunca escreva frases.",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -9664,
+        -208
+      ],
+      "id": "f1a33f99-5b66-4a2d-9866-53fe71d3ddc6",
+      "name": "Roteador de Intenções"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -9680,
+        16
+      ],
+      "id": "dcd735a9-884b-429c-a7f5-897e3da960d3",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7a824c33-a14a-4379-8662-ff7273e4252e",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "FINANCE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FINANCE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "300058da-bd7c-4910-ae3b-4679fb600967",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "HEALTH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "HEALTH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "861d6cce-6728-43f7-81f6-7fbac5720a21",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "ACADEMIC",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ACADEMIC"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "df912df3-23cf-45d1-95c6-2fbd71f42062",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "CHAT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CHAT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "663b5898-69f8-4265-8cd3-17847f30583e",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "AGENDAMENTO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AGENDAMENTO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9f283594-15ac-491f-a960-250ce260655a",
+                    "leftValue": "={{$json.output}}",
+                    "rightValue": "DASHBOARD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DASHBOARD"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -8464,
+        -224
+      ],
+      "id": "24cf00e3-026d-4641-8bd4-bd3505b1cf3a",
+      "name": "Direcionador"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "0nPU1VaK4WDlbKplo2txM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0nPU1VaK4WDlbKplo2txM",
+          "cachedResultName": "Finance_Module"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Verificar Matrícula').first().json.id}}",
+            "message": "={{ $('Saída Canônica').first().json.message }}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "current_date": "={{ $('Saída Canônica').first().json.date }}",
+            "current_weekday": "={{ $('Saída Canônica').first().json.weekday }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "current_date",
+              "displayName": "current_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "current_weekday",
+              "displayName": "current_weekday",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        -480
+      ],
+      "id": "420e2762-f7b5-45f4-9185-5cd98063f19d",
+      "name": "Call_Finance_Module"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "VCFCcG6JF4bVEXW2QPd76",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/VCFCcG6JF4bVEXW2QPd76",
+          "cachedResultName": "Health_Module"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Verificar Matrícula').first().json.id}}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "message": "={{ $('Saída Canônica').first().json.message }}",
+            "current_date": "={{ $('Saída Canônica').first().json.date }}",
+            "current_weekday": "={{ $('Saída Canônica').first().json.weekday }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "current_date",
+              "displayName": "current_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "current_weekday",
+              "displayName": "current_weekday",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        -288
+      ],
+      "id": "be936540-f090-4613-92fe-6c6796583b70",
+      "name": "Call_Health_Module"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "cV-L_5oVTyGZ93Why222u",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/cV-L_5oVTyGZ93Why222u",
+          "cachedResultName": "Academic_Module"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Verificar Matrícula').first().json.id }}",
+            "message": "={{ $('Saída Canônica').first().json.message }}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "current_date": "={{ $('Saída Canônica').first().json.date }}",
+            "current_weekday": "={{ $('Saída Canônica').first().json.weekday }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "current_date",
+              "displayName": "current_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "current_weekday",
+              "displayName": "current_weekday",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        -96
+      ],
+      "id": "fea8c06c-46e5-422b-92b9-081ab040c34a",
+      "name": "Call_Academic_Module"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "yMcTiKFGm-GTN_XNsieqE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/yMcTiKFGm-GTN_XNsieqE",
+          "cachedResultName": "Chat_Module"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Verificar Matrícula').first().json.id}}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "message": "={{ $('Saída Canônica').first().json.message }}",
+            "name": "={{ $('Saída Canônica').first().json.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        96
+      ],
+      "id": "bf3ad2ee-140e-4c8e-9ede-19787db42c60",
+      "name": "Call_Chat_Module"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Versão que evita duplicidade entre Académico e Agendamento\nconst output = $json.output || \"\";\nlet intents = output.split(',').map(i => i.trim().toUpperCase()).filter(i => i !== \"\");\n\n// Se for académico, removemos o agendamento geral para evitar mensagens duplas\nif (intents.includes(\"ACADEMIC\") && intents.includes(\"AGENDAMENTO\")) {\n  intents = intents.filter(i => i !== \"AGENDAMENTO\");\n}\n\nif (intents.length === 0) return [{ output: \"CHAT\" }];\n\nreturn intents.map(intent => ({ output: intent }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -9312,
+        -208
+      ],
+      "id": "bccf2a76-129b-4af8-9332-66c8618ef327",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -8832,
+        -96
+      ],
+      "id": "eaced174-dc84-43f0-979b-89f09c3eb985",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -7776,
+        -144
+      ],
+      "id": "3a1a11bd-d174-4693-ba85-2a1d32a63d73",
+      "name": "Wait",
+      "webhookId": "9f22647f-118e-4a60-a2da-97b768f95214"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b9927085-55c8-4b41-bf1d-4a207e189fdc",
+              "leftValue": "={{ $('Coleta de Dados').first().json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3be5684f-e4e7-43d0-ad6f-2489b8cca04d",
+              "leftValue": "={{ $('Coleta de Dados').first().json.tipo }}",
+              "rightValue": "=status",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -14592,
+        336
+      ],
+      "id": "70077421-02e0-41a1-b64a-ad2e89d20088",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "h60_FusV4ufYOnsED0KOg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/h60_FusV4ufYOnsED0KOg",
+          "cachedResultName": "Agendamento_Module"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "current_weekday": "={{ $('Saída Canônica').first().json.weekday }}",
+            "current_date": "={{ $('Saída Canônica').first().json.date }}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "message": "={{ $('Saída Canônica').first().json.message }}",
+            "user_id": "={{ $('Verificar Matrícula').first()\n.json.id}}",
+            "name": "={{ $('Saída Canônica').first().json.name }}"
+          },
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "current_date",
+              "displayName": "current_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "current_weekday",
+              "displayName": "current_weekday",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        272
+      ],
+      "id": "b0b691ce-befb-4bf0-a24f-ad3b3b43dc58",
+      "name": "Call_Module_Agendamento"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "76d41c84-2013-49ca-91f6-1edc0121fbdf",
+              "leftValue": "={{ $('Verificar Matrícula').first().json.google_refresh_token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8688,
+        288
+      ],
+      "id": "477e9d03-fe08-4f73-9729-fcd0cc67a699",
+      "name": "Verifica Google"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rgP_dYVV74LycU6aP_ygU",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rgP_dYVV74LycU6aP_ygU",
+          "cachedResultName": "Gerador de URL Autenticação"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Identificar Usuário').first().json.id}}",
+            "number": "={{ $('Saída Canônica').first().json.number }}",
+            "name": "={{ $('Saída Canônica').first().json.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "number",
+              "displayName": "number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "tipo_mensagem",
+              "displayName": "tipo_mensagem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -8464,
+        176
+      ],
+      "id": "4edb49f9-731a-42d4-a217-3e392dd43521",
+      "name": "Call Gerador de URL Autenticação"
+    },
+    {
+      "parameters": {
+        "content": "Parâmetros  iniciais e prevenção de looping\n",
+        "height": 640,
+        "width": 1280,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -15664,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "1be98a7b-2c8b-416a-bb59-66c55e7a2c47",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- 1. Define o contexto de segurança RLS no banco Neon\nSET app.current_user_id = {{ $('Identificar Usuário').first().json.id }};\n\n-- 2. Insere a interação no histórico tratando aspas simples para evitar erros de sintaxe\nINSERT INTO chat_history (session_id, role, content, user_id) \nVALUES (\n  '{{ $('Coleta de Dados').first().json.number }}', \n  'user', \n  '{{ $('Coleta de Dados').first().json.message.replace(/'/g, \"''\") }}', \n  {{ $('Identificar Usuário').first().json.id }}\n)\nON CONFLICT DO NOTHING;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -11376,
+        304
+      ],
+      "id": "e5ab346b-41a7-4d2e-80e8-60557750519e",
+      "name": "Inserir chat memory",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{$('Saída Canônica').item.json.number}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -9568,
+        16
+      ],
+      "id": "a164a1c1-9579-43fe-ac10-a0007dda89d5",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "IioD3zGjTA0MtOvw",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gera um token hexadecimal de 64 caracteres usando apenas JS padrão\nconst chars = 'abcdef0123456789';\nlet token = '';\nfor (let i = 0; i < 64; i++) {\n  token += chars[Math.floor(Math.random() * chars.length)];\n}\n\nreturn {\n  token: token,\n  // Define a expiração para daqui a 15 minutos\n  expires_at: new Date(Date.now() + 15 * 60000).toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -11168,
+        304
+      ],
+      "id": "f0b2475a-ac92-4add-87a0-640635c30642",
+      "name": "Gerar Token"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\n-- 1. Garante a segurança da sessão para o usuário logado\nSET app.current_user_id = {{ $('Identificar Usuário').first().json.id }};\n\n-- 2. Tenta inserir um novo token. Se o user_id já existir, apenas atualiza os dados.\nINSERT INTO access_tokens (user_id, token, expires_at, name)\nVALUES (\n  {{ $('Identificar Usuário').first().json.id }},\n  '{{ $json.token }}',\n  '{{ $json.expires_at }}',\n  '{{ $('Coleta de Dados').first().json.name }}'\n)\nON CONFLICT (user_id) \nDO UPDATE SET \n  token = EXCLUDED.token,\n  expires_at = EXCLUDED.expires_at;\n\n-- 3. Retorna o sucesso para o n8n prosseguir\nSELECT 'token_atualizado' as status;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -10912,
+        320
+      ],
+      "id": "730f471a-319a-46f9-b647-78bb4c628bca",
+      "name": "Inserir acess_token",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $('Saída Canônica').first().json.number }}",
+        "messageText": "=Olá! Aqui está seu acesso  ao Dashboard (Este link é válido por 15 minutos): https://dashboard-oficial.vercel.app/dashboard?token={{ $('Gerar Token').first().json.token }}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        -8112,
+        496
+      ],
+      "id": "6d1a9579-ce1d-4196-8b08-99a60a755084",
+      "name": "Enviar texto",
+      "executeOnce": true,
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO users (phone, name)\nVALUES ($1, $2)\nON CONFLICT (phone) \nDO UPDATE SET \n    name = EXCLUDED.name\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $json.number }},  {{ $json.name }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -15296,
+        352
+      ],
+      "id": "ec4bfd79-6f45-48e3-8c7a-0fe6b876abf5",
+      "name": "Identificar Usuário",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -15648,
+        352
+      ],
+      "id": "a8dd9981-54aa-4984-abfc-a25eb74b9990",
+      "name": "Webhook",
+      "webhookId": "8a3fa0e2-1bae-4618-93eb-4da62e0152e3"
+    },
+    {
+      "parameters": {
+        "content": "Reconhecimento por áudio, texto ou imagem\n",
+        "height": 976,
+        "width": 1120,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -14256,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "9374d1e8-5046-4e2a-b0c8-b2cd0b5be902",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9ec15791-41dd-498c-bd8b-126b0369172b",
+              "name": "message",
+              "value": "={{$json.text || $('Coleta de Dados').first().json.message || $json.content}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12928,
+        304
+      ],
+      "id": "aa531384-6d73-45c7-8b23-a3efa2ceb8b9",
+      "name": "Normalizar_Message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Coleta de Dados": {
+      "main": [
+        [
+          {
+            "node": "Identificar Usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registra mensagem temp": {
+      "main": [
+        [
+          {
+            "node": "Pausa Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pausa Buffer": {
+      "main": [
+        [
+          {
+            "node": "Busca e Limpa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar Mensagens": {
+      "main": [
+        [
+          {
+            "node": "Inserir chat memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSFORMA URL EM BASE64": {
+      "main": [
+        [
+          {
+            "node": "Converte Arquivo em Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisa audio": {
+      "main": [
+        [
+          {
+            "node": "Normalizar_Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisa imagem": {
+      "main": [
+        [
+          {
+            "node": "Normalizar_Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSFORMA URL EM BASE": {
+      "main": [
+        [
+          {
+            "node": "Converte Arquivo em Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converte Arquivo em Imagem": {
+      "main": [
+        [
+          {
+            "node": "Analisa imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converte Arquivo em Audio": {
+      "main": [
+        [
+          {
+            "node": "Analisa audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saída Canônica": {
+      "main": [
+        [
+          {
+            "node": "Roteador de Intenções",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "TRANSFORMA URL EM BASE64",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TRANSFORMA URL EM BASE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Normalizar_Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalizar_Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Validar Acesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Agrupar Mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca e Limpa": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Matrícula": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Acesso": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensagem Acesso Negado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Roteador de Intenções",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteador de Intenções": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Direcionador": {
+      "main": [
+        [
+          {
+            "node": "Call_Finance_Module",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call_Health_Module",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call_Academic_Module",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call_Chat_Module",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verifica Google",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Direcionador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Direcionador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call_Finance_Module": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call_Health_Module": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call_Academic_Module": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call_Chat_Module": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call_Module_Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica Google": {
+      "main": [
+        [
+          {
+            "node": "Call Gerador de URL Autenticação",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call_Module_Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir chat memory": {
+      "main": [
+        [
+          {
+            "node": "Gerar Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Roteador de Intenções",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Token": {
+      "main": [
+        [
+          {
+            "node": "Inserir acess_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir acess_token": {
+      "main": [
+        [
+          {
+            "node": "Saída Canônica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identificar Usuário": {
+      "main": [
+        [
+          {
+            "node": "Verificar Matrícula",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Coleta de Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar_Message": {
+      "main": [
+        [
+          {
+            "node": "Registra mensagem temp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Gerador de URL Autenticação": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d2b2b67a-09af-4065-9eb9-fe262f17b67b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "QXGzFDoemVMUtTOMbwXSv",
+  "tags": []
+}

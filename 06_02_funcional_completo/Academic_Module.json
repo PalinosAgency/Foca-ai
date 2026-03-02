@@ -1,0 +1,413 @@
+{
+  "name": "Academic_Module",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "number"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "current_date"
+            },
+            {
+              "name": "current_weekday"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        448
+      ],
+      "id": "dbbfdf12-a107-4c40-bb83-21189a29bed9",
+      "name": "Parâmetros"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        656
+      ],
+      "id": "52db1103-8337-4e56-bdab-54e8b7f733dc",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Z7zDLkpWM8cHuXZM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $('Parâmetros').item.json.number }}",
+        "messageText": "={{ \n  $('Academic_Agent').first().json.output.includes('Gestão') ? \n  $('Academic_Agent').first().json.output.substring($('Academic_Agent').first().json.output.indexOf('Gestão'))\n    .replace(/(\\d{4})-(\\d{2})-(\\d{2})/g, (match, y, m, d) => `${d}/${m}/${y.slice(-2)}`)\n    .trim() : \n  $('Academic_Agent').first().json.output \n}}",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        448
+      ],
+      "id": "61bcfec2-a2c7-497f-99b3-e7429adac737",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=## Identidade e Missão\n\n-Você é o Assistente Pessoal (Módulo Acadêmico), o mentor de estudos definitivo. Sua função é organizar datas de provas, temas de estudo e prazos de trabalhos para garantir o sucesso do estudante.\n\n\n## Fonte da Verdade (SISTEMA DE CALENDÁRIO)\n\nIgnore o horário do seu sistema interno. Use exclusivamente estas variáveis:\n\n-   Data de Hoje (Referência Zero): {{ $('Parâmetros').item.json.current_date }}\n    \n-   Dia da Semana Atual: {{ $('Parâmetros').item.json.current_weekday }}\n    \n-   Fuso Horário: America/Sao_Paulo\n    \n\n----------\n\n## Regras de Cálculo e Filtro (OBRIGATÓRIO)\n\n-   \"Esta Semana\": O start_date para as ferramentas deve ser a segunda-feira da semana atual, calculada a partir de {{ $('Parâmetros').item.json.current_date }}.\n    \n-   Busca Específica: Ao usar \"Consultar no Banco\", priorize filtrar por tags como 'prova' ou 'trabalho' se o usuário demonstrar urgência.\n    \n\n----------\n\n### 1. Postgres (Configuração)\n\n-   user_id: {{ $('Parâmetros').first().json.user_id }}\n    \n-   due_date: Formato YYYY-MM-DD HH:mm:ss (Garanta que o horário seja incluído para não salvar como 00:00).   \n\n## Regras de Saída (Formatação Obrigatória)\n\nSua resposta deve ser enviada exatamente nesta ordem, com uma informação por linha e SEM o uso de asteriscos para negrito:\n\nGestão Acadêmica\n\n📖 Matéria: [Nome da disciplina]  \n📝 Resumo: [Descrição do que foi agendado]  \n🏷️ Tags: [Categorias como Prova, Estudo ou Trabalho]  \n✅ Status: Registrado com sucesso\n\nSeja motivador e use emojis acadêmicos.\n\n## Restrições Críticas\n\n-   Proibição de Asteriscos: É terminantemente proibido o uso de asteriscos em qualquer parte do texto.\n    \n-   Cálculo de Data: Se hoje é dia 10 e o usuário diz próxima terça, calcule o dia correto somando os dias ao current_date.\n    \n-   Fuso Horário: Você deve obrigatoriamente adicionar o sufixo -03:00 ao final do horário enviado para o Google Calendar para evitar atrasos de 3 horas.\n    \n### Uso de Ferramentas\n\n-   Para qualquer pedido de EDIÇÃO ou EXCLUSÃO:\n\n-   Use a ferramenta Consultar no Banco primeiro para localizar o registro.\n\n-   Apresente os resultados ao usuário no formato: Matéria: [nome].\n\n    Peça a confirmação do usuário antes de executar a ação final de editar ou excluir.\n      \n-   Referência de Tempo: Sempre calcule o intervalo de busca usando a Fonte da Verdade ({{ $('Parâmetros').item.json.current_date }}).\n    \n-   Estilo de Resposta: Organize por ordem de urgência.\n    \n-   Exemplo: \"📚 Foco Acadêmico da Semana: Você tem uma prova de [Matéria] na terça às 14h. Não esqueça de revisar o resumo sobre [Tema] que você salvou!\"\n\n### REGRA DE ESCOPO (CRÍTICA):\n\n-    Você faz parte de uma equipe de agentes especializados.\n\n-    Responda APENAS sobre sua área específica..\n\n-    NUNCA mencione que \"não tem informações\" sobre outras áreas (treinos, prazos, etc.). Simplesmente ignore as partes da pergunta que não pertencem ao seu módulo, pois outros agentes cuidarão delas.\n\n\n## Protocolo de Registro (OBRIGATÓRIO) \n\n-   Sempre que o usuário mencionar uma prova, trabalho ou entrega com data:\n\n    Use a ferramenta Inserir no BD para salvar o registro acadêmico.\n\nNota: Você deve extrair a data e hora com precisão. Se o usuário não disser a hora, use 08:00:00 e adicione o sufixo -03:00.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1536,
+        448
+      ],
+      "id": "1b678f59-ba16-4e7b-96d9-2857186c71b4",
+      "name": "Academic_Agent"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize esta ferramenta para buscar registros acadêmicos específicos (provas, trabalhos, estudos). Esta busca é obrigatória antes de qualquer edição ou exclusão, pois ela retorna o ID único do registro. Você deve sempre apresentar o ID ao usuário para que ele confirme qual item deseja manipular.",
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $1;\nSELECT \n    id, \n    -- Substitua pelos campos da sua tabela (ex: title, amount, item)\n    doc_name, \n    summary,\n    tags\nFROM \n    -- Substitua pela tabela alvo (finances, health, academic ou agendamento)\n    academic \nWHERE \n    user_id = $1 \n    AND (\n        doc_name ILIKE '%' || $2 || '%' -- Busca por palavra-chave\n        OR summary ILIKE '%' || $2 || '%' -- Busca por categoria\n    )\nORDER BY \n    created_at DESC\nLIMIT 5;",
+        "options": {
+          "queryReplacement": "={{ $('Parâmetros').item.json.user_id }}, {{ $fromAI('busca', 'O nome da maatéria ou resumo da máteria do usuário', 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1584,
+        896
+      ],
+      "id": "afd4b395-0fad-4842-93a2-51298562f9fe",
+      "name": "Consultar no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.number }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1536,
+        656
+      ],
+      "id": "e9602032-bd27-42da-9ec7-cc1bc4802345",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "IioD3zGjTA0MtOvw",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\nSET app.current_user_id = $1;\nINSERT INTO chat_history (user_id, session_id, role, content)\nVALUES ($1, $2, 'assistant', $3);",
+        "options": {
+          "queryReplacement": "={{ $('Parâmetros').item.json.user_id }}, {{ $('Parâmetros').item.json.number }}, {{ $('Parâmetros').item.json.message }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1856,
+        448
+      ],
+      "id": "d05284e1-262b-467b-b3a4-51979b76db8a",
+      "name": "Inserir mensagem do usuário no banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aiUnksZeKmtshWO_iRt8f",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/aiUnksZeKmtshWO_iRt8f",
+          "cachedResultName": "Insert_Academic_DB"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "doc_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('doc_name', `O nome do assunto, matéria ou documento.`, 'string') }}",
+            "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('summary', `Um resumo detalhado da tarefa ou do conteúdo de estudo.`, 'string') }}",
+            "tags": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tags', `Palavras-chave que classifiquem o registro (ex: prova, trabalho, leitura).\"`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "doc_name",
+              "displayName": "doc_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tags",
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        896
+      ],
+      "id": "4ca457c4-e0d3-4839-9740-973291396a36",
+      "name": "Inserir no Banco"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize esta ferramenta para editar um registro acadêmico existente. Você deve fornecer o ID do registro e as novas informações para nome da matéria, resumo ou tags",
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $5;\nUPDATE academic \nSET \n    doc_name = COALESCE($1, doc_name), \n    summary = COALESCE($2, summary), \n    tags = COALESCE($3, tags)\nWHERE id = $4 AND user_id = $5;",
+        "options": {
+          "queryReplacement": "={{ $fromAI('doc_name', 'Novo nome da matéria', 'string') }}, {{ $fromAI('summary', 'Novo resumo', 'string') }}, {{ $fromAI('tags', 'Nova categoria', 'string') }}, {{ $fromAI('id', 'ID do registro', 'number') }}, {{ $('Parâmetros').item.json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1856,
+        896
+      ],
+      "id": "648bdef9-619c-4aee-89e2-c12851636eb2",
+      "name": "Editar no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Utilize esta ferramenta para excluir permanentemente um registro acadêmico do banco de dados utilizando o ID.",
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\nSET app.current_user_id = $2;\nDELETE FROM academic \nWHERE id = $1 AND user_id = $2;",
+        "options": {
+          "queryReplacement": "={{ $fromAI('id', 'ID do registro a ser excluído', 'number') }}, {{ $('Parâmetros').item.json.user_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        1984,
+        896
+      ],
+      "id": "34fd43e5-f4fc-4718-9aea-bbd339101f41",
+      "name": "Excluir no Banco",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parâmetros": {
+      "main": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Academic_Agent": {
+      "main": [
+        [
+          {
+            "node": "Inserir mensagem do usuário no banco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir mensagem do usuário no banco": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editar no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excluir no Banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Academic_Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1b66432f-5e82-4d2f-8af1-f6f237f40e04",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "cV-L_5oVTyGZ93Why222u",
+  "tags": []
+}

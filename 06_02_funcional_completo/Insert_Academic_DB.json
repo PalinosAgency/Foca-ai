@@ -1,0 +1,85 @@
+{
+  "name": "Insert_Academic_DB",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SET TIME ZONE 'America/Sao_Paulo';\n-- Sua query original abaixo...\nSET app.current_user_id = '{{ $json.user_id }}';\n\nINSERT INTO academic (user_id, doc_name, summary, tags)\nVALUES (\n  {{ $json.user_id }},\n  '{{ $json.doc_name }}',\n  '{{ $json.summary.replace(/'/g, \"''\") }}',\n  '{{ $json.tags }}'\n);",
+        "options": {}
+      },
+      "id": "969f9bad-8f7d-4ceb-baf9-5b32e6e4a93d",
+      "name": "Academic Insert with RLS",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -592,
+        -256
+      ],
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id",
+              "type": "number"
+            },
+            {
+              "name": "doc_name"
+            },
+            {
+              "name": "summary"
+            },
+            {
+              "name": "tags"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -816,
+        -256
+      ],
+      "id": "06ffb5ee-62df-4e6b-9dc1-e62511f89bf0",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Academic Insert with RLS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6422cded-0cd2-49a3-b5ea-e9b07c92f7fd",
+  "meta": {
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "aiUnksZeKmtshWO_iRt8f",
+  "tags": []
+}

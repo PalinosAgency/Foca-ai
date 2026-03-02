@@ -1,0 +1,404 @@
+{
+  "name": "Verificacao_Pagamento",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hotmart-venda-aprovada",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "df7b596e-e5ba-409e-be7c-71604771e13f",
+      "name": "Webhook",
+      "webhookId": "8369c26f-1a31-42b1-b8cf-b57783664abb"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38d90a9d-0dd0-4c99-936b-f6085f5203ab",
+              "leftValue": "={{ $json.body.data.purchase.status }}",
+              "rightValue": "=APPROVED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "6b4a4da4-7475-4f39-a06d-658dc6c8a9b6",
+              "leftValue": "={{ $json.body.data.purchase.price.value }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "559b8e5c-d7e9-4011-b732-24fc3a256e79",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users \nSET status = 'ativo', \n    subscription_expires_at = NOW() + INTERVAL '30 days',\n  phone = {{ $json.phone_limpo }},\n    updated_at = NOW() \nWHERE phone = '{{ $json.phone_limpo }}' \n   OR email = '{{ $('Webhook').first().json.body.data.buyer.email }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "e17ea6f0-2825-4ad4-a98c-d85214c1fc5e",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $node[\"Code\"].json.phone_limpo }}",
+        "messageText": "=Olá {{ $json.name }}! 🎓 Bem-vindo ao Foca.Aí. Identifiquei seu pagamento e sua matrícula já está ativa! Eu sou seu novo assistente pessoal e vou te ajudar no ramo de saúde, agendamento, finanças e estudos.\nConsigo registrar suas transações financeiras, suas horas de estudo, seus dados de treino e agendar seus compromissos direto no calendário do Google. Além de disponibilizar um dashboard interativo a qualquer momento, basta mencionar \"dashboard\". Como posso te ajudar agora?",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "96234741-36e5-4f58-b782-6e3f0dbf3662",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Captura o telefone vindo da Hotmart (ajuste o caminho se necessário)\nlet phone = $input.first().json.body.data.buyer.checkout_phone || \"\"; \n\n// 1. Remove tudo que não for número (parênteses, espaços, traços)\nlet cleanPhone = phone.replace(/\\D+/g, \"\");\n\n// 2. Verifica se o número já começa com o DDI do Brasil (55)\n// Se não começar e tiver 10 ou 11 dígitos, adiciona o 55 na frente\nif (cleanPhone.length > 0 && !cleanPhone.startsWith(\"55\")) {\n  cleanPhone = \"55\" + cleanPhone;\n}\n\n// Retorna o objeto formatado para os próximos nós\nreturn {\n  phone_limpo: cleanPhone,\n  remote_jid: cleanPhone + \"@s.whatsapp.net\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "6af8bd94-0e89-4931-8201-dfc890159100",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE users \nSET status = 'ativo', \n    subscription_expires_at = NOW() + INTERVAL '3 days',\n  phone = {{ $json.phone_limpo }},\n    updated_at = NOW() \nWHERE phone = '{{ $json.phone_limpo }}' \n   OR email = '{{ $('Webhook').first().json.body.data.buyer.email }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        624,
+        96
+      ],
+      "id": "2893f36d-a424-4467-8746-845ce9d61a4e",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "yPEYBDmcYVRHArz4",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Tim_Number",
+        "remoteJid": "={{ $node[\"Code1\"].json.phone_limpo }}",
+        "messageText": "=Olá {{ $json.name }}! 🎓 Bem-vindo ao Foca.Aí. Identifiquei seu pagamento e sua matrícula já está ativa! Eu sou seu novo assistente pessoal e vou te ajudar no ramo de saúde, agendamento, finanças e estudos.\nConsigo registrar suas transações financeiras, suas horas de estudo, seus dados de treino e agendar seus compromissos direto no calendário do Google. Além de disponibilizar um dashboard interativo a qualquer momento, basta mencionar \"dashboard\". Como posso te ajudar agora?",
+        "options_message": {}
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        832,
+        96
+      ],
+      "id": "df5db917-5499-435f-8767-c7dae85a620d",
+      "name": "Enviar texto1",
+      "credentials": {
+        "evolutionApi": {
+          "id": "dgrzATrXi3dwpSdq",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Captura o telefone vindo da Hotmart (ajuste o caminho se necessário)\nlet phone = $input.first().json.body.data.buyer.checkout_phone || \"\"; \n\n// 1. Remove tudo que não for número (parênteses, espaços, traços)\nlet cleanPhone = phone.replace(/\\D+/g, \"\");\n\n// 2. Verifica se o número já começa com o DDI do Brasil (55)\n// Se não começar e tiver 10 ou 11 dígitos, adiciona o 55 na frente\nif (cleanPhone.length > 0 && !cleanPhone.startsWith(\"55\")) {\n  cleanPhone = \"55\" + cleanPhone;\n}\n\n// Retorna o objeto formatado para os próximos nós\nreturn {\n  phone_limpo: cleanPhone,\n  remote_jid: cleanPhone + \"@s.whatsapp.net\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        96
+      ],
+      "id": "7838e384-0953-447a-9332-dcfd93d865d1",
+      "name": "Code1"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "connection": "Close",
+            "host": "n8n.projetospalinos.online",
+            "x-forwarded-scheme": "https",
+            "x-forwarded-proto": "https",
+            "x-forwarded-for": "13.221.176.214",
+            "x-real-ip": "13.221.176.214",
+            "content-length": "1669",
+            "content-type": "application/json",
+            "user-agent": "Jodd HTTP",
+            "x-hotmart-hottok": "HEVY6s5zw5OEMYZGkLr8B3S7sAYrUN076fc490-7b5e-44aa-a048-d3cbd85b9a04"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "data": {
+              "product": {
+                "support_email": "",
+                "has_co_production": false,
+                "name": "Foca.aí",
+                "warranty_date": "2026-02-12T00:00:00Z",
+                "is_physical_product": false,
+                "id": 7109912,
+                "ucode": "64a2391f-f0aa-4183-9dd5-54e9410f2dcb"
+              },
+              "commissions": [
+                {
+                  "currency_value": "BRL",
+                  "source": "MARKETPLACE",
+                  "value": 0
+                },
+                {
+                  "currency_value": "BRL",
+                  "source": "PRODUCER",
+                  "value": 0
+                }
+              ],
+              "purchase": {
+                "original_offer_price": {
+                  "currency_value": "BRL",
+                  "value": 0
+                },
+                "recurrence_number": 1,
+                "subscription_anticipation_purchase": false,
+                "checkout_country": {
+                  "iso": "BR",
+                  "name": "Brasil"
+                },
+                "origin": {
+                  "sck": "focaai_cart"
+                },
+                "order_bump": {
+                  "is_order_bump": false
+                },
+                "approved_date": 1770339456000,
+                "offer": {
+                  "code": "lrwe3v0j",
+                  "name": "Promoção Imperdível",
+                  "description": "FOCAAI"
+                },
+                "is_funnel": false,
+                "order_date": 1770339453000,
+                "date_next_charge": 1770638400000,
+                "price": {
+                  "currency_value": "BRL",
+                  "value": 0
+                },
+                "payment": {
+                  "installments_number": 1,
+                  "type": "CREDIT_CARD"
+                },
+                "full_price": {
+                  "currency_value": "BRL",
+                  "value": 0
+                },
+                "business_model": "I",
+                "invoice_by": "HOTMART",
+                "transaction": "HP3075439307",
+                "status": "APPROVED"
+              },
+              "affiliates": [
+                {
+                  "affiliate_code": "",
+                  "name": ""
+                }
+              ],
+              "producer": {
+                "legal_nature": "Pessoa Jurídica",
+                "document": "53672178000145",
+                "name": "53.672.178 MATHEUS PALINOS ALEIXO"
+              },
+              "subscription": {
+                "subscriber": {
+                  "code": "9BDDAYBA"
+                },
+                "plan": {
+                  "name": "Foca.aí",
+                  "id": 1246018
+                },
+                "status": "ACTIVE"
+              },
+              "buyer": {
+                "checkout_phone_code": "22",
+                "address": {
+                  "country": "Brasil",
+                  "country_iso": "BR"
+                },
+                "document": "",
+                "name": "Heitor Crespo",
+                "last_name": "Crespo",
+                "checkout_phone": "22998969818",
+                "first_name": "Heitor",
+                "email": "heitorcrespos@gmail.com",
+                "document_type": ""
+              }
+            },
+            "id": "de0a6da2-020d-4f95-8fa6-0eeb631789f3",
+            "creation_date": 1770339467389,
+            "event": "PURCHASE_APPROVED",
+            "version": "2.0.0"
+          },
+          "webhookUrl": "https://n8n.projetospalinos.online/webhook/hotmart-venda-aprovada",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "07c003f6-0613-4cb8-8fdc-e329e0b18e14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "90b54ece09663a64e3b5e27dd7a7ed8fc5de9639b14038b7f2b21b9f100f2e5a"
+  },
+  "id": "vtPx3mWn4RYR8JwB_av6d",
+  "tags": []
+}
