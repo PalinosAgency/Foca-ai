@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       [user.id, token, expiresAt]
     );
 
-    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://foca-ai-oficial.vercel.app';
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://www.focaaioficial.com';
     const resetLink = `${appUrl}/reset-password?token=${token}`;
 
     // sendEmail retorna false se EMAIL_USER/PASS não estão configurados — tratado graciosamente

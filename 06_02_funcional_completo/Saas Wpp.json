@@ -528,7 +528,7 @@
         "resource": "messages-api",
         "instanceName": "Tim_Number",
         "remoteJid": "={{$('Coleta de Dados').first().json.number }}",
-        "messageText": "=Olá {{ $('Coleta de Dados').first().json.name }}! Identifiquei que sua assinatura do Foca.Aí não está ativa no momento. Para ter acesso ao Foca.Aí e evoluir em todas as suas áreas pessoais, acesse nosso site: https://foca-ai-oficial.vercel.app/. Se você já é aluno e acredita que isso é um erro, entre em contato com nosso suporte. suportefocaaioficial@gmail.com",
+        "messageText": "=Olá {{ $('Coleta de Dados').first().json.name }}! Identifiquei que sua assinatura do Foca.Aí não está ativa no momento. Para ter acesso ao Foca.Aí e evoluir em todas as suas áreas pessoais, acesse nosso site: https://www.focaaioficial.com/. Se você já é aluno e acredita que isso é um erro, entre em contato com nosso suporte. suportefocaaioficial@gmail.com",
         "options_message": {}
       },
       "type": "n8n-nodes-evolution-api.evolutionApi",

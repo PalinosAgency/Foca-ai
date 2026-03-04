@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
     // 5. Enviar E-mail
     // ✅ Correção: usa APP_URL ao invés de NEXT_PUBLIC_APP_URL (server-side only)
-    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://foca-ai-oficial.vercel.app';
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://www.focaaioficial.com';
     const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
 
     await sendEmail({

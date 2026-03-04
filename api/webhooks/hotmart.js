@@ -157,7 +157,7 @@ export default async function handler(req, res) {
           ? 'Seu pagamento foi confirmado e sua conta premium está ativa.'
           : 'Aproveite seus 3 dias de teste grátis com acesso total!',
         buttonText: 'ACESSAR PLATAFORMA',
-        buttonLink: 'https://foca-ai-oficial.vercel.app/'
+        buttonLink: 'https://www.focaaioficial.com/'
       });
 
       // Envia para o n8n
@@ -203,7 +203,7 @@ export default async function handler(req, res) {
           title: 'Cancelamento Confirmado',
           message: `Sua assinatura foi cancelada. Seu acesso continua válido até o fim do período atual.`,
           buttonText: 'Minha Conta',
-          buttonLink: 'https://foca-ai-oficial.vercel.app/account'
+          buttonLink: 'https://www.focaaioficial.com/account'
         });
       }
     }
