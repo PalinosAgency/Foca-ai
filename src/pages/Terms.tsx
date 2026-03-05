@@ -7,7 +7,7 @@ export default function Terms() {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-24 max-w-4xl">
         <h1 className="text-3xl font-bold mb-2 text-[#040949]">Termos de Uso</h1>
-        <p className="text-gray-500 mb-8">Versão 2.1 — Atualizada em: 06 de Fevereiro de 2026</p>
+        <p className="text-gray-500 mb-8">Versão 2.2 — Atualizada em: 04 de Março de 2026</p>
 
         <div className="prose prose-blue max-w-none space-y-8 text-gray-700">
 
@@ -76,7 +76,9 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-[#040949] mb-3">5. Dados e Privacidade</h2>
             <p>
-              A sua privacidade é fundamental. O tratamento dos seus dados, incluindo o envio de mensagens para processamento por IA e a integração com o Google Calendar, é regido pela nossa <a href="/privacy" className="text-blue-600 hover:underline">Política de Privacidade</a>, que é parte integrante destes Termos.
+              A sua privacidade é fundamental. O tratamento dos seus dados, incluindo o registro de conta via Google OAuth, o envio de mensagens para processamento por IA e a integração com o Google Calendar, é regido pela nossa <a href="/privacy" className="text-blue-600 hover:underline">Política de Privacidade</a>, que é parte integrante destes Termos.
+              <br /><br />
+              Declaramos expressamente que o uso e a transferência de informações recebidas das APIs do Google para qualquer outro aplicativo aderirão estritamente à <strong>Google API Services User Data Policy</strong>, incluindo os requisitos de Uso Limitado.
             </p>
           </section>
 

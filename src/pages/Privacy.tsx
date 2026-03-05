@@ -8,7 +8,7 @@ export default function Privacy() {
       {/* COMPACTAÇÃO: py-8 em vez de py-24 no mobile */}
       <main className="flex-grow container mx-auto px-4 py-8 md:py-24 max-w-4xl text-left">
         <h1 className="text-2xl md:text-3xl font-bold mb-2 text-[#040949]">Política de Privacidade</h1>
-        <p className="text-sm text-gray-500 mb-6">Versão 3.1 — Em conformidade com a LGPD (Lei 13.709/2018)</p>
+        <p className="text-sm text-gray-500 mb-6">Versão 3.2 — Atualizada em 04 de Março de 2026</p>
 
         <div className="prose prose-blue max-w-none space-y-6 text-gray-700 text-sm md:text-base">
 
@@ -93,12 +93,41 @@ export default function Privacy() {
             </p>
           </section>
 
-          {/* 6. GOOGLE CALENDAR */}
-          <section className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h2 className="text-base md:text-lg font-bold text-[#040949] mb-2">6. Dados do Google</h2>
-            <p className="italic text-xs md:text-sm">
-              O uso e a transferência de informações recebidas das APIs do Google para qualquer outro aplicativo aderirão à <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" className="text-blue-600 underline">Google User Data Policy</a>, incluindo os requisitos de Uso Limitado. Não compartilhamos dados do usuário do Google com ferramentas de IA de terceiros para fins de treinamento de modelos generalistas.
+          {/* 6. GOOGLE USER DATA & API SERVICES */}
+          <section>
+            <h2 className="text-lg md:text-xl font-bold text-[#040949] mb-2">6. Política de Dados de Usuário do Google (OAuth e APIs)</h2>
+            <p className="mb-4">
+              A <strong>Foca.aí</strong> utiliza serviços de autenticação do Google (Google OAuth) para facilitar o acesso à nossa plataforma e pode vir a requerer permissões adicionais (como Google Calendar) visando oferecer melhor experiência de organização pessoal.
+              <br /><br />
+              O uso e a transferência de informações recebidas das APIs do Google para qualquer outro aplicativo aderirão estritamente à <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" className="text-blue-600 underline font-semibold">Google API Services User Data Policy</a>, incluindo os requisitos de Uso Limitado (Limited Use).
             </p>
+
+            <div className="space-y-4">
+              <div>
+                <strong className="text-gray-800 block mb-1">A. Dados Acessados (Data Accessed)</strong>
+                Acessamos exclusivamente os dados estritamente necessários para o funcionamento da plataforma. Ao fazer login com o Google, recebemos seu <strong>Nome completo, Endereço de e-mail e Foto de perfil</strong>. Caso você conecte integrações futuras (como o Google Calendar), acessaremos apenas as permissões explicitamente concedidas no momento da autorização.
+              </div>
+
+              <div>
+                <strong className="text-gray-800 block mb-1">B. Uso de Dados (Data Usage)</strong>
+                Utilizamos os dados recebidos do Google <strong>unicamente</strong> para criar, autenticar e gerenciar sua conta de usuário dentro da plataforma Foca.aí, além de prover as funcionalidades diretas solicitadas por você (ex: exibição do seu nome/foto no perfil ou sincronização de eventos, se autorizado).
+              </div>
+
+              <div>
+                <strong className="text-gray-800 block mb-1">C. Compartilhamento de Dados (Data Sharing)</strong>
+                A Foca.aí <strong>NÃO</strong> compartilha seus dados pessoais obtidos do Google com terceiros para fins publicitários, de marketing ou venda de dados. Em nenhuma hipótese dados do usuário do Google são compartilhados ou utilizados para fins de treinamento de modelos de Inteligência Artificial (generalistas ou proprietários). O compartilhamento só ocorrerá se formalmente exigido por força da lei.
+              </div>
+
+              <div>
+                <strong className="text-gray-800 block mb-1">D. Armazenamento e Proteção (Data Storage & Protection)</strong>
+                Todos os dados são armazenados em servidores em nuvem seguros e com tecnologia de ponta (AWS/Supabase), empregando criptografia em trânsito (HTTPS/SSL) e em repouso. O acesso aos bancos de dados é restrito, monitorado e protegido por rigorosas políticas de acesso.
+              </div>
+
+              <div>
+                <strong className="text-gray-800 block mb-1">E. Retenção e Exclusão de Dados (Data Retention & Deletion)</strong>
+                Reteremos seus dados apenas pelo tempo em que sua conta permanecer ativa na "Foca.aí" ou conforme exigido por obrigações legais no Brasil (Marco Civil da Internet). Você pode solicitar a <strong>exclusão completa e definitiva</strong> da sua conta e de todos os dados associados a qualquer momento através das opções do painel ou enviando um e-mail com o assunto "Excluir Conta" para <a href="mailto:suportefocaaioficial@gmail.com" className="text-blue-600 hover:underline">suportefocaaioficial@gmail.com</a>. O processamento da exclusão ocorre em até 15 dias úteis.
+              </div>
+            </div>
           </section>
 
           {/* 7. CONTATO */}
