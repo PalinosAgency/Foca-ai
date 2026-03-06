@@ -188,20 +188,35 @@ export default async function handler(req, res) {
         event: body.event
       });
 
-      let query = `UPDATE subscriptions SET status = 'canceled' WHERE user_id = $1`;
-
       if (['REFUNDED', 'CHARGEBACK'].includes(status)) {
-        query = `UPDATE subscriptions SET status = 'canceled', current_period_end = NOW() - INTERVAL '1 day' WHERE user_id = $1`;
+        // Reembolso/Chargeback: acesso removido imediatamente
+        await pool.query(
+          `UPDATE subscriptions SET status = 'canceled', auto_renew = false, current_period_end = NOW() - INTERVAL '1 day' WHERE user_id = $1`,
+          [user.id]
+        );
+      } else {
+        // Cancelamento normal: mantém acesso até o fim do período, desativa auto_renew
+        await pool.query(
+          `UPDATE subscriptions SET status = 'canceled', auto_renew = false WHERE user_id = $1`,
+          [user.id]
+        );
       }
 
-      await pool.query(query, [user.id]);
-
       if (!['REFUNDED', 'CHARGEBACK'].includes(status)) {
+        // Busca a data de expiração para informar no e-mail
+        const subRes = await pool.query(
+          'SELECT current_period_end FROM subscriptions WHERE user_id = $1',
+          [user.id]
+        );
+        const endDate = subRes.rows[0]?.current_period_end
+          ? new Date(subRes.rows[0].current_period_end).toLocaleDateString('pt-BR')
+          : 'o fim do período atual';
+
         await sendEmail({
           to: email,
-          subject: 'Sua assinatura foi cancelada',
+          subject: 'Sua renovação foi cancelada',
           title: 'Cancelamento Confirmado',
-          message: `Sua assinatura foi cancelada. Seu acesso continua válido até o fim do período atual.`,
+          message: `A renovação automática da sua assinatura foi cancelada. Seu acesso continua válido até <strong>${endDate}</strong>. Após essa data, será necessário realizar uma nova compra para continuar acessando a plataforma.`,
           buttonText: 'Minha Conta',
           buttonLink: 'https://www.focaaioficial.com/account'
         });
