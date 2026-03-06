@@ -38,17 +38,8 @@ export default async function handler(req, res) {
 
       if (subResult.rows.length > 0) {
         subscription = subResult.rows[0];
-
-        // Se o status for "canceled" mas a data ainda estiver no futuro,
-        // força o status para 'active' para o site liberar o acesso.
-        const now = new Date();
-        const expiresAt = subscription.current_period_end
-          ? new Date(subscription.current_period_end)
-          : null;
-
-        if (expiresAt && expiresAt > now) {
-          subscription.status = 'active';
-        }
+        // NOTA: O status real do banco é preservado (active, canceled, etc.)
+        // O frontend calcula o acesso via current_period_end + status
       }
     } catch (e) {
       logError('Erro ao buscar assinatura', e);
