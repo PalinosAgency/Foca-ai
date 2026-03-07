@@ -28,13 +28,11 @@ export default async function handler(req, res) {
 
     // 3. Se não existir, CRIA
     if (!user) {
-      const randomPass = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-
       const newUser = await pool.query(
         `INSERT INTO users (name, email, password_hash, avatar_url, google_id, is_verified, created_at) 
-         VALUES ($1, $2, $3, $4, $5, true, NOW()) 
+         VALUES ($1, $2, NULL, $3, $4, true, NOW()) 
          RETURNING id, name, email, avatar_url, role`,
-        [name, email, randomPass, picture, googleId]
+        [name, email, picture, googleId]
       );
       user = newUser.rows[0];
     } else {

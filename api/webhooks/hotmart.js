@@ -128,37 +128,56 @@ export default async function handler(req, res) {
 
       // --- LÓGICA DE TRIAL VS PAGAMENTO REAL ---
       const pricePaid = data.purchase?.price?.value || data.price?.value || 0;
-      const daysToAdd = pricePaid > 0.5 ? 35 : 4;
+      const isTrial = pricePaid <= 0.5;
 
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + daysToAdd);
+      // 1. Tenta usar a data REAL da Hotmart (mais confiável)
+      const hotmartNextCharge = data.subscription?.date_next_charge
+        || data.purchase?.recurrency?.charge_date
+        || data.subscription?.subscriber?.date_next_charge
+        || null;
+
+      let endDate;
+      if (hotmartNextCharge) {
+        // Usa a data que a Hotmart informou (fonte da verdade)
+        endDate = new Date(hotmartNextCharge);
+      } else {
+        // Fallback: calcula manualmente (30 dias pagos, 3 dias trial)
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() + (isTrial ? 3 : 30));
+      }
 
       logInfo('Webhook - Subscription Created', {
         userId: user.id,
         pricePaid,
-        daysToAdd,
+        isTrial,
+        hotmartNextCharge: hotmartNextCharge || 'not_provided',
         endDate: endDate.toISOString()
       });
 
       await pool.query(
-        `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end)
-         VALUES ($1, 'active', 'premium', $2)
+        `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end, auto_renew)
+         VALUES ($1, 'active', 'premium', $2, true)
          ON CONFLICT (user_id) 
-         DO UPDATE SET status = 'active', current_period_end = $2, plan_id = 'premium'`,
+         DO UPDATE SET status = 'active', current_period_end = $2, plan_id = 'premium', auto_renew = true`,
         [user.id, endDate]
       );
 
-      // Envia E-mail de Boas-vindas
-      await sendEmail({
-        to: email,
-        subject: daysToAdd > 10 ? 'Matrícula Confirmada! 🚀' : 'Período de Teste Iniciado! 🧪',
-        title: `Bem-vindo(a), ${user.name || 'Estudante'}!`,
-        message: daysToAdd > 10
-          ? 'Seu pagamento foi confirmado e sua conta premium está ativa.'
-          : 'Aproveite seus 3 dias de teste grátis com acesso total!',
-        buttonText: 'ACESSAR PLATAFORMA',
-        buttonLink: 'https://www.focaaioficial.com/'
-      });
+      // Envia E-mail de Boas-vindas (não bloqueia o webhook se falhar)
+      const formattedEnd = endDate.toLocaleDateString('pt-BR');
+      try {
+        await sendEmail({
+          to: email,
+          subject: isTrial ? 'Período de Teste Iniciado! 🧪' : 'Matrícula Confirmada! 🚀',
+          title: `Bem-vindo(a), ${user.name || 'Estudante'}!`,
+          message: isTrial
+            ? `Aproveite seus 3 dias de teste grátis com acesso total! Seu acesso é válido até <strong>${formattedEnd}</strong>.`
+            : `Seu pagamento foi confirmado e sua conta premium está ativa até <strong>${formattedEnd}</strong>.`,
+          buttonText: 'ACESSAR PLATAFORMA',
+          buttonLink: 'https://www.focaaioficial.com/'
+        });
+      } catch (emailError) {
+        logError('Email de boas-vindas falhou (assinatura JÁ ativada)', emailError);
+      }
 
       // Envia para o n8n
       try {
@@ -170,7 +189,7 @@ export default async function handler(req, res) {
             email: user.email,
             phone: phone || user.phone,
             status: 'approved',
-            is_trial: daysToAdd < 10,
+            is_trial: isTrial,
             hotmart_original_status: status,
             origin: 'hotmart_webhook_v2_site'
           })
@@ -212,14 +231,18 @@ export default async function handler(req, res) {
           ? new Date(subRes.rows[0].current_period_end).toLocaleDateString('pt-BR')
           : 'o fim do período atual';
 
-        await sendEmail({
-          to: email,
-          subject: 'Sua renovação foi cancelada',
-          title: 'Cancelamento Confirmado',
-          message: `A renovação automática da sua assinatura foi cancelada. Seu acesso continua válido até <strong>${endDate}</strong>. Após essa data, será necessário realizar uma nova compra para continuar acessando a plataforma.`,
-          buttonText: 'Minha Conta',
-          buttonLink: 'https://www.focaaioficial.com/account'
-        });
+        try {
+          await sendEmail({
+            to: email,
+            subject: 'Sua renovação foi cancelada',
+            title: 'Cancelamento Confirmado',
+            message: `A renovação automática da sua assinatura foi cancelada. Seu acesso continua válido até <strong>${endDate}</strong>. Após essa data, será necessário realizar uma nova compra para continuar acessando a plataforma.`,
+            buttonText: 'Minha Conta',
+            buttonLink: 'https://www.focaaioficial.com/account'
+          });
+        } catch (emailError) {
+          logError('Email de cancelamento falhou (cancelamento JÁ processado)', emailError);
+        }
       }
     }
 

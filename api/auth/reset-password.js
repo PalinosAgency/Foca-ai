@@ -58,6 +58,6 @@ export default async function handler(req, res) {
   } catch (error) {
     logError('Reset Password Error', error);
     // Mensagem de erro mais detalhada para ajudar no debug se necessário
-    return res.status(500).json({ message: `Erro interno: ${error.message}` });
+    return res.status(500).json({ message: 'Erro interno no servidor. Tente novamente.' });
   }
 }

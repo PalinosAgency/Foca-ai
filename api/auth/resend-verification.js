@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     // 4. Enviar e-mail
     // ✅ Correção: usa APP_URL ao invés de NEXT_PUBLIC_APP_URL (server-side only)
-    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://focaai.vercel.app';
+    const appUrl = process.env.APP_URL || process.env.VERCEL_URL || 'https://www.focaaioficial.com';
     const verificationLink = `${appUrl}/verify-email?token=${token}`;
 
     const emailSent = await sendEmail({
