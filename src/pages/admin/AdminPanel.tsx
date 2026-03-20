@@ -63,13 +63,13 @@ export default function AdminPanel() {
     }
 
     try {
-      const response = await fetch('/api/admin/register-investor', {
+      const response = await fetch('/api/admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: name.trim(), phone }),
+        body: JSON.stringify({ action: 'register-investor', name: name.trim(), phone }),
       });
 
       const data = await response.json();
