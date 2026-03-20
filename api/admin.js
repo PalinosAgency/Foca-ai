@@ -8,6 +8,11 @@ const N8N_WEBHOOK_URL = 'https://n8n.projetospalinos.online/webhook/hotmart-vend
 function normalizePhone(phone) {
   if (!phone) return null;
   let clean = phone.replace(/\D/g, '');
+  // Remove DDI 55 se já vier com ele (ex: +5511999999999 → 11999999999)
+  if (clean.startsWith('55') && clean.length >= 12) {
+    clean = clean.slice(2);
+  }
+  // Agora adiciona o 55 padronizado
   if (clean.length >= 10 && clean.length <= 11) {
     clean = '55' + clean;
   }

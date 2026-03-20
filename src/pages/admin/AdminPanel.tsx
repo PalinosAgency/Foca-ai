@@ -204,6 +204,7 @@ export default function AdminPanel() {
               <Phone className="w-4 h-4" />
               Telefone (WhatsApp)
             </Label>
+            <p className="text-xs text-amber-600 font-medium">⚠️ Não inclua +55 — digite apenas DDD + número</p>
             <Input
               id="reg-phone"
               type="tel"
