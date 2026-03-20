@@ -34,6 +34,10 @@ const VerifyEmail = lazy(() => import("./pages/auth/VerifyEmail"));
 const Account = lazy(() => import("./pages/app/Account"));
 const SubscriptionBlocked = lazy(() => import("./pages/app/SubscriptionBlocked"));
 
+// Admin Pages
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -109,6 +113,10 @@ const App = () => (
                   path="/cart" 
                   element={<Cart />} 
                 />
+
+                {/* --- PAINEL ADMIN --- */}
+                <Route path="/admin" element={<AdminLogin />} />
+                <Route path="/admin/panel" element={<AdminPanel />} />
 
                 {/* Erro 404 */}
                 <Route path="*" element={<NotFound />} />
