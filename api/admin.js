@@ -12,10 +12,30 @@ function normalizePhone(phone) {
   return clean;
 }
 
+// Verifica se o token é de admin, retorna tokenData ou envia erro
+function verifyAdmin(req, res) {
+  let tokenData;
+  try {
+    tokenData = verifyToken(req);
+  } catch {
+    res.status(401).json({ message: 'Token inválido ou não fornecido.' });
+    return null;
+  }
+  if (tokenData.role !== 'admin') {
+    logSecurityEvent('Admin - Unauthorized Role', {
+      role: tokenData.role,
+      ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+    });
+    res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
+    return null;
+  }
+  return tokenData;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { action } = req.body || {};
+  const { action } = req.body || req.query || {};
 
   // ===== AÇÃO: LOGIN =====
   if (req.method === 'POST' && action === 'login') {
@@ -56,23 +76,10 @@ export default async function handler(req, res) {
     }
   }
 
-  // ===== AÇÃO: REGISTRAR INVESTIDOR =====
-  if (req.method === 'POST' && action === 'register-investor') {
-    // Verifica autenticação admin
-    let tokenData;
-    try {
-      tokenData = verifyToken(req);
-    } catch {
-      return res.status(401).json({ message: 'Token inválido ou não fornecido.' });
-    }
-
-    if (tokenData.role !== 'admin') {
-      logSecurityEvent('Admin Register - Unauthorized Role', {
-        role: tokenData.role,
-        ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
-      });
-      return res.status(403).json({ message: 'Acesso negado. Apenas administradores.' });
-    }
+  // ===== AÇÃO: REGISTRO MANUAL =====
+  if (req.method === 'POST' && action === 'register') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
 
     const { name, phone } = req.body;
 
@@ -105,15 +112,16 @@ export default async function handler(req, res) {
           [user.id, endDate]
         );
 
-        logInfo('Admin - Investor Reactivated', {
+        logInfo('Admin - User Reactivated', {
           userId: user.id, name: user.name, phone: normalizedPhone,
           endDate: endDate.toISOString(), admin: tokenData.username
         });
 
         return res.status(200).json({
-          message: `Investidor "${user.name}" já existia. Matrícula reativada por 30 dias!`,
+          message: `"${user.name}" já existia. Matrícula reativada por 30 dias!`,
           user: { id: user.id, name: user.name, phone: user.phone },
-          subscription: { status: 'active', current_period_end: endDate.toISOString() }
+          subscription: { status: 'active', current_period_end: endDate.toISOString() },
+          reactivated: true
         });
       }
 
@@ -121,7 +129,7 @@ export default async function handler(req, res) {
       const newUser = await pool.query(
         `INSERT INTO users (name, phone, is_verified, created_at)
          VALUES ($1, $2, TRUE, NOW())
-         RETURNING id, name, phone`,
+         RETURNING id, name, phone, created_at`,
         [name.trim(), normalizedPhone]
       );
 
@@ -137,22 +145,45 @@ export default async function handler(req, res) {
         [user.id, endDate]
       );
 
-      logInfo('Admin - Investor Registered', {
+      logInfo('Admin - User Registered', {
         userId: user.id, name, phone: normalizedPhone,
         endDate: endDate.toISOString(), admin: tokenData.username
       });
 
       return res.status(201).json({
-        message: `Investidor "${name}" registrado com sucesso! Matrícula ativa por 30 dias.`,
-        user: { id: user.id, name: user.name, phone: user.phone },
-        subscription: { status: 'active', current_period_end: endDate.toISOString() }
+        message: `"${name}" registrado com sucesso! Matrícula ativa por 30 dias.`,
+        user: { id: user.id, name: user.name, phone: user.phone, created_at: user.created_at },
+        subscription: { status: 'active', current_period_end: endDate.toISOString() },
+        reactivated: false
       });
 
     } catch (error) {
-      logError('Admin Register Investor Error', error);
-      return res.status(500).json({ message: 'Erro interno ao registrar investidor.' });
+      logError('Admin Register Error', error);
+      return res.status(500).json({ message: 'Erro interno ao registrar.' });
     }
   }
 
-  return res.status(400).json({ message: 'Ação inválida. Use action: "login" ou "register-investor".' });
+  // ===== AÇÃO: LISTAR REGISTROS RECENTES =====
+  if (req.method === 'POST' && action === 'list-registrations') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    try {
+      const result = await pool.query(
+        `SELECT u.id, u.name, u.phone, u.created_at,
+                s.status AS sub_status, s.current_period_end
+         FROM users u
+         LEFT JOIN subscriptions s ON s.user_id = u.id
+         ORDER BY u.created_at DESC
+         LIMIT 50`
+      );
+
+      return res.status(200).json({ registrations: result.rows });
+    } catch (error) {
+      logError('Admin List Registrations Error', error);
+      return res.status(500).json({ message: 'Erro ao listar registros.' });
+    }
+  }
+
+  return res.status(400).json({ message: 'Ação inválida. Use action: "login", "register" ou "list-registrations".' });
 }
