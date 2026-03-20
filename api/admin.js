@@ -2,6 +2,8 @@ import pool from '../lib/db.js';
 import { signToken, verifyToken } from '../lib/auth.js';
 import { logError, logInfo, logSecurityEvent } from '../lib/logger.js';
 
+const N8N_WEBHOOK_URL = 'https://n8n.projetospalinos.online/webhook/hotmart-venda-aprovada';
+
 // Normaliza telefone para padrão apenas números com DDI 55
 function normalizePhone(phone) {
   if (!phone) return null;
@@ -112,6 +114,29 @@ export default async function handler(req, res) {
           [user.id, endDate]
         );
 
+        // Atualiza subscription_expires_at na tabela users
+        await pool.query(
+          'UPDATE users SET subscription_expires_at = $1 WHERE id = $2',
+          [endDate, user.id]
+        );
+
+        // Envia para n8n (WhatsApp)
+        try {
+          await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: user.name,
+              phone: normalizedPhone,
+              status: 'approved',
+              is_trial: false,
+              origin: 'admin_panel'
+            })
+          });
+        } catch (n8nError) {
+          logError('N8N webhook failed (admin reactivation)', n8nError);
+        }
+
         logInfo('Admin - User Reactivated', {
           userId: user.id, name: user.name, phone: normalizedPhone,
           endDate: endDate.toISOString(), admin: tokenData.username
@@ -144,6 +169,29 @@ export default async function handler(req, res) {
          DO UPDATE SET status = 'active', current_period_end = $2, plan_id = 'premium', auto_renew = false`,
         [user.id, endDate]
       );
+
+      // Atualiza subscription_expires_at na tabela users
+      await pool.query(
+        'UPDATE users SET subscription_expires_at = $1 WHERE id = $2',
+        [endDate, user.id]
+      );
+
+      // Envia para n8n (WhatsApp)
+      try {
+        await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name.trim(),
+            phone: normalizedPhone,
+            status: 'approved',
+            is_trial: false,
+            origin: 'admin_panel'
+          })
+        });
+      } catch (n8nError) {
+        logError('N8N webhook failed (admin registration)', n8nError);
+      }
 
       logInfo('Admin - User Registered', {
         userId: user.id, name, phone: normalizedPhone,
