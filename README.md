@@ -10,7 +10,7 @@
   [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
   
-  [🌐 Site Oficial](https://foca-ai-oficial.vercel.app) · [📧 Suporte](mailto:suportefocaaioficial@gmail.com) · [📸 Instagram](https://www.instagram.com/foca__ai)
+  [🌐 Site Oficial](https://www.focaaioficial.com) · [📧 Suporte](mailto:suportefocaaioficial@gmail.com) · [📸 Instagram](https://www.instagram.com/foca__ai)
 </div>
 
 ---
@@ -310,7 +310,7 @@ Este software é **proprietário e protegido por direitos autorais**. O código-
 
 Para obter uma **licença comercial** ou autorização de uso, entre em contato:
 - 📧 **Email**: suportefocaaioficial@gmail.com
-- 🌐 **Site**: [foca-ai-oficial.vercel.app](https://foca-ai-oficial.vercel.app)
+- 🌐 **Site**: [foca-ai-oficial.vercel.app](https://www.focaaioficial.com)
 
 **Violações desta licença estão sujeitas a ações legais.**
 
@@ -336,7 +336,7 @@ O uso não autorizado deste software para fins comerciais constitui violação d
 
 - 📧 **Email**: suportefocaaioficial@gmail.com
 - 📸 **Instagram**: [@foca__ai](https://www.instagram.com/foca__ai)
-- 🌐 **Site**: [foca-ai-oficial.vercel.app](https://foca-ai-oficial.vercel.app)
+- 🌐 **Site**: [foca-ai-oficial.vercel.app](https://www.focaaioficial.com)
 
 ---
 
