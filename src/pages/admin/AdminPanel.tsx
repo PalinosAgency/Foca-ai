@@ -76,7 +76,8 @@ interface Stats {
 interface ConfirmAction {
   userId: string;
   userName: string;
-  operation: 'cancel' | 'reactivate';
+  operation: 'cancel' | 'reactivate' | 'extend';
+  duration?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────
@@ -275,7 +276,7 @@ export default function AdminPanel() {
     setIsActionLoading(true);
     try {
       const result = await adminFetch(
-        { action: 'update-subscription', userId: confirmAction.userId, operation: confirmAction.operation },
+        { action: 'update-subscription', userId: confirmAction.userId, operation: confirmAction.operation, duration: confirmAction.duration },
         navigate
       );
       if (result?.response.ok) {
@@ -494,21 +495,48 @@ export default function AdminPanel() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {isActive ? (
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: '1' })}
+                                  className="text-emerald-600 focus:text-emerald-600"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {isActive ? 'Aumentar 1 mês' : 'Reativar (1 mês)'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: '2' })}
+                                  className="text-emerald-600 focus:text-emerald-600"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {isActive ? 'Aumentar 2 meses' : 'Reativar (2 meses)'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: '6' })}
+                                  className="text-emerald-600 focus:text-emerald-600"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {isActive ? 'Aumentar 6 meses' : 'Reativar (6 meses)'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: '12' })}
+                                  className="text-emerald-600 focus:text-emerald-600"
+                                >
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  {isActive ? 'Aumentar 1 ano' : 'Reativar (1 ano)'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: 'lifetime' })}
+                                  className="text-blue-600 focus:text-blue-600"
+                                >
+                                  <Shield className="w-4 h-4 mr-2" />
+                                  {isActive ? 'Tornar Vitalício' : 'Reativar (Vitalício)'}
+                                </DropdownMenuItem>
+                                {isActive && (
                                   <DropdownMenuItem
                                     onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'cancel' })}
-                                    className="text-red-600 focus:text-red-600"
+                                    className="text-red-600 focus:text-red-600 border-t mt-1 pt-1"
                                   >
                                     <XCircle className="w-4 h-4 mr-2" />
                                     Cancelar assinatura
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem
-                                    onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'reactivate' })}
-                                    className="text-emerald-600 focus:text-emerald-600"
-                                  >
-                                    <RotateCcw className="w-4 h-4 mr-2" />
-                                    Reativar (30 dias)
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -699,13 +727,13 @@ export default function AdminPanel() {
               {confirmAction?.operation === 'cancel' ? (
                 <><XCircle className="w-5 h-5 text-red-500" /> Cancelar Assinatura</>
               ) : (
-                <><RotateCcw className="w-5 h-5 text-emerald-500" /> Reativar Assinatura</>
+                <><RotateCcw className="w-5 h-5 text-emerald-500" /> {confirmAction?.duration === 'lifetime' ? 'Acesso Vitalício' : 'Aumentar Tempo'}</>
               )}
             </DialogTitle>
             <DialogDescription>
               {confirmAction?.operation === 'cancel'
                 ? `Tem certeza que deseja cancelar a assinatura de "${confirmAction?.userName}"? O acesso será encerrado.`
-                : `Deseja reativar a assinatura de "${confirmAction?.userName}" por mais 30 dias?`
+                : `Deseja adicionar mais ${confirmAction?.duration === 'lifetime' ? 'tempo vitalício' : confirmAction?.duration + (confirmAction?.duration === '1' ? ' mês' : ' meses')} para "${confirmAction?.userName}"?`
               }
             </DialogDescription>
           </DialogHeader>
