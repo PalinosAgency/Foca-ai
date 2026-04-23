@@ -170,8 +170,8 @@ export default async function handler(req, res) {
           subject: isTrial ? 'Período de Teste Iniciado! 🧪' : 'Matrícula Confirmada! 🚀',
           title: `Bem-vindo(a), ${user.name || 'Estudante'}!`,
           message: isTrial
-            ? `Aproveite seus 3 dias de teste grátis com acesso total! Seu acesso é válido até <strong>${formattedEnd}</strong>.`
-            : `Seu pagamento foi confirmado e sua conta premium está ativa até <strong>${formattedEnd}</strong>.`,
+            ? `Aproveite seus 3 dias de teste grátis com acesso total! Seu acesso é válido até <strong>${formattedEnd}</strong>.<br><br>📺 <strong>Passo a passo:</strong> <a href="https://www.focaaioficial.com/video/demo-video.mp4" target="_blank" style="color: #0026f7; font-weight: bold;">Clique aqui e assista nosso vídeo rápido ensinando a usar todas as funcionalidades!</a>`
+            : `Seu pagamento foi confirmado e sua conta premium está ativa até <strong>${formattedEnd}</strong>.<br><br>📺 <strong>Passo a passo:</strong> <a href="https://www.focaaioficial.com/video/demo-video.mp4" target="_blank" style="color: #0026f7; font-weight: bold;">Clique aqui e assista nosso vídeo rápido ensinando a usar todas as funcionalidades!</a>`,
           buttonText: 'ACESSAR PLATAFORMA',
           buttonLink: 'https://www.focaaioficial.com/'
         });

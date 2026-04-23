@@ -19,10 +19,9 @@ export default function Index() {
       <Navbar />
 
       {/* --- SETOR 1: HERO (AZUL ESCURO) --- */}
-      {/* --- SETOR 1: HERO (AZUL ESCURO) --- */}
       {isDesktop ? <DesktopHero /> : <MobileHero />}
 
-      {/* --- SETOR 2: FEATURES (BRANCO) --- */}
+      {/* --- SETOR 2: FEATURES (BRANCO/CINZA CLARO) --- */}
       <FeaturesSection />
 
       {/* --- SETOR 3: DASHBOARD (AZUL ESCURO) --- */}
