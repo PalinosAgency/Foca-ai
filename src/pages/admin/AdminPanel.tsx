@@ -134,22 +134,35 @@ async function adminFetch(body: Record<string, unknown>, navigate: ReturnType<ty
   const token = getToken();
   if (!token) { navigate('/admin'); return null; }
 
-  const response = await fetch('/api/admin', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await fetch('/api/admin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (response.status === 401) {
-    sessionStorage.removeItem('admin_token');
-    navigate('/admin');
+    if (response.status === 401) {
+      sessionStorage.removeItem('admin_token');
+      navigate('/admin');
+      return null;
+    }
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text || 'Erro inesperado do servidor.' };
+    }
+
+    return { response, data };
+  } catch (error) {
+    console.error('API Fetch Error:', error);
     return null;
   }
-
-  return { response, data: await response.json() };
 }
 
 // ─── Status Badge ────────────────────────────────
@@ -226,6 +239,16 @@ export default function AdminPanel() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
+  // ── Safety measure against Radix Dialog pointer-events bug ──
+  useEffect(() => {
+    if (!confirmAction) {
+      const t = setTimeout(() => {
+        document.body.style.pointerEvents = '';
+      }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [confirmAction]);
+
   // ── Auth check ──
   useEffect(() => {
     if (!getToken()) navigate('/admin');
@@ -282,17 +305,22 @@ export default function AdminPanel() {
         { action: 'update-subscription', userId: confirmAction.userId, operation: confirmAction.operation, duration: confirmAction.duration },
         navigate
       );
-      if (result?.response.ok) {
+      if (result?.response?.ok) {
         toast({ title: '✅ Sucesso', description: result.data.message });
-        fetchUsers();
+        setConfirmAction(null);
+        setTimeout(() => {
+          fetchUsers();
+          fetchStats();
+        }, 400);
       } else {
-        toast({ title: 'Erro', description: result?.data.message || 'Falha', variant: 'destructive' });
+        toast({ title: 'Erro', description: result?.data?.message || 'Falha na operação', variant: 'destructive' });
+        setConfirmAction(null);
       }
     } catch {
       toast({ title: 'Erro de conexão', variant: 'destructive' });
+      setConfirmAction(null);
     } finally {
       setIsActionLoading(false);
-      setConfirmAction(null);
     }
   };
 
@@ -306,15 +334,16 @@ export default function AdminPanel() {
         { action: 'register', name: regName.trim(), phone: regPhone, duration: regDuration === 'lifetime' ? 'lifetime' : parseInt(regDuration, 10) },
         navigate
       );
-      if (result?.response.ok) {
+      if (result?.response?.ok) {
         setRegSuccess(result.data.message);
         toast({ title: '✅ Registro realizado!', description: result.data.message });
         setRegName('');
         setRegPhone('');
         setRegDuration('1');
         fetchUsers();
+        fetchStats();
       } else {
-        toast({ title: 'Erro', description: result?.data.message, variant: 'destructive' });
+        toast({ title: 'Erro', description: result?.data?.message || 'Erro ao registrar', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Erro de conexão', variant: 'destructive' });
