@@ -198,6 +198,9 @@ export default function AdminPanel() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // ── State: Tabs ──
+  const [activeTab, setActiveTab] = useState('users');
+
   // ── State: Users Tab ──
   const [users, setUsers] = useState<UserRow[]>([]);
   const [page, setPage] = useState(1);
@@ -353,9 +356,9 @@ export default function AdminPanel() {
 
       {/* ── Tabs ── */}
       <Tabs
-        defaultValue="users"
+        value={activeTab}
         className="w-full max-w-5xl"
-        onValueChange={(v) => { if (v === 'stats') fetchStats(); }}
+        onValueChange={(v) => { setActiveTab(v); if (v === 'stats') fetchStats(); }}
       >
         <TabsList className="w-full grid grid-cols-3 bg-white/10 backdrop-blur-sm rounded-xl p-1 mb-6">
           <TabsTrigger
@@ -703,11 +706,11 @@ export default function AdminPanel() {
               </div>
             ) : stats ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <StatCard icon={<Users className="w-6 h-6" />} label="Total" value={stats.total} color="blue" />
-                <StatCard icon={<CalendarCheck className="w-6 h-6" />} label="Ativos" value={stats.active} color="emerald" />
-                <StatCard icon={<XCircle className="w-6 h-6" />} label="Cancelados" value={stats.canceled} color="red" />
-                <StatCard icon={<CalendarX className="w-6 h-6" />} label="Expirados" value={stats.expired} color="gray" />
-                <StatCard icon={<UserMinus className="w-6 h-6" />} label="Sem plano" value={stats.noPlan} color="slate" />
+                <StatCard icon={<Users className="w-6 h-6" />} label="Total" value={stats.total} color="blue" onClick={() => { setFilter('all'); setPage(1); setActiveTab('users'); }} />
+                <StatCard icon={<CalendarCheck className="w-6 h-6" />} label="Ativos" value={stats.active} color="emerald" onClick={() => { setFilter('active'); setPage(1); setActiveTab('users'); }} />
+                <StatCard icon={<XCircle className="w-6 h-6" />} label="Cancelados" value={stats.canceled} color="red" onClick={() => { setFilter('canceled'); setPage(1); setActiveTab('users'); }} />
+                <StatCard icon={<CalendarX className="w-6 h-6" />} label="Expirados" value={stats.expired} color="gray" onClick={() => { setFilter('expired'); setPage(1); setActiveTab('users'); }} />
+                <StatCard icon={<UserMinus className="w-6 h-6" />} label="Sem plano" value={stats.noPlan} color="slate" onClick={() => { setFilter('no-plan'); setPage(1); setActiveTab('users'); }} />
               </div>
             ) : (
               <div className="text-center py-16 text-blue-300/60">
@@ -767,7 +770,7 @@ export default function AdminPanel() {
 }
 
 // ─── Stat Card Component ─────────────────────────
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+function StatCard({ icon, label, value, color, onClick }: { icon: React.ReactNode; label: string; value: number; color: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
     blue: 'from-blue-500/20 to-blue-600/10 text-blue-400 ring-blue-500/20',
     emerald: 'from-emerald-500/20 to-emerald-600/10 text-emerald-400 ring-emerald-500/20',
@@ -777,7 +780,10 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
   };
 
   return (
-    <Card className={`bg-gradient-to-br ${colorMap[color]} border-0 ring-1 shadow-lg`}>
+    <Card 
+      onClick={onClick}
+      className={`bg-gradient-to-br ${colorMap[color]} border-0 ring-1 shadow-lg ${onClick ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+    >
       <CardContent className="p-5 flex flex-col items-center text-center gap-2">
         <div className={colorMap[color].split(' ')[2]}>{icon}</div>
         <p className="text-3xl font-bold text-white">{value}</p>
