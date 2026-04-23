@@ -17,13 +17,24 @@ function normalizePhone(phone) {
   return clean;
 }
 
-// Calcula data final baseada na duração
+// Calcula data final baseada na duração a partir de agora
 function calcEndDate(duration) {
   if (duration === 'lifetime') {
     return new Date('2099-12-31T23:59:59Z');
   }
   const months = parseInt(duration, 10) || 1;
   const end = new Date();
+  end.setMonth(end.getMonth() + months);
+  return end;
+}
+
+// Calcula data final baseada na duração a partir de uma data base
+function calcEndDateFrom(baseDate, duration) {
+  if (duration === 'lifetime') {
+    return new Date('2099-12-31T23:59:59Z');
+  }
+  const months = parseInt(duration, 10) || 1;
+  const end = new Date(baseDate);
   end.setMonth(end.getMonth() + months);
   return end;
 }
@@ -259,10 +270,10 @@ export default async function handler(req, res) {
     const tokenData = verifyAdmin(req, res);
     if (!tokenData) return;
 
-    const { userId, operation } = req.body;
+    const { userId, operation, duration } = req.body;
 
-    if (!userId || !['cancel', 'reactivate'].includes(operation)) {
-      return res.status(400).json({ message: 'userId e operation (cancel/reactivate) são obrigatórios.' });
+    if (!userId || !['cancel', 'reactivate', 'extend'].includes(operation)) {
+      return res.status(400).json({ message: 'userId e operation (cancel/reactivate/extend) são obrigatórios.' });
     }
 
     try {
@@ -314,6 +325,49 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           message: `Assinatura de "${user.name}" reativada por 30 dias.`,
+          subscription: { status: 'active', current_period_end: endDate.toISOString() }
+        });
+      }
+
+      if (operation === 'extend') {
+        if (!duration) {
+          return res.status(400).json({ message: 'Duração é obrigatória para estender a assinatura.' });
+        }
+
+        const subRes = await pool.query('SELECT current_period_end, status FROM subscriptions WHERE user_id = $1', [userId]);
+        let baseDate = new Date();
+
+        if (subRes.rows.length > 0) {
+          const sub = subRes.rows[0];
+          const currentEnd = new Date(sub.current_period_end);
+          if (sub.status === 'active' && currentEnd > new Date()) {
+            baseDate = currentEnd;
+          }
+        }
+
+        const endDate = calcEndDateFrom(baseDate, duration);
+
+        await pool.query(
+          `INSERT INTO subscriptions (user_id, status, plan_id, current_period_end, auto_renew)
+           VALUES ($1, 'active', 'premium', $2, false)
+           ON CONFLICT (user_id)
+           DO UPDATE SET status = 'active', current_period_end = $2, plan_id = 'premium', auto_renew = false`,
+          [userId, endDate]
+        );
+
+        await pool.query(
+          'UPDATE users SET subscription_expires_at = $1 WHERE id = $2',
+          [endDate, userId]
+        );
+
+        const durationLabel = duration === 'lifetime' ? 'vitalício' : `${duration} mês(es)`;
+
+        logInfo('Admin - Subscription Extended', {
+          userId, name: user.name, duration: durationLabel, endDate: endDate.toISOString(), admin: tokenData.username
+        });
+
+        return res.status(200).json({
+          message: `Tempo adicionado com sucesso para "${user.name}" (${durationLabel}).`,
           subscription: { status: 'active', current_period_end: endDate.toISOString() }
         });
       }
