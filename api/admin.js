@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Não foi possível obter o e-mail do Google.' });
       }
 
-      // 2. Verifica a Whitelist
+      // 2. Verifica a Whitelist usando Variáveis de Ambiente (para proteger do repositório público)
       const allowedEmails = [process.env.ADMIN_1_EMAIL, process.env.ADMIN_2_EMAIL].filter(Boolean);
       
       if (!allowedEmails.includes(email)) {
