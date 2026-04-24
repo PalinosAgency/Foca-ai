@@ -64,40 +64,48 @@ export default async function handler(req, res) {
 
   const { action } = req.body || req.query || {};
 
-  // ===== AÇÃO: LOGIN =====
-  if (req.method === 'POST' && action === 'login') {
-    const { username, password } = req.body;
+  // ===== AÇÃO: LOGIN (Google Auth com Whitelist) =====
+  if (req.method === 'POST' && action === 'login-google') {
+    const { accessToken } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Usuário e senha são obrigatórios.' });
-    }
-
-    const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-    const ADMIN_PASS = process.env.ADMIN_PASS;
-
-    if (!ADMIN_PASS) {
-      logError('ADMIN_PASS não configurado nas variáveis de ambiente', null, { critical: true });
-      return res.status(500).json({ message: 'Erro de configuração do servidor.' });
-    }
-
-    if (username !== ADMIN_USER || password !== ADMIN_PASS) {
-      logSecurityEvent('Admin Login Failed', {
-        username,
-        ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
-      });
-      return res.status(401).json({ message: 'Credenciais inválidas.' });
+    if (!accessToken) {
+      return res.status(400).json({ message: 'Token do Google é obrigatório.' });
     }
 
     try {
-      const token = signToken({ role: 'admin', username });
-      logSecurityEvent('Admin Login Success', {
-        username,
-        ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress
+      // 1. Valida o token do Google e pega o e-mail
+      const googleRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
+      
+      if (!googleRes.ok) {
+        return res.status(401).json({ message: 'Token do Google inválido ou expirado.' });
+      }
+
+      const googleData = await googleRes.json();
+      const email = googleData.email;
+
+      if (!email) {
+        return res.status(400).json({ message: 'Não foi possível obter o e-mail do Google.' });
+      }
+
+      // 2. Verifica a Whitelist
+      const allowedEmails = [process.env.ADMIN_1_EMAIL, process.env.ADMIN_2_EMAIL].filter(Boolean);
+      
+      if (!allowedEmails.includes(email)) {
+        logSecurityEvent('Admin Login Blocked - Not in Whitelist', { email, ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress });
+        return res.status(403).json({ message: 'Acesso negado. E-mail não autorizado.' });
+      }
+
+      // 3. Sucesso! Gera o JWT Final
+      const token = signToken({ role: 'admin', username: email });
+      logSecurityEvent('Admin Login Success Google SSO', { email, ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress });
+      
       return res.status(200).json({ token });
+
     } catch (error) {
-      logError('Admin Login Error', error);
-      return res.status(500).json({ message: 'Erro interno do servidor.' });
+      logError('Admin Login Google Error', error);
+      return res.status(500).json({ message: 'Erro interno ao processar login.' });
     }
   }
 
