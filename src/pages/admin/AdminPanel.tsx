@@ -50,6 +50,7 @@ import {
   CalendarX,
   UserX,
   UserMinus,
+  Trash2,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────
@@ -71,6 +72,13 @@ interface Stats {
   canceled: number;
   expired: number;
   noPlan: number;
+}
+
+interface AdminRow {
+  email: string;
+  created_at: string;
+  created_by: string;
+  isEnv?: boolean;
 }
 
 interface ConfirmAction {
@@ -239,6 +247,12 @@ export default function AdminPanel() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
+  // ── State: Admins Tab ──
+  const [admins, setAdmins] = useState<AdminRow[]>([]);
+  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [isAddingAdmin, setIsAddingAdmin] = useState(false);
+
   // ── Safety measure against Radix Dialog pointer-events bug ──
   useEffect(() => {
     if (!confirmAction) {
@@ -295,6 +309,54 @@ export default function AdminPanel() {
       setIsLoadingStats(false);
     }
   }, [navigate]);
+
+  // ── Fetch Admins ──
+  const fetchAdmins = useCallback(async () => {
+    setIsLoadingAdmins(true);
+    try {
+      const result = await adminFetch({ action: 'list-admins' }, navigate);
+      if (result?.response.ok) {
+        setAdmins(result.data.admins || []);
+      }
+    } catch { /* silent */ } finally {
+      setIsLoadingAdmins(false);
+    }
+  }, [navigate]);
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+    setIsAddingAdmin(true);
+    try {
+      const result = await adminFetch({ action: 'add-admin', email: newAdminEmail.trim() }, navigate);
+      if (result?.response?.ok) {
+        toast({ title: '✅ Sucesso', description: result.data.message });
+        setNewAdminEmail('');
+        fetchAdmins();
+      } else {
+        toast({ title: 'Erro', description: result?.data?.message || 'Erro ao adicionar', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Erro de conexão', variant: 'destructive' });
+    } finally {
+      setIsAddingAdmin(false);
+    }
+  };
+
+  const handleRemoveAdmin = async (email: string) => {
+    if (!confirm(`Tem certeza que deseja remover o administrador ${email}?`)) return;
+    try {
+      const result = await adminFetch({ action: 'remove-admin', email }, navigate);
+      if (result?.response?.ok) {
+        toast({ title: '✅ Sucesso', description: result.data.message });
+        fetchAdmins();
+      } else {
+        toast({ title: 'Erro', description: result?.data?.message || 'Erro ao remover', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Erro de conexão', variant: 'destructive' });
+    }
+  };
 
   // ── Handle subscription action ──
   const handleSubscriptionAction = async () => {
@@ -387,9 +449,13 @@ export default function AdminPanel() {
       <Tabs
         value={activeTab}
         className="w-full max-w-5xl"
-        onValueChange={(v) => { setActiveTab(v); if (v === 'stats') fetchStats(); }}
+        onValueChange={(v) => { 
+          setActiveTab(v); 
+          if (v === 'stats') fetchStats(); 
+          if (v === 'admins') fetchAdmins();
+        }}
       >
-        <TabsList className="w-full grid grid-cols-3 bg-white/10 backdrop-blur-sm rounded-xl p-1 mb-6">
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 bg-white/10 backdrop-blur-sm rounded-xl p-1 mb-6 h-auto sm:h-12 gap-1 sm:gap-0">
           <TabsTrigger
             value="users"
             className="rounded-lg text-white/70 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-semibold transition-all"
@@ -410,6 +476,13 @@ export default function AdminPanel() {
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             Resumo
+          </TabsTrigger>
+          <TabsTrigger
+            value="admins"
+            className="rounded-lg text-white/70 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-semibold transition-all"
+          >
+            <Shield className="w-4 h-4 mr-2" />
+            Admins
           </TabsTrigger>
         </TabsList>
 
@@ -747,6 +820,92 @@ export default function AdminPanel() {
                 <p>Não foi possível carregar as estatísticas</p>
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        {/* ══════════════════════════════════════════ */}
+        {/* TAB: ADMINS                               */}
+        {/* ══════════════════════════════════════════ */}
+        <TabsContent value="admins">
+          <div className="max-w-3xl mx-auto bg-white text-slate-900 rounded-2xl shadow-2xl p-6 sm:p-10 animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-full bg-blue-100">
+                <Shield className="w-6 h-6 text-[#0026f7]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Administradores</h2>
+                <p className="text-sm text-gray-500">Gerencie quem tem acesso a este painel</p>
+              </div>
+            </div>
+
+            {/* Formulário de Adição */}
+            <form onSubmit={handleAddAdmin} className="flex flex-col sm:flex-row gap-3 mb-8">
+              <div className="flex-1">
+                <Input
+                  type="email"
+                  placeholder="E-mail do novo administrador (Conta Google)"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  className="h-12 focus-visible:ring-[#0026f7]"
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                className="h-12 bg-[#0026f7] hover:bg-[#0026f7]/90 text-white shrink-0"
+                disabled={isAddingAdmin}
+              >
+                {isAddingAdmin ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
+                Adicionar
+              </Button>
+            </form>
+
+            {/* Lista de Admins */}
+            <div>
+              <h3 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Usuários com Acesso
+              </h3>
+              
+              {isLoadingAdmins && admins.length === 0 ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>
+              ) : (
+                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">E-mail</th>
+                        <th className="px-4 py-3 font-semibold">Adicionado por</th>
+                        <th className="px-4 py-3 font-semibold">Data</th>
+                        <th className="px-4 py-3 text-right font-semibold">Ação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {admins.map((admin) => (
+                        <tr key={admin.email} className="hover:bg-blue-50/30 transition-colors">
+                          <td className="px-4 py-3 font-medium">{admin.email} {admin.isEnv && <span className="ml-2 inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">SISTEMA</span>}</td>
+                          <td className="px-4 py-3 text-gray-500">{admin.created_by || '—'}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {admin.created_at ? new Date(admin.created_at).toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {!admin.isEnv && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => handleRemoveAdmin(admin.email)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>

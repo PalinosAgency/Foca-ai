@@ -89,10 +89,18 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Não foi possível obter o e-mail do Google.' });
       }
 
-      // 2. Verifica a Whitelist usando Variáveis de Ambiente (para proteger do repositório público)
+      // 2. Verifica a Whitelist usando Variáveis de Ambiente e Banco de Dados
       const allowedEmails = [process.env.ADMIN_1_EMAIL, process.env.ADMIN_2_EMAIL].filter(Boolean);
-      
-      if (!allowedEmails.includes(email)) {
+      let isAllowed = allowedEmails.includes(email);
+
+      if (!isAllowed) {
+        const dbRes = await pool.query('SELECT email FROM admin_emails WHERE email = $1', [email]);
+        if (dbRes.rows.length > 0) {
+          isAllowed = true;
+        }
+      }
+
+      if (!isAllowed) {
         logSecurityEvent('Admin Login Blocked - Not in Whitelist', { email, ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress });
         return res.status(403).json({ message: 'Acesso negado. E-mail não autorizado.' });
       }
@@ -424,7 +432,71 @@ export default async function handler(req, res) {
     return handler(req, res);
   }
 
+  // ===== AÇÃO: GERENCIAR ADMINS =====
+  if (req.method === 'POST' && action === 'list-admins') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    try {
+      const result = await pool.query('SELECT email, created_at, created_by FROM admin_emails ORDER BY created_at DESC');
+      
+      const envAdmins = [process.env.ADMIN_1_EMAIL, process.env.ADMIN_2_EMAIL].filter(Boolean).map(email => ({
+        email,
+        created_at: new Date().toISOString(),
+        created_by: 'Sistema',
+        isEnv: true
+      }));
+
+      return res.status(200).json({ admins: [...envAdmins, ...result.rows] });
+    } catch (error) {
+      logError('Admin List Error', error);
+      return res.status(500).json({ message: 'Erro ao listar administradores.' });
+    }
+  }
+
+  if (req.method === 'POST' && action === 'add-admin') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'O e-mail é obrigatório.' });
+    }
+
+    try {
+      await pool.query(
+        'INSERT INTO admin_emails (email, created_by) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING',
+        [email.trim().toLowerCase(), tokenData.username]
+      );
+      return res.status(201).json({ message: `Administrador ${email} adicionado com sucesso.` });
+    } catch (error) {
+      logError('Admin Add Error', error);
+      return res.status(500).json({ message: 'Erro ao adicionar administrador.' });
+    }
+  }
+
+  if (req.method === 'POST' && action === 'remove-admin') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'O e-mail é obrigatório.' });
+    }
+
+    try {
+      const result = await pool.query('DELETE FROM admin_emails WHERE email = $1 RETURNING email', [email.trim().toLowerCase()]);
+      if (result.rowCount === 0) {
+         return res.status(404).json({ message: 'Administrador não encontrado no banco (Variáveis de ambiente não podem ser excluídas).' });
+      }
+      return res.status(200).json({ message: `Administrador ${email} removido com sucesso.` });
+    } catch (error) {
+      logError('Admin Remove Error', error);
+      return res.status(500).json({ message: 'Erro ao remover administrador.' });
+    }
+  }
+
   return res.status(400).json({
-    message: 'Ação inválida. Use: login, register, list-users, update-subscription, get-stats.'
+    message: 'Ação inválida. Use: login, register, list-users, update-subscription, get-stats, list-admins, add-admin, remove-admin.'
   });
 }
