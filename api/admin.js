@@ -39,6 +39,18 @@ function calcEndDateFrom(baseDate, duration) {
   return end;
 }
 
+// Função auxiliar para inserir logs de auditoria
+async function insertAdminLog(adminEmail, action, targetUserId, details) {
+  try {
+    await pool.query(
+      `INSERT INTO admin_logs (admin_email, action, target_user_id, details) VALUES ($1, $2, $3, $4)`,
+      [adminEmail, action, targetUserId || null, details]
+    );
+  } catch (error) {
+    logError('Error inserting admin log', error);
+  }
+}
+
 // Verifica se o token é de admin
 function verifyAdmin(req, res) {
   let tokenData;
@@ -201,6 +213,13 @@ export default async function handler(req, res) {
         ? `"${user.name}" já existia. Matrícula reativada — ${durationLabel}!`
         : `"${name}" registrado com sucesso! Matrícula ativa — ${durationLabel}.`;
 
+      await insertAdminLog(
+        tokenData.username,
+        reactivated ? 'reactivate_user' : 'register_user',
+        user.id,
+        reactivated ? `Reativado com duração: ${durationLabel}` : `Registrado com duração: ${durationLabel}`
+      );
+
       return res.status(reactivated ? 200 : 201).json({
         message: msg,
         user: { id: user.id, name: user.name, phone: user.phone },
@@ -258,7 +277,7 @@ export default async function handler(req, res) {
 
       // Dados paginados
       const dataResult = await pool.query(
-        `SELECT u.id, u.name, u.phone, u.email, u.created_at,
+        `SELECT u.id, u.name, u.phone, u.email, u.created_at, u.internal_notes,
                 s.status AS sub_status, s.plan_id, s.current_period_end, s.auto_renew
          FROM users u
          LEFT JOIN subscriptions s ON s.user_id = u.id
@@ -315,6 +334,8 @@ export default async function handler(req, res) {
           userId, name: user.name, admin: tokenData.username
         });
 
+        await insertAdminLog(tokenData.username, 'cancel_subscription', userId, `Cancelou a assinatura de ${user.name}`);
+
         return res.status(200).json({ message: `Assinatura de "${user.name}" cancelada.` });
       }
 
@@ -338,6 +359,8 @@ export default async function handler(req, res) {
         logInfo('Admin - Subscription Reactivated', {
           userId, name: user.name, endDate: endDate.toISOString(), admin: tokenData.username
         });
+
+        await insertAdminLog(tokenData.username, 'reactivate_subscription', userId, `Reativou a assinatura de ${user.name} por 30 dias`);
 
         return res.status(200).json({
           message: `Assinatura de "${user.name}" reativada por 30 dias.`,
@@ -381,6 +404,8 @@ export default async function handler(req, res) {
         logInfo('Admin - Subscription Extended', {
           userId, name: user.name, duration: durationLabel, endDate: endDate.toISOString(), admin: tokenData.username
         });
+
+        await insertAdminLog(tokenData.username, 'extend_subscription', userId, `Adicionou ${durationLabel} para ${user.name}`);
 
         return res.status(200).json({
           message: `Tempo adicionado com sucesso para "${user.name}" (${durationLabel}).`,
@@ -468,6 +493,7 @@ export default async function handler(req, res) {
         'INSERT INTO admin_emails (email, created_by) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING',
         [email.trim().toLowerCase(), tokenData.username]
       );
+      await insertAdminLog(tokenData.username, 'add_admin', null, `Adicionou o administrador ${email.trim().toLowerCase()}`);
       return res.status(201).json({ message: `Administrador ${email} adicionado com sucesso.` });
     } catch (error) {
       logError('Admin Add Error', error);
@@ -489,6 +515,7 @@ export default async function handler(req, res) {
       if (result.rowCount === 0) {
          return res.status(404).json({ message: 'Administrador não encontrado no banco (Variáveis de ambiente não podem ser excluídas).' });
       }
+      await insertAdminLog(tokenData.username, 'remove_admin', null, `Removeu o administrador ${email.trim().toLowerCase()}`);
       return res.status(200).json({ message: `Administrador ${email} removido com sucesso.` });
     } catch (error) {
       logError('Admin Remove Error', error);
@@ -496,7 +523,53 @@ export default async function handler(req, res) {
     }
   }
 
+  // ===== AÇÃO: HISTÓRICO DE LOGS =====
+  if (req.method === 'POST' && action === 'get-logs') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    try {
+      const result = await pool.query(
+        `SELECT l.id, l.admin_email, l.action, l.details, l.created_at, u.name as target_user_name 
+         FROM admin_logs l 
+         LEFT JOIN users u ON l.target_user_id = u.id 
+         ORDER BY l.created_at DESC LIMIT 100`
+      );
+      return res.status(200).json({ logs: result.rows });
+    } catch (error) {
+      logError('Admin Get Logs Error', error);
+      return res.status(500).json({ message: 'Erro ao buscar logs.' });
+    }
+  }
+
+  // ===== AÇÃO: EDITAR USUÁRIO =====
+  if (req.method === 'POST' && action === 'edit-user') {
+    const tokenData = verifyAdmin(req, res);
+    if (!tokenData) return;
+
+    const { id, name, phone, email, internal_notes } = req.body;
+    if (!id || !name) {
+      return res.status(400).json({ message: 'ID e Nome são obrigatórios.' });
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+
+    try {
+      await pool.query(
+        'UPDATE users SET name = $1, phone = $2, email = $3, internal_notes = $4 WHERE id = $5',
+        [name.trim(), normalizedPhone, email ? email.trim() : null, internal_notes || null, id]
+      );
+      
+      await insertAdminLog(tokenData.username, 'edit_user', id, `Editou o perfil de ${name.trim()}`);
+      
+      return res.status(200).json({ message: 'Usuário atualizado com sucesso.' });
+    } catch (error) {
+      logError('Admin Edit User Error', error);
+      return res.status(500).json({ message: 'Erro ao atualizar usuário.' });
+    }
+  }
+
   return res.status(400).json({
-    message: 'Ação inválida. Use: login, register, list-users, update-subscription, get-stats, list-admins, add-admin, remove-admin.'
+    message: 'Ação inválida. Use: login, register, list-users, update-subscription, get-stats, list-admins, add-admin, remove-admin, get-logs, edit-user.'
   });
 }
