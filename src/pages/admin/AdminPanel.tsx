@@ -48,9 +48,11 @@ import {
   BarChart3,
   CalendarCheck,
   CalendarX,
-  UserX,
   UserMinus,
   Trash2,
+  Download,
+  FileEdit,
+  ClipboardList,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────
@@ -64,6 +66,16 @@ interface UserRow {
   plan_id: string | null;
   current_period_end: string | null;
   auto_renew: boolean | null;
+  internal_notes?: string;
+}
+
+interface AdminLog {
+  id: number;
+  admin_email: string;
+  action: string;
+  details: string;
+  created_at: string;
+  target_user_name?: string;
 }
 
 interface Stats {
@@ -253,6 +265,15 @@ export default function AdminPanel() {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [isAddingAdmin, setIsAddingAdmin] = useState(false);
 
+  // ── State: Edit User ──
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editUserData, setEditUserData] = useState<{ id: string; name: string; phone: string; email: string; internal_notes: string } | null>(null);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+
+  // ── State: Logs Tab ──
+  const [adminLogs, setAdminLogs] = useState<AdminLog[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
   // ── Safety measure against Radix Dialog pointer-events bug ──
   useEffect(() => {
     if (!confirmAction) {
@@ -358,6 +379,87 @@ export default function AdminPanel() {
     }
   };
 
+  // ── Fetch Logs ──
+  const fetchLogs = useCallback(async () => {
+    setIsLoadingLogs(true);
+    try {
+      const result = await adminFetch({ action: 'get-logs' }, navigate);
+      if (result?.response.ok) {
+        setAdminLogs(result.data.logs || []);
+      }
+    } catch { /* silent */ } finally {
+      setIsLoadingLogs(false);
+    }
+  }, [navigate]);
+
+  // ── Handle Edit User ──
+  const openEditModal = (user: UserRow) => {
+    setEditUserData({
+      id: user.id,
+      name: user.name || '',
+      phone: user.phone || '',
+      email: user.email || '',
+      internal_notes: user.internal_notes || '',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const submitEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUserData) return;
+    setIsEditingUser(true);
+    try {
+      const result = await adminFetch({ action: 'edit-user', ...editUserData }, navigate);
+      if (result?.response?.ok) {
+        toast({ title: '✅ Sucesso', description: result.data.message });
+        setIsEditModalOpen(false);
+        fetchUsers();
+      } else {
+        toast({ title: 'Erro', description: result?.data?.message || 'Erro ao editar', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Erro de conexão', variant: 'destructive' });
+    } finally {
+      setIsEditingUser(false);
+    }
+  };
+
+  // ── Export CSV ──
+  const handleExportCSV = () => {
+    if (users.length === 0) {
+      toast({ title: 'Nada para exportar', description: 'A lista atual está vazia.', variant: 'destructive' });
+      return;
+    }
+    
+    const headers = ['Nome', 'Telefone', 'E-mail', 'Status', 'Acesso Até', 'Registrado em', 'Notas Internas'];
+    const csvContent = [
+      headers.join(','),
+      ...users.map(u => {
+        const status = u.sub_status === 'active' && u.current_period_end && new Date(u.current_period_end) > new Date() ? 'Ativo' 
+                     : u.sub_status === 'canceled' ? 'Cancelado'
+                     : u.sub_status === 'active' ? 'Expirado' : 'Sem plano';
+        const endDate = u.current_period_end ? new Date(u.current_period_end).toLocaleDateString('pt-BR') : '';
+        const created = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '';
+        // Escape quotes and commas
+        const name = `"${(u.name || '').replace(/"/g, '""')}"`;
+        const email = `"${(u.email || '').replace(/"/g, '""')}"`;
+        const notes = `"${(u.internal_notes || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+        
+        return `${name},${u.phone},${email},${status},${endDate},${created},${notes}`;
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `foca_ai_usuarios_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // ── Handle subscription action ──
   const handleSubscriptionAction = async () => {
     if (!confirmAction) return;
@@ -453,9 +555,10 @@ export default function AdminPanel() {
           setActiveTab(v); 
           if (v === 'stats') fetchStats(); 
           if (v === 'admins') fetchAdmins();
+          if (v === 'logs') fetchLogs();
         }}
       >
-        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 bg-white/10 backdrop-blur-sm rounded-xl p-1 mb-6 h-auto sm:h-12 gap-1 sm:gap-0">
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 bg-white/10 backdrop-blur-sm rounded-xl p-1 mb-6 h-auto sm:h-12 gap-1 sm:gap-0">
           <TabsTrigger
             value="users"
             className="rounded-lg text-white/70 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-semibold transition-all"
@@ -483,6 +586,13 @@ export default function AdminPanel() {
           >
             <Shield className="w-4 h-4 mr-2" />
             Admins
+          </TabsTrigger>
+          <TabsTrigger
+            value="logs"
+            className="rounded-lg text-white/70 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-semibold transition-all"
+          >
+            <ClipboardList className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Histórico</span>
           </TabsTrigger>
         </TabsList>
 
@@ -520,8 +630,18 @@ export default function AdminPanel() {
                 disabled={isLoadingUsers}
                 className="h-10 w-10 shrink-0"
                 id="refresh-users"
+                title="Atualizar lista"
               >
                 {isLoadingUsers ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleExportCSV}
+                className="h-10 w-10 shrink-0 text-gray-600 hover:text-blue-600"
+                title="Exportar CSV"
+              >
+                <Download className="w-4 h-4" />
               </Button>
             </div>
 
@@ -600,6 +720,13 @@ export default function AdminPanel() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => openEditModal(u)}
+                                  className="text-slate-700 focus:text-slate-900 mb-1"
+                                >
+                                  <FileEdit className="w-4 h-4 mr-2" />
+                                  Ver / Editar Perfil
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => setConfirmAction({ userId: u.id, userName: u.name || 'Usuário', operation: 'extend', duration: '1' })}
                                   className="text-emerald-600 focus:text-emerald-600"
@@ -908,7 +1035,127 @@ export default function AdminPanel() {
             </div>
           </div>
         </TabsContent>
+
+        {/* ══════════════════════════════════════════ */}
+        {/* TAB: LOGS                                 */}
+        {/* ══════════════════════════════════════════ */}
+        <TabsContent value="logs">
+          <div className="max-w-4xl mx-auto bg-white text-slate-900 rounded-2xl shadow-2xl p-6 sm:p-10 animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-full bg-slate-100">
+                <ClipboardList className="w-6 h-6 text-slate-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Histórico de Ações</h2>
+                <p className="text-sm text-gray-500">Registro de todas as alterações feitas no sistema.</p>
+              </div>
+            </div>
+
+            {isLoadingLogs && adminLogs.length === 0 ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>
+            ) : (
+              <div className="border border-gray-100 rounded-xl overflow-hidden">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Data</th>
+                      <th className="px-4 py-3 font-semibold">Admin</th>
+                      <th className="px-4 py-3 font-semibold">Ação</th>
+                      <th className="px-4 py-3 font-semibold">Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {adminLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                          {new Date(log.created_at).toLocaleString('pt-BR')}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-xs">{log.admin_email}</td>
+                        <td className="px-4 py-3 text-xs">
+                          <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-mono">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-600">
+                          {log.details}
+                          {log.target_user_name && <span className="block text-[10px] text-gray-400 mt-0.5">Usuário: {log.target_user_name}</span>}
+                        </td>
+                      </tr>
+                    ))}
+                    {adminLogs.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-gray-400">Nenhum registro encontrado.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
+
+      {/* ── Edit User Dialog ── */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Perfil do Usuário</DialogTitle>
+            <DialogDescription>
+              Altere dados cadastrais e adicione notas internas visíveis apenas para a equipe.
+            </DialogDescription>
+          </DialogHeader>
+          {editUserData && (
+            <form onSubmit={submitEditUser} className="space-y-4 py-2">
+              <div className="space-y-1">
+                <Label htmlFor="edit-name">Nome Completo</Label>
+                <Input
+                  id="edit-name"
+                  value={editUserData.name}
+                  onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="edit-phone">Telefone (WhatsApp)</Label>
+                  <Input
+                     id="edit-phone"
+                     value={editUserData.phone}
+                     onChange={(e) => setEditUserData({ ...editUserData, phone: formatPhoneInput(e.target.value) })}
+                     required
+                   />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="edit-email">E-mail</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editUserData.email}
+                    onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="edit-notes">Notas do Suporte (Visível só para admins)</Label>
+                <textarea
+                  id="edit-notes"
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px] resize-none"
+                  placeholder="Ex: Usuário pediu estorno, ou reclamou de acesso..."
+                  value={editUserData.internal_notes}
+                  onChange={(e) => setEditUserData({ ...editUserData, internal_notes: e.target.value })}
+                />
+              </div>
+              <DialogFooter className="mt-6">
+                <Button variant="outline" type="button" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button>
+                <Button type="submit" className="bg-[#0026f7] hover:bg-[#0026f7]/90 text-white" disabled={isEditingUser}>
+                  {isEditingUser ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileEdit className="w-4 h-4 mr-2" />}
+                  Salvar Alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Confirm Dialog ── */}
       <Dialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
