@@ -1,3 +1,7 @@
+/*! desenvolvido por Arthur Miquelito Lopes e Heitor Crespo de Souza
+ * Copyright (c) 2026 Arthur Miquelito Lopes e Heitor Crespo de Souza. Todos os direitos reservados.
+ * Aviso de propriedade intelectual: remocao ou alteracao deste aviso nao remove os direitos autorais dos autores.
+ */
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { User, LogOut } from 'lucide-react';

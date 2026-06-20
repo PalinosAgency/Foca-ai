@@ -1,3 +1,7 @@
+/*! desenvolvido por Arthur Miquelito Lopes e Heitor Crespo de Souza
+ * Copyright (c) 2026 Arthur Miquelito Lopes e Heitor Crespo de Souza. Todos os direitos reservados.
+ * Aviso de propriedade intelectual: remocao ou alteracao deste aviso nao remove os direitos autorais dos autores.
+ */
 export const PIE_COLORS = [
     "hsl(217, 91%, 60%)",   // Finance Blue
     "hsl(142, 71%, 45%)",   // Health Green

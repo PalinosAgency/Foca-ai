@@ -1,3 +1,7 @@
+<!-- desenvolvido por Arthur Miquelito Lopes e Heitor Crespo de Souza
+Copyright (c) 2026 Arthur Miquelito Lopes e Heitor Crespo de Souza. Todos os direitos reservados.
+Aviso de propriedade intelectual: remocao ou alteracao deste aviso nao remove os direitos autorais dos autores.
+-->
 # 🎯 Foca.aí - Assistente Pessoal Inteligente no WhatsApp
 
 <div align="center">
@@ -11,6 +15,8 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
   
   [🌐 Site Oficial](https://www.focaaioficial.com) · [📧 Suporte](mailto:suportefocaaioficial@gmail.com) · [📸 Instagram](https://www.instagram.com/foca__ai)
+
+  <sub>Todo o código e o projeto foram desenvolvidos por Arthur Miquelito Lopes e Heitor Crespo de Souza.</sub>
 </div>
 
 ---
@@ -291,6 +297,8 @@ O código está disponível **apenas para fins educacionais e de referência**. 
 ## 📄 Licença
 
 **Copyright © 2026 Palinos Produtora. Todos os direitos reservados.**
+
+**Autoria técnica**: todo o código e o projeto foram desenvolvidos por **Arthur Miquelito Lopes** e **Heitor Crespo de Souza**. Consulte também [`AUTHORS.md`](AUTHORS.md), [`NOTICE.md`](NOTICE.md) e [`COPYRIGHT.md`](COPYRIGHT.md).
 
 Este software é **proprietário e protegido por direitos autorais**. O código-fonte está disponível publicamente **apenas para fins de referência, estudo e aprendizado**, sob as seguintes condições:
 

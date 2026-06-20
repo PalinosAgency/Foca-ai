@@ -1,3 +1,7 @@
+/*! desenvolvido por Arthur Miquelito Lopes e Heitor Crespo de Souza
+ * Copyright (c) 2026 Arthur Miquelito Lopes e Heitor Crespo de Souza. Todos os direitos reservados.
+ * Aviso de propriedade intelectual: remocao ou alteracao deste aviso nao remove os direitos autorais dos autores.
+ */
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bot, LayoutDashboard, Wallet, Heart, GraduationCap, Calendar, User, LogOut, Menu, X } from 'lucide-react';

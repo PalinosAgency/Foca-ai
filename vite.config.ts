@@ -3,6 +3,19 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+const copyrightNotice = "desenvolvido por Arthur Miquelito Lopes e Heitor Crespo de Souza";
+const copyrightWatermark = () => ({
+  name: "copyright-watermark",
+  apply: "build" as const,
+  generateBundle(_options: unknown, bundle: Record<string, { type: string; code?: string }>) {
+    for (const file of Object.values(bundle)) {
+      if (file.type === "chunk" && file.code) {
+        file.code = `/*! ${copyrightNotice} */\n${file.code}`;
+      }
+    }
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -24,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), copyrightWatermark(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

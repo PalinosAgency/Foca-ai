@@ -3,14 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "author": "Arthur Miquelito Lopes e Heitor Crespo de Souza",
+  "contributors": [
+    "Arthur Miquelito Lopes",
+    "Heitor Crespo de Souza"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "copyright": "Copyright (c) 2026 Arthur Miquelito Lopes e Heitor Crespo de Souza. Todos os direitos reservados.",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run watermark:check",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "watermark": "node scripts/watermark.mjs --write",
+    "watermark:check": "node scripts/watermark.mjs --check",
     "stress": "node stress-test.mjs",
     "stress:medium": "node stress-test.mjs --users 50 --requests 8",
     "stress:heavy": "node stress-test.mjs --users 100 --requests 10"
